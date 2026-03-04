@@ -1,0 +1,28 @@
+{
+  "name": "linggo",
+  "version": "1.0.0",
+  "description": "Learn Filipino languages the fun way - AI-powered language learning app",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": [
+    "language-learning",
+    "filipino",
+    "hiligaynon",
+    "tagalog",
+    "education",
+    "ai",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "vite": "^5.0.0"
+  },
+  "dependencies": {}
+}

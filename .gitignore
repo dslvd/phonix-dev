@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build outputs
+dist/
+*.js.map
+
+# Development
+.vite/
+.DS_Store
+*.log
+*.log.*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.production
+
+# Testing
+coverage/
+
+# Misc
+*.bak
+*.tmp
+
+# Vercel
+.vercel
