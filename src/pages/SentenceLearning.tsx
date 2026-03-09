@@ -1,0 +1,184 @@
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import Button from '../components/Button';
+import Card from '../components/Card';
+import Mascot from '../components/Mascot';
+import NavigationHeader from '../components/NavigationHeader';
+import { Page, AppState } from '../App';
+import { sentenceData } from '../data/vocabulary';
+
+interface SentenceLearningProps {
+  navigate: (page: Page) => void;
+  appState: AppState;
+  updateState: (updates: Partial<AppState>) => void;
+}
+
+export default function SentenceLearning({
+  navigate,
+  appState,
+  updateState,
+}: SentenceLearningProps) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const currentSentence = sentenceData[currentIndex];
+
+  const handleNext = () => {
+    if (currentIndex < sentenceData.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    } else {
+      // Award a star for completing
+      updateState({ stars: appState.stars + 1 });
+      navigate('collection');
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
+    }
+  };
+
+  const playAudio = (text: string) => {
+    if ('speechSynthesis' in window) {
+      // Cancel any ongoing speech
+      window.speechSynthesis.cancel();
+      
+      const utterance = new SpeechSynthesisUtterance(text);
+      
+      // Configure for Hiligaynon/Filipino pronunciation
+      utterance.lang = 'fil-PH'; // Filipino language code
+      utterance.rate = 0.7; // Even slower for sentences
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+      
+      // Try to find a Filipino or Tagalog voice
+      const voices = window.speechSynthesis.getVoices();
+      const filipinoVoice = voices.find(voice => 
+        voice.lang.includes('fil') || 
+        voice.lang.includes('tl') || 
+        voice.lang.includes('PH')
+      );
+      
+      if (filipinoVoice) {
+        utterance.voice = filipinoVoice;
+      }
+      
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-pink-100 via-yellow-100 to-green-100 flex flex-col">
+      <NavigationHeader
+        onBack={() => navigate('vocabulary')}
+        onLogout={() => navigate('landing')}
+        title="Sentence Practice"
+        showProgress={true}
+        currentProgress={currentIndex + 1}
+        totalProgress={sentenceData.length}
+      />
+
+      {/* Main Content */}
+      <div className="flex-1 flex items-center justify-center p-4">
+        <div className="max-w-2xl w-full">
+          <motion.div
+            key={currentSentence.id}
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ type: 'spring', stiffness: 150 }}
+          >
+            <Card className="text-center">
+              {/* Illustration */}
+              <motion.div
+                animate={{
+                  scale: [1, 1.05, 1],
+                  rotate: [0, 2, -2, 0],
+                }}
+                transition={{ duration: 3, repeat: Infinity }}
+                className="text-9xl mb-8 leading-none flex items-center justify-center"
+              >
+                {currentSentence.illustration}
+              </motion.div>
+
+              {/* Native Sentence */}
+              <div className="mb-8 bg-gradient-to-r from-purple-100 to-pink-100 rounded-2xl p-6">
+                <p className="text-sm font-bold text-gray-600 mb-3">
+                  {appState.targetLanguage}:
+                </p>
+                <div className="flex items-center justify-center gap-4">
+                  <h2 className="font-baloo text-3xl md:text-4xl font-bold text-gray-800 leading-relaxed">
+                    {currentSentence.nativeSentence}
+                  </h2>
+                  <button
+                    onClick={() => playAudio(currentSentence.nativeSentence)}
+                    className="bg-primary text-white p-4 rounded-full hover:scale-110 transition-transform flex-shrink-0"
+                  >
+                    🔊
+                  </button>
+                </div>
+              </div>
+
+              {/* English Translation */}
+              <div className="bg-white border-4 border-secondary rounded-2xl p-6 shadow-lg">
+                <p className="text-sm font-bold text-gray-600 mb-3">
+                  {appState.nativeLanguage}:
+                </p>
+                <div className="flex items-center justify-center gap-4">
+                  <h3 className="font-baloo text-3xl md:text-4xl font-bold text-secondary leading-relaxed">
+                    {currentSentence.englishSentence}
+                  </h3>
+                  <button
+                    onClick={() => playAudio(currentSentence.englishSentence)}
+                    className="bg-secondary text-white p-4 rounded-full hover:scale-110 transition-transform flex-shrink-0"
+                  >
+                    🔊
+                  </button>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+
+          {/* Navigation Buttons */}
+          <div className="flex gap-4 mt-6">
+            <Button
+              variant="outline"
+              onClick={handlePrevious}
+              disabled={currentIndex === 0}
+              className="flex-1"
+            >
+              ← Previous
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleNext}
+              className="flex-1"
+            >
+              {currentIndex === sentenceData.length - 1 ? 'Finish! 🎉' : 'Next →'}
+            </Button>
+          </div>
+
+          {/* Progress Dots */}
+          <div className="mt-4 flex justify-center gap-2">
+            {sentenceData.map((_, index) => (
+              <div
+                key={index}
+                className={`w-3 h-3 rounded-full transition-all ${
+                  index === currentIndex
+                    ? 'bg-secondary w-6'
+                    : index < currentIndex
+                    ? 'bg-success'
+                    : 'bg-gray-300'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Mascot */}
+      <Mascot
+        message="You're doing amazing! Keep it up! 💪"
+        animation="wiggle"
+      />
+    </div>
+  );
+}

@@ -1,5 +1,5 @@
 {
-  "name": "linggo",
+  "name": "Phonix",
   "version": "1.0.0",
   "description": "Learn Filipino languages the fun way - AI-powered language learning app",
   "type": "module",
@@ -16,13 +16,24 @@
     "tagalog",
     "education",
     "ai",
-    "typescript"
+    "typescript",
+    "react"
   ],
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@types/react": "^18.2.48",
+    "@types/react-dom": "^18.2.18",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.17",
+    "postcss": "^8.4.33",
+    "tailwindcss": "^3.4.1",
     "typescript": "^5.3.3",
     "vite": "^5.0.0"
   },
-  "dependencies": {}
+  "dependencies": {
+    "framer-motion": "^11.0.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
 }
