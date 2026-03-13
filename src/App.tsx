@@ -216,13 +216,6 @@ function App() {
               </div>
             </div>
           </div>
-
-          <div className="rounded-3xl border border-white/80 bg-white/60 p-5">
-            <p className="text-sm font-bold text-gray-700">Desktop format</p>
-            <p className="mt-2 text-sm font-semibold leading-6 text-gray-500">
-              Wider screens now use a split layout with a dedicated sidebar, while mobile keeps the full-screen app experience.
-            </p>
-          </div>
         </aside>
 
         <main className="min-w-0 overflow-hidden rounded-[36px] border border-white/80 bg-[rgba(255,255,255,0.96)] shadow-[0_30px_80px_rgba(255,145,38,0.12)]">
