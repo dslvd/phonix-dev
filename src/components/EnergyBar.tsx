@@ -39,10 +39,10 @@ export default function EnergyBar({ current, max, isPremium, onUpgrade }: Energy
             transition={{ duration: 0.5, repeat: isLow && !isPremium ? Infinity : 0 }}
             className="text-2xl leading-none flex items-center justify-center"
           >
-            {isPremium ? '✨' : isCritical ? '🚨' : isLow ? '⚠️' : '⚡'}
+            {isPremium ? '💖' : isCritical ? '🪫' : isLow ? '🔋' : '🔋'}
           </motion.span>
           <span className="font-bold text-gray-800">
-            {isPremium ? 'Unlimited Magic' : 'Scan Energy'}
+            {isPremium ? 'Unlimited Hearts' : 'Batteries'}
           </span>
         </div>
         
@@ -96,7 +96,7 @@ export default function EnergyBar({ current, max, isPremium, onUpgrade }: Energy
         {/* Text Overlay */}
         <div className="absolute inset-0 flex items-center justify-center">
           <span className="font-bold text-sm text-gray-800 drop-shadow-[0_1px_2px_rgba(255,255,255,0.8)]">
-            {isPremium ? '∞ Unlimited' : `${current} / ${max} scans`}
+            {isPremium ? '∞ Hearts' : `${current} / ${max} batteries`}
           </span>
         </div>
 
@@ -122,7 +122,7 @@ export default function EnergyBar({ current, max, isPremium, onUpgrade }: Energy
               animate={{ opacity: 1, y: 0 }}
               className="text-xs text-red-600 font-bold mt-2 text-center"
             >
-              ⚠️ Critical! Only {current} scans left. Upgrade for unlimited!
+              ⚠️ Critical! Only {current} batteries left. Upgrade for unlimited hearts!
             </motion.p>
           )}
           {isLow && !isCritical && (
@@ -131,7 +131,7 @@ export default function EnergyBar({ current, max, isPremium, onUpgrade }: Energy
               animate={{ opacity: 1, y: 0 }}
               className="text-xs text-orange-600 font-semibold mt-2 text-center"
             >
-              Running low. Consider upgrading to Unlimited Magic ✨
+              Running low. Consider upgrading to Unlimited Hearts 💖
             </motion.p>
           )}
           {current === 0 && (
@@ -140,7 +140,7 @@ export default function EnergyBar({ current, max, isPremium, onUpgrade }: Energy
               animate={{ opacity: 1, scale: 1 }}
               className="text-sm text-red-700 font-bold mt-2 text-center bg-red-100 p-2 rounded-lg"
             >
-              🚫 No scans remaining! Upgrade to continue scanning.
+              🚫 No batteries remaining! Upgrade to continue without limits.
             </motion.p>
           )}
         </>
@@ -154,7 +154,7 @@ export default function EnergyBar({ current, max, isPremium, onUpgrade }: Energy
           className="flex items-center justify-center gap-2 mt-2"
         >
           <div className="bg-gradient-to-r from-yellow-400 to-amber-500 text-white px-4 py-1 rounded-full text-xs font-bold shadow-lg">
-            ⭐ PREMIUM MEMBER ⭐
+            💖 UNLIMITED HEARTS 💖
           </div>
         </motion.div>
       )}

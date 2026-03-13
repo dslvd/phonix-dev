@@ -5,6 +5,7 @@ import Card from '../components/Card';
 import NavigationHeader from '../components/NavigationHeader';
 import EnergyBar from '../components/EnergyBar';
 import { Page, AppState } from '../App';
+import { analyzeImageWithAI, getFallbackScanResult } from '../lib/aiFallback';
 
 interface ScanModeProps {
   navigate: (page: Page) => void;
@@ -26,6 +27,7 @@ export default function ScanMode({ navigate, appState, updateState }: ScanModePr
   const [error, setError] = useState<string | null>(null);
   const [savedWords, setSavedWords] = useState<DetectedObject[]>([]);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [manualObject, setManualObject] = useState('');
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -140,14 +142,28 @@ export default function ScanMode({ navigate, appState, updateState }: ScanModePr
     setCameraLoading(false);
   };
 
-  const captureAndAnalyze = async () => {
-    if (!videoRef.current || !canvasRef.current) return;
-
-    // Check scan limits for non-premium users
-    if (!appState.isPremium && appState.scansRemaining <= 0) {
-      setShowUpgradeModal(true);
+  const runManualSmartAssist = () => {
+    if (!manualObject.trim()) {
+      setError('Type what you see first, then use Smart Assist.');
       return;
     }
+
+    const fallback = getFallbackScanResult(manualObject, appState.targetLanguage || 'Hiligaynon');
+    if (!fallback) {
+      setError('Smart Assist could not understand that object yet. Try a simple word like cat, dog, rice, or water.');
+      return;
+    }
+
+    setDetectedObject({
+      object: fallback.object,
+      translation: fallback.translation,
+      confidence: fallback.confidence,
+    });
+    setError(null);
+  };
+
+  const captureAndAnalyze = async () => {
+    if (!videoRef.current || !canvasRef.current) return;
 
     setIsScanning(true);
     setError(null);
@@ -167,39 +183,22 @@ export default function ScanMode({ navigate, appState, updateState }: ScanModePr
       // Convert base64 to blob for API
       const base64Data = imageData.split(',')[1];
       
-      // Call Google Gemini Vision API
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-      if (!apiKey) {
-        setError('Gemini API key not configured');
-        setIsScanning(false);
-        return;
-      }
-
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{
-              parts: [
-                { text: `Identify the main object in this image in English. Then translate it to ${appState.targetLanguage}. Format: "Object: [name] | Translation: [${appState.targetLanguage} word]" Keep it simple and concise.` },
-                {
-                  inline_data: {
-                    mime_type: "image/jpeg",
-                    data: base64Data
-                  }
-                }
-              ]
-            }]
-          })
-        }
+      const aiText = await analyzeImageWithAI(
+        base64Data,
+        appState.targetLanguage || 'Hiligaynon'
       );
 
-      const data = await response.json();
-      
-      if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
-        const text = data.candidates[0].content.parts[0].text;
+      if (!aiText) {
+        if (manualObject.trim()) {
+          runManualSmartAssist();
+          setIsScanning(false);
+          return;
+        }
+        setError('Cloud AI did not return a result. Use Smart Assist below and type the object name to keep scanning.');
+        return;
+      }
+      if (aiText) {
+        const text = aiText;
         
         // Parse response
         const objectMatch = text.match(/Object:\s*([^|]+)/i);
@@ -213,11 +212,6 @@ export default function ScanMode({ navigate, appState, updateState }: ScanModePr
           };
           setDetectedObject(result);
           
-          // Decrement scans for non-premium users
-          if (!appState.isPremium) {
-            updateState({ scansRemaining: appState.scansRemaining - 1 });
-          }
-          
           // Play sound effect (optional)
           playSuccessSound();
         } else {
@@ -227,18 +221,15 @@ export default function ScanMode({ navigate, appState, updateState }: ScanModePr
             translation: text,
             confidence: 'medium'
           });
-          
-          // Still decrement for non-premium
-          if (!appState.isPremium) {
-            updateState({ scansRemaining: appState.scansRemaining - 1 });
-          }
         }
-      } else {
-        setError('Could not identify object. Try again with better lighting.');
       }
     } catch (err) {
       console.error('Analysis error:', err);
-      setError('Failed to analyze image. Check your connection.');
+      if (manualObject.trim()) {
+        runManualSmartAssist();
+      } else {
+        setError('Failed to analyze image. Check your connection or use Smart Assist below.');
+      }
     } finally {
       setIsScanning(false);
     }
@@ -351,10 +342,10 @@ export default function ScanMode({ navigate, appState, updateState }: ScanModePr
         >
           <Card className="bg-white/90 backdrop-blur-xl border-2 border-purple-300">
             <EnergyBar
-              current={appState.scansRemaining}
-              max={20}
+              current={appState.heartsRemaining}
+              max={5}
               isPremium={appState.isPremium}
-              onUpgrade={() => navigate('premium')}
+              onUpgrade={() => setShowUpgradeModal(true)}
             />
           </Card>
         </motion.div>
@@ -524,6 +515,13 @@ export default function ScanMode({ navigate, appState, updateState }: ScanModePr
                       <h3 className="font-baloo text-2xl font-bold text-gray-800 mb-2">
                         Found!
                       </h3>
+                      <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-gray-500">
+                        {detectedObject.confidence === 'high'
+                          ? 'Cloud AI'
+                          : detectedObject.confidence === 'smart-assist'
+                          ? 'Smart Assist'
+                          : 'AI Assisted'}
+                      </p>
                       <div className="bg-white rounded-lg p-4 mb-4">
                         <p className="text-gray-600 font-semibold mb-1">English:</p>
                         <p className="text-2xl font-bold text-gray-800 mb-3">
@@ -564,6 +562,42 @@ export default function ScanMode({ navigate, appState, updateState }: ScanModePr
                 </motion.div>
               )}
             </AnimatePresence>
+
+            <Card className="bg-gradient-to-br from-blue-100 to-cyan-100 border-2 border-blue-300">
+              <h3 className="mb-3 flex items-center gap-2 font-baloo text-xl font-bold text-gray-800">
+                <span>⚡</span>
+                AI Alternative: Smart Assist
+              </h3>
+              <p className="mb-3 text-sm font-semibold text-gray-700">
+                If cloud AI is slow or unavailable, type what you see and the website will still translate it instantly.
+              </p>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <input
+                  type="text"
+                  value={manualObject}
+                  onChange={(e) => setManualObject(e.target.value)}
+                  placeholder="Type object name, like cat, rice, dog..."
+                  className="flex-1 rounded-2xl border-2 border-blue-300 px-4 py-3 font-semibold text-gray-800 outline-none transition-all focus:border-blue-500"
+                />
+                <Button
+                  variant="secondary"
+                  onClick={runManualSmartAssist}
+                >
+                  ⚡ Translate Now
+                </Button>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {['cat', 'dog', 'rice', 'water', 'bird', 'mother'].map((item) => (
+                  <button
+                    key={item}
+                    onClick={() => setManualObject(item)}
+                    className="rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-bold text-blue-700 transition-all hover:border-blue-400 hover:bg-blue-50"
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            </Card>
 
             {/* Saved Words History */}
             <Card>
@@ -669,11 +703,11 @@ export default function ScanMode({ navigate, appState, updateState }: ScanModePr
                   </motion.div>
                   
                   <h2 className="font-baloo text-3xl font-bold mb-4">
-                    Out of Scan Energy!
+                    Need More Hearts?
                   </h2>
                   
                   <p className="text-lg mb-6 opacity-90">
-                    You've used all your free scans. Upgrade to <strong>Unlimited Magic</strong> for endless scanning!
+                    Free learners get 5 batteries, and every lesson mistake removes 1. Upgrade to <strong>Unlimited Hearts</strong> for stress-free practice!
                   </p>
 
                   <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-6">
@@ -685,7 +719,7 @@ export default function ScanMode({ navigate, appState, updateState }: ScanModePr
                     <ul className="text-left space-y-2 text-sm">
                       <li className="flex items-center gap-2">
                         <span className="text-xl leading-none flex items-center justify-center">∞</span>
-                        <span>Unlimited scans forever</span>
+                        <span>Unlimited hearts forever</span>
                       </li>
                       <li className="flex items-center gap-2">
                         <span className="text-xl leading-none flex items-center justify-center">📄</span>
@@ -710,8 +744,8 @@ export default function ScanMode({ navigate, appState, updateState }: ScanModePr
                     >
                       <span className="flex items-center justify-center gap-2 text-lg">
                         <span>🚀</span>
-                        Unlock Unlimited Magic
-                        <span>✨</span>
+                        Unlock Unlimited Hearts
+                        <span>💖</span>
                       </span>
                     </motion.button>
 
