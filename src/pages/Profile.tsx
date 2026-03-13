@@ -220,6 +220,27 @@ export default function Profile({ navigate, appState }: ProfileProps) {
                   </p>
                 </div>
 
+                <div className="bg-gradient-to-r from-orange-50 to-pink-50 p-4 rounded-xl border-2 border-orange-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-bold text-gray-700">Current Streak</span>
+                    <span className="text-3xl leading-none flex items-center justify-center">🔥</span>
+                  </div>
+                  <p className="font-baloo text-4xl font-bold bg-gradient-to-r from-primary to-pink-500 bg-clip-text text-transparent">
+                    {appState.currentStreak}
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">Best streak: {appState.longestStreak} days</p>
+                </div>
+
+                <div className="bg-gradient-to-r from-sky-50 to-cyan-50 p-4 rounded-xl border-2 border-sky-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-bold text-gray-700">XP Earned</span>
+                    <span className="text-3xl leading-none flex items-center justify-center">⚡</span>
+                  </div>
+                  <p className="font-baloo text-4xl font-bold bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent">
+                    {appState.totalXP}
+                  </p>
+                </div>
+
                 {/* Languages */}
                 <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-4 rounded-xl border-2 border-blue-200">
                   <div className="flex items-center justify-between mb-2">

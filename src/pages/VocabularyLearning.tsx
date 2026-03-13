@@ -51,6 +51,11 @@ export default function VocabularyLearning({
     if (!appState.learnedWords.includes(currentItem.id)) {
       updateState({
         learnedWords: [...appState.learnedWords, currentItem.id],
+        totalXP: appState.totalXP + 10,
+      });
+    } else {
+      updateState({
+        totalXP: appState.totalXP + 2,
       });
     }
 
@@ -83,6 +88,8 @@ export default function VocabularyLearning({
         setShowOutOfHeartsModal(true);
         return;
       }
+    } else {
+      // Premium users keep learning without losing hearts.
     }
     
     // Reset quiz mode and counter

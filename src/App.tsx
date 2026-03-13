@@ -29,12 +29,23 @@ export interface AppState {
   currentVocabIndex: number;
   learnedWords: string[];
   stars: number;
+  currentStreak: number;
+  longestStreak: number;
+  totalXP: number;
+  lastActiveDate: string;
   heartsRemaining: number;
   isPremium: boolean;
   scansRemaining: number;
 }
 
 function App() {
+  const getTodayKey = () => new Date().toISOString().split('T')[0];
+  const getYesterdayKey = () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    return yesterday.toISOString().split('T')[0];
+  };
+
   const [isMobile, setIsMobile] = useState(() => {
     if (typeof window === 'undefined') {
       return true;
@@ -43,16 +54,37 @@ function App() {
     return window.innerWidth < 1024;
   });
   const [currentPage, setCurrentPage] = useState<Page>('landing');
-  const [appState, setAppState] = useState<AppState>({
-    nativeLanguage: '',
-    targetLanguage: '',
-    mode: null,
-    currentVocabIndex: 0,
-    learnedWords: [],
-    stars: 0,
-    heartsRemaining: 5,
-    isPremium: false,
-    scansRemaining: 20,
+  const [appState, setAppState] = useState<AppState>(() => {
+    const defaultState: AppState = {
+      nativeLanguage: '',
+      targetLanguage: '',
+      mode: null,
+      currentVocabIndex: 0,
+      learnedWords: [],
+      stars: 0,
+      currentStreak: 1,
+      longestStreak: 1,
+      totalXP: 0,
+      lastActiveDate: getTodayKey(),
+      heartsRemaining: 5,
+      isPremium: false,
+      scansRemaining: 20,
+    };
+
+    if (typeof window === 'undefined') {
+      return defaultState;
+    }
+
+    const stored = window.localStorage.getItem('phonix-app-state');
+    if (!stored) {
+      return defaultState;
+    }
+
+    try {
+      return { ...defaultState, ...JSON.parse(stored) };
+    } catch {
+      return defaultState;
+    }
   });
 
   useEffect(() => {
@@ -65,6 +97,33 @@ function App() {
 
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    const today = getTodayKey();
+    const yesterday = getYesterdayKey();
+
+    if (appState.lastActiveDate === today) {
+      return;
+    }
+
+    setAppState((prev) => {
+      const nextStreak = prev.lastActiveDate === yesterday ? prev.currentStreak + 1 : 1;
+      return {
+        ...prev,
+        currentStreak: nextStreak,
+        longestStreak: Math.max(prev.longestStreak, nextStreak),
+        lastActiveDate: today,
+      };
+    });
+  }, [appState.lastActiveDate]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    window.localStorage.setItem('phonix-app-state', JSON.stringify(appState));
+  }, [appState]);
 
   const navigate = (page: Page) => {
     setCurrentPage(page);
@@ -145,6 +204,15 @@ function App() {
                 <p className="mt-2 font-baloo text-2xl font-bold text-primary">
                   {appState.isPremium ? '∞ Unlimited Hearts' : `${appState.heartsRemaining} / 5 batteries`}
                 </p>
+              </div>
+              <div className="rounded-2xl border border-warning/50 bg-yellow-50 p-4">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary-dark">Streak</p>
+                <p className="mt-2 font-baloo text-2xl font-bold text-primary">🔥 {appState.currentStreak} days</p>
+                <p className="mt-1 text-xs font-semibold text-gray-500">Best: {appState.longestStreak} days</p>
+              </div>
+              <div className="rounded-2xl border border-secondary/20 bg-white/70 p-4">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-secondary-dark">XP</p>
+                <p className="mt-2 font-baloo text-4xl font-bold text-secondary-dark">{appState.totalXP}</p>
               </div>
             </div>
           </div>
