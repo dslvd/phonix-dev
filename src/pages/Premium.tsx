@@ -15,6 +15,7 @@ export default function Premium({ navigate, appState, updateState }: PremiumProp
     // For demo purposes, we'll just unlock it
     updateState({ 
       isPremium: true,
+      heartsRemaining: 5,
       scansRemaining: 999999 // Unlimited
     });
     
@@ -22,15 +23,15 @@ export default function Premium({ navigate, appState, updateState }: PremiumProp
     localStorage.setItem('isPremium', 'true');
     
     // Show success and navigate back
-    alert('🎉 Unlimited Magic Unlocked! You now have unlimited scans and premium features!');
+    alert('🎉 Unlimited Hearts Unlocked! You now have infinite hearts and premium features!');
     navigate('scan');
   };
 
   const features = [
     {
-      icon: '✨',
-      title: 'Unlimited Scans',
-      description: 'Scan as many objects as you want, anytime!',
+      icon: '💖',
+      title: 'Unlimited Hearts',
+      description: 'Make mistakes while learning without ever running out of lives!',
       gradient: 'from-purple-400 to-pink-500'
     },
     {
@@ -118,7 +119,7 @@ export default function Premium({ navigate, appState, updateState }: PremiumProp
           </motion.div>
           
           <h1 className="font-baloo text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-pink-300 to-purple-300 mb-4">
-            Unlimited Magic
+            Unlimited Hearts
           </h1>
           
           <p className="text-2xl text-purple-200 font-semibold mb-2">
@@ -140,10 +141,10 @@ export default function Premium({ navigate, appState, updateState }: PremiumProp
             >
               <div className="bg-white/10 backdrop-blur-sm border-2 border-orange-300 rounded-xl p-4 inline-block">
                 <p className="text-orange-200 font-bold mb-2">
-                  ⚠️ You have {appState.scansRemaining} out of 20 free scans remaining
+                  ⚠️ You have {appState.heartsRemaining} out of 5 batteries left
                 </p>
                 <p className="text-purple-200 text-sm">
-                  Upgrade now to never worry about running out!
+                  Upgrade now to learn with unlimited hearts!
                 </p>
               </div>
             </motion.div>
@@ -175,9 +176,9 @@ export default function Premium({ navigate, appState, updateState }: PremiumProp
                   className="bg-white text-purple-600 px-12 py-4 rounded-2xl font-bold text-xl shadow-2xl hover:bg-yellow-50 transition-colors"
                 >
                   <span className="flex items-center gap-3">
-                    <span>✨</span>
-                    Unlock Unlimited Magic
-                    <span>✨</span>
+                    <span>💖</span>
+                    Unlock Unlimited Hearts
+                    <span>💖</span>
                   </span>
                 </motion.button>
               </div>
@@ -243,7 +244,7 @@ export default function Premium({ navigate, appState, updateState }: PremiumProp
             {[
               {
                 name: 'Maria Santos',
-                quote: 'The unlimited scans changed everything! I can learn anywhere, anytime.',
+                quote: 'The unlimited hearts changed everything! I stay confident even when I make mistakes.',
                 avatar: '👩',
                 stars: 5
               },

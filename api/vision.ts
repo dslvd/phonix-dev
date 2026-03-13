@@ -1,0 +1,124 @@
+const jsonHeaders = {
+  'Content-Type': 'application/json',
+};
+
+async function callGeminiVision(image: string, targetLanguage: string, apiKey: string) {
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: `Identify the main object in this image in English. Then translate it to ${targetLanguage}. Format exactly: Object: [name] | Translation: [${targetLanguage} word]. Keep it simple and concise.`,
+              },
+              {
+                inline_data: {
+                  mime_type: 'image/jpeg',
+                  data: image,
+                },
+              },
+            ],
+          },
+        ],
+      }),
+    }
+  );
+
+  const data = await response.json();
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!response.ok || !text) {
+    throw new Error('gemini-vision-failed');
+  }
+
+  return { text, provider: 'gemini' };
+}
+
+async function callOpenRouterVision(image: string, targetLanguage: string, apiKey: string) {
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      ...jsonHeaders,
+      Authorization: `Bearer ${apiKey}`,
+      'HTTP-Referer': 'https://phonix.app',
+      'X-Title': 'Phonix',
+    },
+    body: JSON.stringify({
+      model: process.env.OPENROUTER_VISION_MODEL || 'openai/gpt-4o-mini',
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: `Identify the main object in this image in English. Then translate it to ${targetLanguage}. Format exactly: Object: [name] | Translation: [${targetLanguage} word]. Keep it simple and concise.`,
+            },
+            {
+              type: 'image_url',
+              image_url: {
+                url: `data:image/jpeg;base64,${image}`,
+              },
+            },
+          ],
+        },
+      ],
+    }),
+  });
+
+  const data = await response.json();
+  const text = data?.choices?.[0]?.message?.content;
+  if (!response.ok || !text) {
+    throw new Error('openrouter-vision-failed');
+  }
+
+  return { text, provider: 'openrouter' };
+}
+
+export default async function handler(req: any, res: any) {
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
+  }
+
+  try {
+    const image = req.body?.image;
+    const targetLanguage = req.body?.targetLanguage || 'Hiligaynon';
+
+    if (!image) {
+      res.status(400).json({ error: 'Image is required' });
+      return;
+    }
+
+    const providers = [
+      process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY
+        ? () => callGeminiVision(image, targetLanguage, process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '')
+        : null,
+      process.env.OPENROUTER_API_KEY
+        ? () => callOpenRouterVision(image, targetLanguage, process.env.OPENROUTER_API_KEY || '')
+        : null,
+    ].filter(Boolean) as Array<() => Promise<{ text: string; provider: string }>>;
+
+    if (providers.length === 0) {
+      res.status(500).json({ error: 'No vision provider configured. Add GEMINI_API_KEY or OPENROUTER_API_KEY.' });
+      return;
+    }
+
+    let lastError: unknown = null;
+    for (const provider of providers) {
+      try {
+        const result = await provider();
+        res.status(200).json(result);
+        return;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    res.status(502).json({ error: 'All vision providers failed', details: String(lastError) });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error', details: String(error) });
+  }
+}

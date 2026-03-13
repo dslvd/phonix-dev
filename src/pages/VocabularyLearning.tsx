@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Mascot from '../components/Mascot';
 import NavigationHeader from '../components/NavigationHeader';
 import Quiz from '../components/Quiz';
+import EnergyBar from '../components/EnergyBar';
 import { Page, AppState } from '../App';
 import { vocabularyData, getBeginnerWords, getIntermediateWords, getAdvancedWords } from '../data/vocabulary';
 
@@ -20,6 +21,7 @@ export default function VocabularyLearning({
   const [isQuizMode, setIsQuizMode] = useState(false);
   const [wordsBeforeQuiz, setWordsBeforeQuiz] = useState(3); // Quiz every 3 words
   const [consecutiveWords, setConsecutiveWords] = useState(0);
+  const [showOutOfHeartsModal, setShowOutOfHeartsModal] = useState(false);
   
   // Get current difficulty level based on learned words
   const getCurrentDifficultyWords = () => {
@@ -71,6 +73,16 @@ export default function VocabularyLearning({
       updateState({
         stars: appState.stars + 1,
       });
+    } else if (!appState.isPremium) {
+      const nextHearts = Math.max(0, appState.heartsRemaining - 1);
+      updateState({ heartsRemaining: nextHearts });
+
+      if (nextHearts === 0) {
+        setIsQuizMode(false);
+        setConsecutiveWords(0);
+        setShowOutOfHeartsModal(true);
+        return;
+      }
     }
     
     // Reset quiz mode and counter
@@ -149,6 +161,19 @@ export default function VocabularyLearning({
       {/* Main Content */}
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="max-w-lg w-full">
+          <motion.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6"
+          >
+            <EnergyBar
+              current={appState.heartsRemaining}
+              max={5}
+              isPremium={appState.isPremium}
+              onUpgrade={() => navigate('premium')}
+            />
+          </motion.div>
+
           {isQuizMode ? (
             // Quiz Mode
             <Quiz
@@ -357,6 +382,35 @@ export default function VocabularyLearning({
         message={isQuizMode ? "Show me what you've learned! 🎯" : `Great job learning "${currentItem.englishWord}"! 🎉`}
         animation="bounce"
       />
+
+      {showOutOfHeartsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="max-w-md w-full rounded-3xl border-4 border-primary bg-white p-8 text-center shadow-2xl">
+            <div className="mb-4 flex items-center justify-center text-7xl leading-none">🪫</div>
+            <h3 className="font-baloo text-3xl font-bold text-gray-800">Out of Batteries!</h3>
+            <p className="mt-3 text-gray-600 font-semibold">
+              Every mistake costs 1 battery. Upgrade to premium for unlimited hearts, or come back later and keep practicing.
+            </p>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <button
+                onClick={() => navigate('premium')}
+                className="flex-1 rounded-2xl bg-gradient-to-r from-primary to-secondary px-6 py-4 font-bold text-white shadow-lg"
+              >
+                Get Unlimited Hearts 💖
+              </button>
+              <button
+                onClick={() => {
+                  setShowOutOfHeartsModal(false);
+                  navigate('dashboard');
+                }}
+                className="flex-1 rounded-2xl bg-gray-100 px-6 py-4 font-bold text-gray-700"
+              >
+                Back to Dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -324,15 +324,15 @@ export default function Dashboard({ navigate, appState }: DashboardProps) {
               {appState.isPremium ? (
                 <Card className="bg-gradient-to-br from-yellow-100 via-amber-100 to-orange-100 border-2 border-yellow-400">
                   <div className="text-center">
-                    <div className="text-5xl mb-2 leading-none flex items-center justify-center">✨</div>
+                    <div className="text-5xl mb-2 leading-none flex items-center justify-center">💖</div>
                     <h4 className="font-baloo text-lg font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent mb-2">
                       Premium Member
                     </h4>
                     <p className="text-xs text-gray-700 mb-2 font-semibold">
-                      Unlimited Magic Active
+                      Unlimited Hearts Active
                     </p>
                     <div className="bg-white/50 rounded-lg p-2 text-xs space-y-1">
-                      <p className="font-bold text-gray-700">∞ Unlimited Scans</p>
+                      <p className="font-bold text-gray-700">∞ Unlimited Hearts</p>
                       <p className="font-bold text-gray-700">📄 Document Translation</p>
                       <p className="font-bold text-gray-700">🔌 Offline Mode</p>
                     </div>
@@ -345,24 +345,24 @@ export default function Dashboard({ navigate, appState }: DashboardProps) {
                   onClick={() => navigate('premium')}
                 >
                   <div className="text-center">
-                    <div className="text-4xl mb-2 leading-none flex items-center justify-center">✨</div>
+                    <div className="text-4xl mb-2 leading-none flex items-center justify-center">🔋</div>
                     <h4 className="font-baloo text-lg font-bold text-gray-800 mb-2">
                       Upgrade to Premium
                     </h4>
                     <p className="text-xs text-gray-600 mb-3">
-                      {appState.scansRemaining}/20 scans remaining
+                      {appState.heartsRemaining}/5 batteries left
                     </p>
                     <div className="w-full bg-gray-200 rounded-full h-2 mb-3 overflow-hidden">
                       <div 
                         className="bg-gradient-to-r from-purple-500 to-pink-500 h-full rounded-full transition-all duration-500"
-                        style={{ width: `${(appState.scansRemaining / 20) * 100}%` }}
+                        style={{ width: `${(appState.heartsRemaining / 5) * 100}%` }}
                       />
                     </div>
                     <Button
                       variant="primary"
                       fullWidth
                     >
-                      Get Unlimited 🚀
+                      Get Unlimited Hearts 🚀
                     </Button>
                   </div>
                 </Card>

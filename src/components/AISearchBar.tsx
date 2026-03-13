@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from './Button';
 import Card from './Card';
+import { askCloudAI, generateFallbackAIAnswer } from '../lib/aiFallback';
 
 interface AISearchBarProps {
   onSearch?: (query: string, result: string) => void;
@@ -12,6 +13,7 @@ export default function AISearchBar({ onSearch }: AISearchBarProps) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState('');
   const [error, setError] = useState('');
+  const [usingFallback, setUsingFallback] = useState(false);
 
   const handleSearch = async () => {
     if (!query.trim()) return;
@@ -19,47 +21,27 @@ export default function AISearchBar({ onSearch }: AISearchBarProps) {
     setLoading(true);
     setError('');
     setResult('');
+    setUsingFallback(false);
 
     try {
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-      
-      if (!apiKey) {
-        setError('⚠️ API key not configured. Please add VITE_GEMINI_API_KEY to your .env file.');
-        setLoading(false);
-        return;
-      }
+      const aiResult = (await askCloudAI(
+        `You are a helpful Filipino language learning assistant for kids. Answer this question in a simple, fun way with emojis: ${query}`
+      )) || '✨ I am ready to help you practice more words!';
 
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            contents: [{
-              parts: [{
-                text: `You are a helpful Filipino language learning assistant for kids. Answer this question in a simple, fun way with emojis: ${query}`
-              }]
-            }]
-          })
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to get AI response');
-      }
-
-      const data = await response.json();
-      const aiResult = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response received.';
-      
       setResult(aiResult);
       if (onSearch) {
         onSearch(query, aiResult);
       }
     } catch (err) {
-      setError('❌ Sorry, something went wrong. Please try again!');
+      const fallbackResult = generateFallbackAIAnswer(query, 'Hiligaynon');
+      setUsingFallback(true);
+      setResult(fallbackResult);
+      setError('⚡ Cloud AI is unavailable right now. Smart Helper Mode is answering locally.');
       console.error('AI Search Error:', err);
+
+      if (onSearch) {
+        onSearch(query, fallbackResult);
+      }
     } finally {
       setLoading(false);
     }
@@ -84,6 +66,14 @@ export default function AISearchBar({ onSearch }: AISearchBarProps) {
             <p className="text-sm text-gray-600">Ask me anything about Filipino language!</p>
           </div>
         </div>
+
+        {usingFallback && (
+          <div className="rounded-2xl border-2 border-yellow-300 bg-yellow-50 px-4 py-3">
+            <p className="text-sm font-bold text-yellow-700">
+              ✨ Smart Helper Mode is active so the website AI still works right away.
+            </p>
+          </div>
+        )}
 
         {/* Search Input */}
         <div className="flex gap-2">

@@ -4,9 +4,25 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --color-primary: #FF9126;
+  --color-cream: #EBEBEB;
+  --color-secondary: #2FC0E1;
+  --color-warning: #FFFEA7;
+}
+
 @layer base {
+  html {
+    background: var(--color-cream);
+  }
+
   body {
-    @apply font-nunito bg-gradient-to-br from-sky-100 via-pink-100 to-green-100 min-h-screen;
+    @apply min-h-screen font-nunito;
+    background:
+      radial-gradient(circle at top left, rgba(47, 192, 225, 0.18), transparent 30%),
+      radial-gradient(circle at bottom right, rgba(255, 145, 38, 0.16), transparent 35%),
+      linear-gradient(135deg, #EBEBEB, #f8f8f8, #fffef0);
+    color: #1f2937;
   }
 }
 
