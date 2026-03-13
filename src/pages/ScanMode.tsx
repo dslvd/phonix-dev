@@ -263,7 +263,12 @@ export default function ScanMode({ navigate, appState, updateState }: ScanModePr
     if (!appState.learnedWords.includes(detectedObject.translation)) {
       updateState({
         learnedWords: [...appState.learnedWords, detectedObject.translation],
-        stars: appState.stars + 1
+        stars: appState.stars + 1,
+        totalXP: appState.totalXP + 12
+      });
+    } else {
+      updateState({
+        totalXP: appState.totalXP + 3
       });
     }
     
@@ -314,6 +319,8 @@ export default function ScanMode({ navigate, appState, updateState }: ScanModePr
         }}
         onProfile={() => navigate('profile')}
         showStats={true}
+        streakCount={appState.currentStreak}
+        starCount={appState.stars}
       />
 
       <div className="max-w-4xl mx-auto p-4 mt-6">

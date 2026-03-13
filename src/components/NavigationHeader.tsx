@@ -9,6 +9,8 @@ interface NavigationHeaderProps {
   currentProgress?: number;
   totalProgress?: number;
   showStats?: boolean;
+  streakCount?: number;
+  starCount?: number;
 }
 
 export default function NavigationHeader({
@@ -20,6 +22,8 @@ export default function NavigationHeader({
   currentProgress = 0,
   totalProgress = 0,
   showStats = false,
+  streakCount = 0,
+  starCount = 0,
 }: NavigationHeaderProps) {
   const handleLogout = () => {
     localStorage.removeItem('user');
@@ -67,10 +71,10 @@ export default function NavigationHeader({
           {showStats && (
             <>
               <div className="bg-yellow-200 px-3 py-1 rounded-full font-bold text-sm hidden sm:flex items-center gap-1">
-                🔥 <span>0</span>
+                🔥 <span>{streakCount}</span>
               </div>
               <div className="bg-sky-200 px-3 py-1 rounded-full font-bold text-sm hidden sm:flex items-center gap-1">
-                ⭐ <span>0</span>
+                ⭐ <span>{starCount}</span>
               </div>
             </>
           )}

@@ -62,7 +62,10 @@ export default function Dashboard({ navigate, appState }: DashboardProps) {
     { id: 1, text: 'Complete 1 lesson', completed: appState.learnedWords.length > 0 },
     { id: 2, text: 'Review 5 words', completed: appState.learnedWords.length >= 5 },
     { id: 3, text: 'Earn 1 star', completed: appState.stars > 0 },
+    { id: 4, text: 'Keep your streak alive', completed: appState.currentStreak > 0 },
   ];
+
+  const totalTasksCompleted = dailyTasks.filter((task) => task.completed).length;
 
   return (
     <div className="min-h-screen relative overflow-hidden pb-20">
@@ -76,6 +79,8 @@ export default function Dashboard({ navigate, appState }: DashboardProps) {
         onLogout={() => navigate('landing')}
         onProfile={() => navigate('profile')}
         showStats={true}
+        streakCount={appState.currentStreak}
+        starCount={appState.stars}
       />
 
       <div className="max-w-4xl mx-auto p-4 mt-6">
@@ -102,6 +107,44 @@ export default function Dashboard({ navigate, appState }: DashboardProps) {
             </p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-purple-300" />
           </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="mb-8 grid gap-4 md:grid-cols-3"
+        >
+          <Card className="bg-gradient-to-br from-yellow-100 to-orange-100 border-2 border-yellow-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary-dark">Streak</p>
+                <p className="mt-2 font-baloo text-4xl font-bold text-primary">🔥 {appState.currentStreak}</p>
+                <p className="text-sm font-semibold text-gray-600">Best: {appState.longestStreak} days</p>
+              </div>
+              <div className="text-5xl leading-none flex items-center justify-center">🏆</div>
+            </div>
+          </Card>
+          <Card className="bg-gradient-to-br from-sky-100 to-cyan-100 border-2 border-sky-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-secondary-dark">XP earned</p>
+                <p className="mt-2 font-baloo text-4xl font-bold text-secondary-dark">{appState.totalXP}</p>
+                <p className="text-sm font-semibold text-gray-600">Every lesson adds progress</p>
+              </div>
+              <div className="text-5xl leading-none flex items-center justify-center">⚡</div>
+            </div>
+          </Card>
+          <Card className="bg-gradient-to-br from-pink-100 to-orange-100 border-2 border-pink-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-pink-500">Daily quests</p>
+                <p className="mt-2 font-baloo text-4xl font-bold text-pink-500">{totalTasksCompleted}/{dailyTasks.length}</p>
+                <p className="text-sm font-semibold text-gray-600">Quest progress today</p>
+              </div>
+              <div className="text-5xl leading-none flex items-center justify-center">🎯</div>
+            </div>
+          </Card>
         </motion.div>
 
         {/* AI Search Bar */}
