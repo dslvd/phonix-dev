@@ -109,7 +109,9 @@ export default function VocabularyLearning({
     }
   };
 
-  const playAudio = () => {
+  const playAudio = (e?: React.MouseEvent<HTMLButtonElement>) => {
+    e?.preventDefault();
+    e?.stopPropagation();
     if ('speechSynthesis' in window) {
       // Cancel any ongoing speech
       window.speechSynthesis.cancel();
@@ -118,32 +120,49 @@ export default function VocabularyLearning({
       
       // Configure for Hiligaynon/Filipino pronunciation
       utterance.lang = 'fil-PH'; // Filipino language code
-      utterance.rate = 0.75; // Slower for clarity
-      utterance.pitch = 1.0;
+      utterance.rate = 0.85;
+      utterance.pitch = 0.75;
       utterance.volume = 1.0;
-      
-      // Try to find a Filipino or Tagalog voice
-      const voices = window.speechSynthesis.getVoices();
-      const filipinoVoice = voices.find(voice => 
-        voice.lang.includes('fil') || 
-        voice.lang.includes('tl') || 
-        voice.lang.includes('PH')
-      );
-      
-      if (filipinoVoice) {
-        utterance.voice = filipinoVoice;
-        console.log('Using Filipino voice:', filipinoVoice.name);
+
+      const speakWithBestVoice = () => {
+        const voices = window.speechSynthesis.getVoices();
+        const robotVoice = voices.find((voice) => {
+          const name = voice.name.toLowerCase();
+          return (
+            name.includes('robot') ||
+            name.includes('siri') ||
+            name.includes('fred') ||
+            name.includes('david') ||
+            name.includes('zira') ||
+            name.includes('microsoft') ||
+            name.includes('google us english')
+          );
+        });
+
+        const filipinoVoice = voices.find((voice) => {
+          const lang = voice.lang.toLowerCase();
+          return lang.includes('fil') || lang.includes('tl') || lang.includes('ph');
+        });
+
+        const englishFallback = voices.find((voice) => voice.lang.toLowerCase().startsWith('en'));
+        utterance.voice = robotVoice || filipinoVoice || englishFallback || voices[0] || null;
+        window.speechSynthesis.speak(utterance);
+      };
+
+      const availableVoices = window.speechSynthesis.getVoices();
+      if (availableVoices.length === 0) {
+        window.speechSynthesis.onvoiceschanged = () => {
+          window.speechSynthesis.onvoiceschanged = null;
+          speakWithBestVoice();
+        };
       } else {
-        // Fallback to any available voice
-        console.log('No Filipino voice found, using default');
+        speakWithBestVoice();
       }
       
       // Add event listeners for debugging
       utterance.onstart = () => console.log('Speech started');
       utterance.onend = () => console.log('Speech ended');
       utterance.onerror = (e) => console.error('Speech error:', e);
-      
-      window.speechSynthesis.speak(utterance);
     } else {
       console.error('Speech synthesis not supported');
       alert('Audio playback not supported in this browser. Try Chrome or Safari.');
@@ -267,7 +286,7 @@ export default function VocabularyLearning({
                     <motion.button
                       whileHover={{ scale: 1.1, rotate: 10 }}
                       whileTap={{ scale: 0.9 }}
-                      onClick={playAudio}
+                      onClick={(e) => playAudio(e)}
                       className="relative group/btn flex-shrink-0"
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full blur-lg opacity-50 group-hover/btn:opacity-100 transition-opacity" />
@@ -317,7 +336,7 @@ export default function VocabularyLearning({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="flex gap-4 mt-  8"
+            className="flex gap-4 mt-8"
           >
             <motion.div
               whileHover={{ scale: 1.02 }}

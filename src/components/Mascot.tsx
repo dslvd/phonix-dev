@@ -12,7 +12,7 @@ export default function Mascot({
   animation = 'float',
 }: MascotProps) {
   const positionClasses = {
-    bottom: 'fixed bottom-8 right-8',
+    bottom: 'fixed bottom-4 right-4 md:bottom-8 md:right-8',
     center: 'mx-auto',
   };
 
@@ -23,7 +23,7 @@ export default function Mascot({
   };
 
   return (
-    <div className={`${positionClasses[position]} z-50`}>
+    <div className={`${positionClasses[position]} z-50 pointer-events-none select-none`}>
       <motion.div
         initial={{ scale: 0, rotate: -180 }}
         animate={{ scale: 1, rotate: 0 }}
@@ -44,7 +44,7 @@ export default function Mascot({
           </motion.div>
         )}
         
-        <div className={`${animationClasses[animation]} text-8xl`}>
+        <div className={`${animationClasses[animation]} text-6xl md:text-8xl`}>
           🤖
         </div>
       </motion.div>
