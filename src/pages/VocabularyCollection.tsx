@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion';
-import Button from '../components/Button';
 import SimplePageLayout from '../components/SimplePageLayout';
 import { Page, AppState } from '../App';
 import { vocabularyData } from '../data/vocabulary';
@@ -17,13 +16,6 @@ export default function VocabularyCollection({
     appState.learnedWords.includes(item.id)
   );
 
-  const messageText = 
-    learnedVocabulary.length === 0 ? "🎒 Your backpack is empty!" :
-    learnedVocabulary.length < 10 ? "🌟 Great start! Keep going!" :
-    learnedVocabulary.length < 25 ? "🔥 You're on fire!" :
-    learnedVocabulary.length < 40 ? "⭐ Superstar learner!" :
-    "🏆 Language master!";
-
   return (
     <SimplePageLayout
       title="Your Backpack"
@@ -34,47 +26,34 @@ export default function VocabularyCollection({
       onProfile={() => navigate('profile')}
       className="space-y-8"
     >
-      {/* Achievement Message */}
-      <motion.div
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        className="text-center py-6"
-      >
-        <h2 className="font-baloo text-3xl font-bold text-gray-800">
-          {messageText}
-        </h2>
-      </motion.div>
-
       {/* Learning Status */}
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <span className="font-bold text-gray-700">Words Mastered</span>
-          <span className="font-bold text-primary">{learnedVocabulary.length}/{vocabularyData.length}</span>
+      <div className="space-y-3">
+        <div className="flex justify-between items-center text-sm">
+          <span className="font-bold text-gray-300">Progress</span>
+          <span className="font-bold text-white">{learnedVocabulary.length}/{vocabularyData.length}</span>
         </div>
-        <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
+        <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${(learnedVocabulary.length / vocabularyData.length) * 100}%` }}
             transition={{ duration: 1 }}
-            className="h-full bg-gradient-to-r from-sky-400 to-blue-500 rounded-full"
+            className="h-full bg-blue-600 rounded-full"
           />
         </div>
       </div>
 
-      {/* Vocabulary Grid */}
+      {/* Vocabulary Buttons Grid */}
       {learnedVocabulary.length > 0 ? (
         <>
           <div>
-            <h3 className="font-baloo font-bold text-lg text-gray-800 mb-4">
-              Your Learned Words 📖
-            </h3>
-            <div className="grid grid-cols-3 gap-3">
+            <h3 className="font-bold text-gray-300 text-sm mb-3">Learned Words</h3>
+            <div className="grid grid-cols-4 gap-2">
               {learnedVocabulary.map((item, index) => (
                 <motion.button
                   key={item.id}
                   initial={{ opacity: 0, scale: 0 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 0.03 }}
+                  transition={{ delay: index * 0.02 }}
                   whileHover={{ scale: 1.1 }}
                   onClick={(e) => {
                     e.preventDefault();
@@ -83,11 +62,10 @@ export default function VocabularyCollection({
                     utterance.lang = 'fil-PH';
                     speechSynthesis.speak(utterance);
                   }}
-                  className="flex flex-col items-center gap-2 p-3 border-2 border-gray-300 rounded-2xl hover:border-sky-400 hover:bg-sky-50 transition-all"
+                  className="flex flex-col items-center gap-1 p-2 bg-gray-700 border border-gray-600 rounded-lg hover:bg-gray-600 transition-all"
                 >
-                  <span className="text-3xl leading-none">{item.emoji}</span>
-                  <span className="text-xs font-bold text-gray-700">{item.nativeWord}</span>
-                  <span className="text-2xl leading-none">🔊</span>
+                  <span className="text-xl leading-none">{item.emoji}</span>
+                  <span className="text-xs font-bold text-gray-300 text-center">{item.nativeWord}</span>
                 </motion.button>
               ))}
             </div>
@@ -95,28 +73,23 @@ export default function VocabularyCollection({
 
           {/* Continue Button */}
           {learnedVocabulary.length < vocabularyData.length && (
-            <Button
-              variant="primary"
-              fullWidth
+            <button
               onClick={() => navigate('vocabulary')}
+              className="w-full py-2 px-4 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition-all"
             >
-              Learn More Words 🚀
-            </Button>
+              Learn More
+            </button>
           )}
         </>
       ) : (
-        <div className="text-center py-8">
-          <p className="text-gray-600 font-semibold">
-            Complete lessons to collect words in your backpack!
-          </p>
-          <Button
-            variant="primary"
-            fullWidth
+        <div className="text-center py-6">
+          <p className="text-gray-400 text-sm">Complete lessons to collect words</p>
+          <button
             onClick={() => navigate('dashboard')}
-            className="mt-4"
+            className="mt-4 py-2 px-4 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition-all"
           >
             Start Learning
-          </Button>
+          </button>
         </div>
       )}
     </SimplePageLayout>
