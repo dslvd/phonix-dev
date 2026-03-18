@@ -37,7 +37,9 @@ export default function SentenceLearning({
     }
   };
 
-  const playAudio = (text: string) => {
+  const playAudio = (text: string, e?: React.MouseEvent<HTMLButtonElement>) => {
+    e?.preventDefault();
+    e?.stopPropagation();
     if ('speechSynthesis' in window) {
       // Cancel any ongoing speech
       window.speechSynthesis.cancel();
@@ -46,23 +48,44 @@ export default function SentenceLearning({
       
       // Configure for Hiligaynon/Filipino pronunciation
       utterance.lang = 'fil-PH'; // Filipino language code
-      utterance.rate = 0.7; // Even slower for sentences
-      utterance.pitch = 1.0;
+      utterance.rate = 0.8;
+      utterance.pitch = 0.75;
       utterance.volume = 1.0;
-      
-      // Try to find a Filipino or Tagalog voice
-      const voices = window.speechSynthesis.getVoices();
-      const filipinoVoice = voices.find(voice => 
-        voice.lang.includes('fil') || 
-        voice.lang.includes('tl') || 
-        voice.lang.includes('PH')
-      );
-      
-      if (filipinoVoice) {
-        utterance.voice = filipinoVoice;
+
+      const speakWithBestVoice = () => {
+        const voices = window.speechSynthesis.getVoices();
+        const robotVoice = voices.find((voice) => {
+          const name = voice.name.toLowerCase();
+          return (
+            name.includes('robot') ||
+            name.includes('siri') ||
+            name.includes('fred') ||
+            name.includes('david') ||
+            name.includes('zira') ||
+            name.includes('microsoft') ||
+            name.includes('google us english')
+          );
+        });
+
+        const filipinoVoice = voices.find((voice) => {
+          const lang = voice.lang.toLowerCase();
+          return lang.includes('fil') || lang.includes('tl') || lang.includes('ph');
+        });
+
+        const englishFallback = voices.find((voice) => voice.lang.toLowerCase().startsWith('en'));
+        utterance.voice = robotVoice || filipinoVoice || englishFallback || voices[0] || null;
+        window.speechSynthesis.speak(utterance);
+      };
+
+      const availableVoices = window.speechSynthesis.getVoices();
+      if (availableVoices.length === 0) {
+        window.speechSynthesis.onvoiceschanged = () => {
+          window.speechSynthesis.onvoiceschanged = null;
+          speakWithBestVoice();
+        };
+      } else {
+        speakWithBestVoice();
       }
-      
-      window.speechSynthesis.speak(utterance);
     }
   };
 
@@ -109,7 +132,7 @@ export default function SentenceLearning({
                     {currentSentence.nativeSentence}
                   </h2>
                   <button
-                    onClick={() => playAudio(currentSentence.nativeSentence)}
+                    onClick={(e) => playAudio(currentSentence.nativeSentence, e)}
                     className="bg-primary text-white p-4 rounded-full hover:scale-110 transition-transform flex-shrink-0"
                   >
                     🔊
@@ -127,7 +150,7 @@ export default function SentenceLearning({
                     {currentSentence.englishSentence}
                   </h3>
                   <button
-                    onClick={() => playAudio(currentSentence.englishSentence)}
+                    onClick={(e) => playAudio(currentSentence.englishSentence, e)}
                     className="bg-secondary text-white p-4 rounded-full hover:scale-110 transition-transform flex-shrink-0"
                   >
                     🔊
