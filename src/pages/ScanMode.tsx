@@ -307,7 +307,7 @@ export default function ScanMode({ navigate, appState, updateState }: ScanModePr
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-200 via-pink-200 to-orange-200">
+    <div className="min-h-screen bg-gray-900 pb-20">
       <NavigationHeader
         onBack={() => {
           stopCamera();
@@ -330,12 +330,12 @@ export default function ScanMode({ navigate, appState, updateState }: ScanModePr
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-6"
         >
-          <h1 className="font-baloo text-4xl font-bold text-gray-800 mb-2 flex items-center justify-center gap-3">
+          <h1 className="font-baloo text-4xl font-bold text-white mb-2 flex items-center justify-center gap-3">
             <span>📸</span>
             Scan Mode
             <span>🤖</span>
           </h1>
-          <p className="text-gray-600 font-semibold">
+          <p className="text-gray-400 font-semibold">
             Point your camera at objects to learn instantly!
           </p>
         </motion.div>
