@@ -1,6 +1,4 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import Button from '../components/Button';
 import SimplePageLayout from '../components/SimplePageLayout';
 import { Page, AppState } from '../App';
 
@@ -40,96 +38,83 @@ export default function Profile({ navigate, appState }: ProfileProps) {
       onLogout={handleLogout}
       className="space-y-6"
     >
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="text-center p-3 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border-2 border-emerald-200">
-          <div className="text-2xl mb-1">📚</div>
-          <p className="text-xs text-gray-600">Words</p>
-          <p className="font-baloo font-bold text-xl text-emerald-600">{appState.learnedWords.length}</p>
+      {/* Stats Grid - Minimal */}
+      <div className="grid grid-cols-2 gap-2 mb-6">
+        <div className="text-center p-2 bg-gray-700 rounded-lg">
+          <p className="text-2xl mb-1">📚</p>
+          <p className="text-xs text-gray-400">Words</p>
+          <p className="font-bold text-lg text-white">{appState.learnedWords.length}</p>
         </div>
-        <div className="text-center p-3 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl border-2 border-yellow-200">
-          <div className="text-2xl mb-1">⭐</div>
-          <p className="text-xs text-gray-600">Stars</p>
-          <p className="font-baloo font-bold text-xl text-yellow-600">{appState.stars}</p>
+        <div className="text-center p-2 bg-gray-700 rounded-lg">
+          <p className="text-2xl mb-1">⭐</p>
+          <p className="text-xs text-gray-400">Stars</p>
+          <p className="font-bold text-lg text-white">{appState.stars}</p>
         </div>
-        <div className="text-center p-3 bg-gradient-to-br from-orange-50 to-pink-50 rounded-xl border-2 border-orange-200">
-          <div className="text-2xl mb-1">🔥</div>
-          <p className="text-xs text-gray-600">Streak</p>
-          <p className="font-baloo font-bold text-xl text-orange-600">{appState.currentStreak}</p>
+        <div className="text-center p-2 bg-gray-700 rounded-lg">
+          <p className="text-2xl mb-1">🔥</p>
+          <p className="text-xs text-gray-400">Streak</p>
+          <p className="font-bold text-lg text-white">{appState.currentStreak}</p>
         </div>
-        <div className="text-center p-3 bg-gradient-to-br from-sky-50 to-cyan-50 rounded-xl border-2 border-sky-200">
-          <div className="text-2xl mb-1">⚡</div>
-          <p className="text-xs text-gray-600">XP</p>
-          <p className="font-baloo font-bold text-xl text-sky-600">{appState.totalXP}</p>
+        <div className="text-center p-2 bg-gray-700 rounded-lg">
+          <p className="text-2xl mb-1">⚡</p>
+          <p className="text-xs text-gray-400">XP</p>
+          <p className="font-bold text-lg text-white">{appState.totalXP}</p>
         </div>
       </div>
 
-      {/* User Info */}
+      {/* User Info - Minimal */}
       {userData && (
-        <div className="space-y-2">
+        <div className="bg-gray-700 rounded-lg p-3 mb-6 space-y-2">
           <div>
-            <p className="text-xs font-bold text-gray-600 mb-1">NAME</p>
-            <p className="font-baloo text-lg font-bold text-gray-800">{userData.name}</p>
+            <p className="text-xs text-gray-400">NAME</p>
+            <p className="font-bold text-white text-sm">{userData.name}</p>
           </div>
           <div>
-            <p className="text-xs font-bold text-gray-600 mb-1">EMAIL</p>
-            <p className="text-sm text-gray-700">{userData.email || 'No email'}</p>
-          </div>
-          <div>
-            <p className="text-xs font-bold text-gray-600 mb-1">LEARNING</p>
-            <p className="text-sm text-gray-700">{appState.targetLanguage} from {appState.nativeLanguage}</p>
+            <p className="text-xs text-gray-400">LEARNING</p>
+            <p className="text-xs text-gray-300">{appState.targetLanguage}</p>
           </div>
         </div>
       )}
 
-      {/* Subscription Status */}
-      <div className={`p-3 rounded-xl border-2 text-center ${
-        appState.isPremium 
-          ? 'bg-yellow-50 border-yellow-300' 
-          : 'bg-gray-50 border-gray-300'
-      }`}>
+      {/* Subscription Badge */}
+      <div className="bg-gray-700 rounded-lg p-3 text-center mb-6">
         <p className="text-2xl mb-1">{appState.isPremium ? '✨' : '🔒'}</p>
-        <p className="font-bold text-gray-800">
-          {appState.isPremium ? 'Premium Member' : 'Free Plan'}
+        <p className="font-bold text-white text-xs">
+          {appState.isPremium ? 'Premium' : 'Free'}
         </p>
         {!appState.isPremium && (
-          <p className="text-xs text-gray-600 mt-1">{appState.heartsRemaining}/5 batteries left</p>
+          <p className="text-xs text-gray-400 mt-1">{appState.heartsRemaining}/5 left</p>
         )}
       </div>
 
-      {/* Action Buttons */}
-      <div className="space-y-2 pt-4">
-        <Button
-          variant="secondary"
-          fullWidth
+      {/* Action Buttons - Small */}
+      <div className="space-y-2">
+        <button
           onClick={() => navigate('collection')}
+          className="w-full py-2 px-3 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-all"
         >
-          🎒 View Backpack
-        </Button>
-        <Button
-          variant="outline"
-          fullWidth
+          🎒 Backpack
+        </button>
+        <button
           onClick={() => navigate('setup')}
+          className="w-full py-2 px-3 bg-gray-700 text-white text-xs font-bold rounded-lg hover:bg-gray-600 transition-all"
         >
-          ⚙️ Change Language
-        </Button>
+          ⚙️ Settings
+        </button>
         {!appState.isPremium && (
-          <Button
-            variant="primary"
-            fullWidth
+          <button
             onClick={() => navigate('premium')}
+            className="w-full py-2 px-3 bg-yellow-600 text-white text-xs font-bold rounded-lg hover:bg-yellow-700 transition-all"
           >
-            ✨ Unlock Premium
-          </Button>
+            ✨ Premium
+          </button>
         )}
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+        <button
           onClick={handleLogout}
-          className="w-full py-3 bg-red-100 border-2 border-red-300 text-red-600 font-bold rounded-2xl hover:bg-red-200 transition-all"
+          className="w-full py-2 px-3 bg-red-700 text-white text-xs font-bold rounded-lg hover:bg-red-800 transition-all"
         >
           🚪 Logout
-        </motion.button>
+        </button>
       </div>
     </SimplePageLayout>
   );

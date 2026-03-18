@@ -30,20 +30,8 @@ export default function SimplePageLayout({
   className = '',
 }: SimplePageLayoutProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden flex flex-col">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
-          transition={{ duration: 8, repeat: Infinity }}
-          className="absolute top-0 right-0 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl"
-        />
-        <motion.div
-          animate={{ scale: [1.2, 1, 1.2], opacity: [0.1, 0.2, 0.1] }}
-          transition={{ duration: 6, repeat: Infinity, delay: 1 }}
-          className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl"
-        />
-      </div>
+    <div className="min-h-screen bg-gray-900 relative overflow-hidden flex flex-col">
+      {/* Simple dark background - no gradients */}
 
       {/* Header */}
       {showHeader && onBack && onLogout && (
@@ -67,16 +55,9 @@ export default function SimplePageLayout({
               className="flex justify-center gap-2 mb-8"
             >
               {[...Array(maxHearts)].map((_, i) => (
-                <motion.span
-                  key={i}
-                  className={`text-3xl transition-all ${
-                    i < hearts ? 'text-red-500' : 'text-gray-600'
-                  }`}
-                  animate={i < hearts ? { scale: [1, 1.2, 1] } : {}}
-                  transition={{ repeat: Infinity, duration: 1.5 }}
-                >
+                <span key={i} className={i < hearts ? 'text-2xl' : 'text-gray-600 text-2xl'}>
                   ❤️
-                </motion.span>
+                </span>
               ))}
             </motion.div>
           )}
@@ -88,11 +69,11 @@ export default function SimplePageLayout({
               animate={{ opacity: 1, y: 0 }}
               className="text-center mb-8"
             >
-              <h1 className="font-baloo text-4xl md:text-5xl font-bold text-white mb-2">
+              <h1 className="font-baloo text-4xl font-bold text-white mb-2">
                 {title}
               </h1>
               {subtitle && (
-                <p className="text-gray-300 text-lg">{subtitle}</p>
+                <p className="text-gray-400 text-lg">{subtitle}</p>
               )}
             </motion.div>
           )}
@@ -102,7 +83,7 @@ export default function SimplePageLayout({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className={`bg-white/95 backdrop-blur-md rounded-3xl p-8 shadow-2xl border border-white/20 ${className}`}
+            className={`bg-gray-800 rounded-2xl p-6 shadow-2xl ${className}`}
           >
             {children}
           </motion.div>
