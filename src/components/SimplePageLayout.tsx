@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion';
 import { ReactNode } from 'react';
 import NavigationHeader from './NavigationHeader';
-import { Page, AppState } from '../App';
 
 interface SimplePageLayoutProps {
   children: ReactNode;
@@ -14,8 +13,6 @@ interface SimplePageLayoutProps {
   onBack?: () => void;
   onLogout?: () => void;
   onProfile?: () => void;
-  appState?: AppState;
-  navigate?: (page: Page) => void;
   className?: string;
 }
 
@@ -30,8 +27,6 @@ export default function SimplePageLayout({
   onBack,
   onLogout,
   onProfile,
-  appState,
-  navigate,
   className = '',
 }: SimplePageLayoutProps) {
   return (
