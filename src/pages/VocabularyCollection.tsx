@@ -32,7 +32,6 @@ export default function VocabularyCollection({
       onBack={() => navigate('dashboard')}
       onLogout={() => navigate('landing')}
       onProfile={() => navigate('profile')}
-      appState={appState}
       className="space-y-8"
     >
       {/* Achievement Message */}
