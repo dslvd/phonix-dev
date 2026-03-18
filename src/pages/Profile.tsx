@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import Card from '../components/Card';
-import NavigationHeader from '../components/NavigationHeader';
+import Button from '../components/Button';
+import SimplePageLayout from '../components/SimplePageLayout';
 import { Page, AppState } from '../App';
 
 interface ProfileProps {
@@ -17,27 +17,14 @@ interface UserData {
 
 export default function Profile({ navigate, appState }: ProfileProps) {
   const [userData, setUserData] = useState<UserData | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedName, setEditedName] = useState('');
 
   useEffect(() => {
-    // Load user data from localStorage
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       const user = JSON.parse(storedUser);
       setUserData(user);
-      setEditedName(user.name);
     }
   }, []);
-
-  const handleSaveName = () => {
-    if (userData && editedName.trim()) {
-      const updatedUser = { ...userData, name: editedName };
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      setUserData(updatedUser);
-      setIsEditing(false);
-    }
-  };
 
   const handleLogout = () => {
     localStorage.removeItem('user');
