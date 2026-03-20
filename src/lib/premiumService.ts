@@ -8,7 +8,7 @@
  *  Architecture:
  *  - All premium logic flows through this single file
  *  - The rest of the app never touches payment details directly
- *  - To add Stripe/LemonSqueezy later: replace the 3 PAYMENT_PROVIDER_HOOK
+ *  - To add Stripe/LemonSqueezy later: replace the 2 PAYMENT_PROVIDER_HOOK
  *    functions below. Nothing else needs to change.
  */
 
@@ -21,10 +21,10 @@ export type PremiumPlan = 'lifetime';
 export interface PremiumStatus {
   isPremium: boolean;
   plan: PremiumPlan | null;
-  /** ISO date string – null for lifetime/placeholder */
-  expiresAt: string | null;
-  /** Opaque token. Phase 1: random string. Phase 2: provider subscription ID */
-  subscriptionId: string | null;
+  /** Always null for lifetime — never expires */
+  expiresAt: null;
+  /** Opaque token. Phase 1: random string. Phase 2: provider payment ID */
+  purchaseId: string | null;
 }
 
 export interface PurchaseResult {
@@ -62,13 +62,9 @@ function loadStatus(): PremiumStatus | null {
   }
 }
 
-function clearStatus(): void {
-  localStorage.removeItem(STORAGE_KEY);
-}
-
 // ─────────────────────────────────────────────
 //  PHASE 1 PLACEHOLDER IMPLEMENTATIONS
-//  ⚠️  PAYMENT_PROVIDER_HOOK – replace these 3
+//  ⚠️  PAYMENT_PROVIDER_HOOK – replace these 2
 //      functions in Phase 2, nothing else.
 // ─────────────────────────────────────────────
 
@@ -79,37 +75,26 @@ function clearStatus(): void {
  *          (e.g., POST /api/payments/create-checkout) and redirect the
  *          user to the provider's hosted payment page.
  */
-async function _providerCreateCheckout(plan: PremiumPlan): Promise<{ subscriptionId: string }> {
+async function _providerCreateCheckout(): Promise<{ purchaseId: string }> {
   // Simulate network delay
   await new Promise(r => setTimeout(r, 1200));
 
-  // Simulate a 5 % failure rate so you can test error handling
+  // Simulate a 5% failure rate so you can test error handling
   if (Math.random() < 0.05) {
     throw new Error('Simulated payment failure – try again.');
   }
 
-  return { subscriptionId: `placeholder_${plan}_${Date.now()}` };
+  return { purchaseId: `placeholder_lifetime_${Date.now()}` };
 }
 
 /**
  * PAYMENT_PROVIDER_HOOK #2
  * Phase 1: Return the locally stored status.
  * Phase 2: Call GET /api/payments/status?userId=... and return the
- *          server-authoritative subscription object.
+ *          server-authoritative purchase object.
  */
 async function _providerFetchStatus(): Promise<PremiumStatus | null> {
   return loadStatus();
-}
-
-/**
- * PAYMENT_PROVIDER_HOOK #3
- * Phase 1: Clear local storage.
- * Phase 2: Call POST /api/payments/cancel and let the provider webhook
- *          update your database; then clear local cache.
- */
-async function _providerCancelSubscription(_subscriptionId: string): Promise<void> {
-  await new Promise(r => setTimeout(r, 800));
-  clearStatus();
 }
 
 // ─────────────────────────────────────────────
@@ -123,38 +108,24 @@ async function _providerCancelSubscription(_subscriptionId: string): Promise<voi
 export async function getPremiumStatus(): Promise<PremiumStatus> {
   const stored = await _providerFetchStatus();
   if (!stored) {
-    return { isPremium: false, plan: null, expiresAt: null, subscriptionId: null };
+    return { isPremium: false, plan: null, expiresAt: null, purchaseId: null };
   }
-
-  // Expire subscriptions automatically for Phase 1
-  if (stored.expiresAt && new Date(stored.expiresAt) < new Date()) {
-    clearStatus();
-    return { isPremium: false, plan: null, expiresAt: null, subscriptionId: null };
-  }
-
   return stored;
 }
 
 /**
- * Purchase a plan.
+ * Purchase lifetime plan.
  * Returns a PurchaseResult so the UI can react without knowing provider details.
  */
-export async function purchasePlan(plan: PremiumPlan): Promise<PurchaseResult> {
+export async function purchasePlan(): Promise<PurchaseResult> {
   try {
-    const { subscriptionId } = await _providerCreateCheckout(plan);
-
-    const expiresAt =
-      plan === 'monthly'
-        ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-        : plan === 'yearly'
-        ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()
-        : null; // lifetime
+    const { purchaseId } = await _providerCreateCheckout();
 
     const status: PremiumStatus = {
       isPremium: true,
-      plan,
-      expiresAt,
-      subscriptionId,
+      plan: 'lifetime',
+      expiresAt: null,
+      purchaseId,
     };
 
     saveStatus(status);
@@ -169,27 +140,8 @@ export async function purchasePlan(plan: PremiumPlan): Promise<PurchaseResult> {
 }
 
 /**
- * Cancel the active subscription.
- */
-export async function cancelSubscription(): Promise<{ success: boolean; error?: string }> {
-  try {
-    const current = await getPremiumStatus();
-    if (!current.isPremium || !current.subscriptionId) {
-      return { success: false, error: 'No active subscription found.' };
-    }
-    await _providerCancelSubscription(current.subscriptionId);
-    return { success: true };
-  } catch (err) {
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : 'Cancellation failed.',
-    };
-  }
-}
-
-/**
- * Restore a purchase (useful for Phase 2 mobile/cross-device scenarios).
- * Phase 1: just re-reads localStorage.
+ * Restore a purchase (cross-device / re-install).
+ * Phase 1: re-reads localStorage.
  * Phase 2: call your provider's restore endpoint.
  */
 export async function restorePurchase(): Promise<PurchaseResult> {
@@ -197,5 +149,5 @@ export async function restorePurchase(): Promise<PurchaseResult> {
   if (status.isPremium) {
     return { success: true, status };
   }
-  return { success: false, status: null, error: 'No active subscription found to restore.' };
+  return { success: false, status: null, error: 'No active purchase found to restore.' };
 }

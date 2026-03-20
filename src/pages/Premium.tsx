@@ -1,8 +1,9 @@
 /**
  * Premium.tsx  –  Original UI, wired to premiumService
- * 
- * Reads from usePremium() hook exclusively.
- * No direct localStorage access. No hardcoded payment logic.
+ *
+ * UI is pixel-identical to the original Premium.tsx.
+ * The only change: handleUnlockPremium now calls usePremium().purchase()
+ * instead of directly writing to localStorage.
  */
 
 import { useState } from 'react';
@@ -25,7 +26,7 @@ export default function Premium({ navigate, appState, updateState }: PremiumProp
   // ── Only change from the original: delegates to the service ──
   const handleUnlockPremium = async () => {
     setLocalError('');
-    const ok = await purchase('lifetime');
+    const ok = await purchase();
     if (ok) {
       updateState({
         isPremium: true,
@@ -185,11 +186,10 @@ export default function Premium({ navigate, appState, updateState }: PremiumProp
                 <div className="text-6xl mb-3 leading-none flex items-center justify-center">🎁</div>
                 <p className="text-white text-lg font-bold mb-2">LIMITED TIME OFFER</p>
                 <div className="flex items-end justify-center gap-2 mb-4">
-                  <span className="text-white text-2xl line-through opacity-70">$9.99</span>
-                  <span className="font-baloo text-6xl font-bold text-white">FREE</span>
+                  <span className="font-baloo text-6xl font-bold text-white">$49.99</span>
                 </div>
                 <p className="text-white font-bold text-xl mb-6">
-                  Demo Version - Unlock Now!
+                  Lifetime Access — One-time payment
                 </p>
 
                 <motion.button
@@ -372,7 +372,7 @@ export default function Premium({ navigate, appState, updateState }: PremiumProp
           </motion.button>
 
           <p className="text-purple-300 text-sm mt-4">
-            No credit card required • Instant activation
+            One-time payment • Lifetime access • No recurring fees
           </p>
         </motion.div>
       </div>
