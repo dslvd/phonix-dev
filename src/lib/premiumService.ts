@@ -16,7 +16,7 @@
 //  TYPES
 // ─────────────────────────────────────────────
 
-export type PremiumPlan = 'monthly' | 'yearly' | 'lifetime';
+export type PremiumPlan = 'lifetime';
 
 export interface PremiumStatus {
   isPremium: boolean;
@@ -37,10 +37,8 @@ export interface PurchaseResult {
 //  PLAN CONFIG  (prices shown to user only)
 // ─────────────────────────────────────────────
 
-export const PLANS: Record<PremiumPlan, { label: string; price: string; period: string; savings?: string }> = {
-  monthly:  { label: 'Monthly',  price: '$4.99',  period: '/mo' },
-  yearly:   { label: 'Yearly',   price: '$29.99', period: '/yr', savings: 'Save 50%' },
-  lifetime: { label: 'Lifetime', price: '$49.99', period: 'once', savings: 'Best Value' },
+export const PLANS: Record<PremiumPlan, { label: string; price: string; period: string }> = {
+  lifetime: { label: 'Lifetime', price: '$49.99', period: 'once' },
 };
 
 // ─────────────────────────────────────────────
