@@ -45,6 +45,7 @@ export function usePremium(): UsePremiumReturn {
 
   const refresh = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const s = await getPremiumStatus();
       setStatus(s);

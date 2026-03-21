@@ -20,7 +20,7 @@ interface PremiumProps {
 }
 
 export default function Premium({ navigate, appState, updateState }: PremiumProps) {
-  const { purchase, loading, error } = usePremium();
+  const { purchase, restore, loading, error, isPremium } = usePremium();
   const [localError, setLocalError] = useState('');
 
   // ── Only change from the original: delegates to the service ──
@@ -146,7 +146,7 @@ export default function Premium({ navigate, appState, updateState }: PremiumProp
           </div>
 
           {/* Current Status Banner */}
-          {!appState.isPremium && (
+          {!isPremium && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}

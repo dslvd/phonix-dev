@@ -118,6 +118,11 @@ export async function getPremiumStatus(): Promise<PremiumStatus> {
  * Returns a PurchaseResult so the UI can react without knowing provider details.
  */
 export async function purchasePlan(): Promise<PurchaseResult> {
+  const existing = await getPremiumStatus();
+  if (existing.isPremium) {
+    return { success: true, status: existing }; // already purchased
+  }
+  
   try {
     const { purchaseId } = await _providerCreateCheckout();
 
