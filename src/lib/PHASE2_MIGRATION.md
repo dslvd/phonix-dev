@@ -8,50 +8,53 @@ The rest of the app (components, pages, hooks) never touches payment details.
 They only call three public functions:
 
 ```
-getPremiumStatus()   →  load current status
-purchasePlan(plan)   →  start a purchase
-cancelSubscription() →  cancel
+getPremiumStatus()  →  load current status on app start
+purchasePlan()      →  initiate the lifetime purchase
+restorePurchase()   →  restore a previous purchase (cross-device / re-install)
 ```
 
-To add a real payment provider, you replace **3 private functions** inside
+To add a real payment provider, you replace **2 private functions** inside
 `premiumService.ts`. Nothing else changes — not the hook, not the UI, not
-App.tsx.
+`App.tsx`.
 
 ---
 
-## The 3 functions to replace
+## The 2 functions to replace
 
 These are clearly marked `// PAYMENT_PROVIDER_HOOK` in the source.
 
-### Hook #1 — `_providerCreateCheckout(plan)`
-Currently: simulates a network call and returns a fake subscription ID.  
-Phase 2: Call your backend to create a checkout session, then redirect the
-user to the provider's payment page.
+### Hook #1 — `_providerCreateCheckout()`
+
+Currently: simulates a network call and returns a fake `purchaseId`.
+Phase 2: call your backend to create a one-time payment checkout session,
+then redirect the user to the provider's hosted payment page.
 
 **Stripe example:**
 ```ts
-async function _providerCreateCheckout(plan: PremiumPlan) {
+async function _providerCreateCheckout(): Promise<{ purchaseId: string }> {
   const res = await fetch('/api/payments/create-checkout', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ plan, userId: getCurrentUserId() }),
+    body: JSON.stringify({ userId: getCurrentUserId() }),
   });
   const { url } = await res.json();
   // Redirect to Stripe Checkout — user returns to /premium?success=true
   window.location.href = url;
   // This line is never reached; the webhook handles completion
-  return { subscriptionId: '' };
+  return { purchaseId: '' };
 }
 ```
 
-**LemonSqueezy example:** Same pattern — create a checkout URL on your
+**LemonSqueezy example:** same pattern — create a checkout URL on your
 backend, redirect the user, handle the webhook.
 
 ---
 
 ### Hook #2 — `_providerFetchStatus()`
-Currently: reads from localStorage.  
-Phase 2: Fetch from your own backend, which is the authoritative source.
+
+Currently: reads from localStorage.
+Phase 2: fetch from your own backend, which is the authoritative source.
+This means users can never fake premium status by editing localStorage.
 
 ```ts
 async function _providerFetchStatus(): Promise<PremiumStatus | null> {
@@ -59,91 +62,81 @@ async function _providerFetchStatus(): Promise<PremiumStatus | null> {
     headers: { Authorization: `Bearer ${getAuthToken()}` },
   });
   if (!res.ok) return null;
-  return res.json(); // shape must match PremiumStatus
+  // Shape must match PremiumStatus: { isPremium, plan, expiresAt, purchaseId }
+  return res.json();
 }
 ```
 
-Your backend reads from your database (updated by the provider's webhook).
-This means users can never fake premium status by editing localStorage.
+Your backend reads from your database, which is updated by the provider's
+webhook whenever a payment is confirmed.
 
 ---
 
-### Hook #3 — `_providerCancelSubscription(subscriptionId)`
-Currently: clears localStorage.  
-Phase 2: Tell your backend to cancel via the provider API.
+## Key differences from a subscription system
 
-```ts
-async function _providerCancelSubscription(subscriptionId: string) {
-  await fetch('/api/payments/cancel', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${getAuthToken()}`,
-    },
-    body: JSON.stringify({ subscriptionId }),
-  });
-  // The provider webhook will update your DB; local cache clears automatically
-}
-```
+Because Phonix uses a **lifetime one-time payment** (not a recurring
+subscription), the integration is simpler than a typical subscription setup:
+
+- `expiresAt` is always `null` — no renewal logic needed
+- `purchaseId` holds the provider's payment/order ID (not a subscription ID)
+- There is no cancel flow — a lifetime purchase is permanent
+- The webhook only needs to handle one event: payment succeeded
+- No need to listen for renewal, failed payment, or cancellation events
 
 ---
 
 ## Backend work needed (provider-agnostic)
 
-Regardless of which provider you choose, you need:
-
 | Endpoint | Purpose |
 |---|---|
 | `POST /api/payments/create-checkout` | Creates a session and returns a checkout URL |
 | `GET /api/payments/status` | Returns the user's current `PremiumStatus` from DB |
-| `POST /api/payments/cancel` | Cancels subscription via provider API |
-| `POST /api/payments/webhook` | Receives provider events; updates your DB |
+| `POST /api/payments/webhook` | Receives the payment success event; updates your DB |
+| `POST /api/payments/restore` | Looks up a previous purchase by user ID or email |
 
 The webhook is the most important piece — it's how you reliably know when a
-payment succeeds, renews, or fails. Never trust the frontend alone.
+payment succeeds. Never trust the frontend alone.
 
 ---
 
 ## Provider-specific notes
 
-### Stripe
-- Use `stripe.checkout.sessions.create()` for `_providerCreateCheckout`
-- Listen for `checkout.session.completed`, `invoice.paid`,
-  `customer.subscription.deleted` webhooks
-- Store `stripe_customer_id` and `stripe_subscription_id` per user in your DB
+### Stripe (one-time payment)
+- Use `stripe.checkout.sessions.create({ mode: 'payment' })` — not
+  `mode: 'subscription'`
+- Listen for the `checkout.session.completed` webhook event only
+- Store the Stripe `payment_intent` ID as `purchaseId` in your DB
 - SDK: `npm install stripe`
 
 ### LemonSqueezy
-- Very similar to Stripe but simpler setup, better for indie projects
-- Use `/v1/checkouts` to create a session
-- Listen for `subscription_created`, `subscription_cancelled` webhooks
+- Use `/v1/checkouts` to create a session with a one-time product
+- Listen for the `order_created` webhook event
+- Store the LemonSqueezy order ID as `purchaseId`
 - SDK: `npm install @lemonsqueezy/lemonsqueezy.js`
 
 ### RevenueCat (best for cross-platform / mobile)
-- Manages iOS, Android, and web subscriptions under one API
+- Create a non-consumable or lifetime entitlement in the dashboard
 - `_providerFetchStatus` calls RevenueCat's `/subscribers/{userId}` endpoint
-- Handles receipt validation and restore automatically
+- `restorePurchase` calls RevenueCat's restore API automatically
 
 ---
 
-## Database schema (minimal, works with Supabase/PlanetScale/Neon)
+## Database schema (minimal, works with Supabase / PlanetScale / Neon)
 
 ```sql
-CREATE TABLE user_subscriptions (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id         TEXT NOT NULL UNIQUE,
-  is_premium      BOOLEAN NOT NULL DEFAULT false,
-  plan            TEXT,                  -- 'monthly' | 'yearly' | 'lifetime'
-  expires_at      TIMESTAMPTZ,
-  subscription_id TEXT,                  -- provider subscription ID
-  provider        TEXT,                  -- 'stripe' | 'lemonsqueezy' | 'revenuecat'
-  created_at      TIMESTAMPTZ DEFAULT now(),
-  updated_at      TIMESTAMPTZ DEFAULT now()
+CREATE TABLE user_purchases (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id     TEXT NOT NULL UNIQUE,
+  is_premium  BOOLEAN NOT NULL DEFAULT false,
+  plan        TEXT DEFAULT 'lifetime',
+  purchase_id TEXT,               -- provider payment/order ID
+  provider    TEXT,               -- 'stripe' | 'lemonsqueezy' | 'revenuecat'
+  purchased_at TIMESTAMPTZ DEFAULT now()
 );
 ```
 
-Your webhook handler updates `is_premium`, `expires_at`, and `updated_at`
-whenever a payment event arrives.
+Note: no `expires_at` column needed — lifetime purchases never expire.
+Your webhook handler inserts or updates a row when payment is confirmed.
 
 ---
 
@@ -151,11 +144,11 @@ whenever a payment event arrives.
 
 - [ ] Choose a payment provider
 - [ ] Set up a backend (Vercel API routes already work — see `api/` folder)
-- [ ] Add user auth so you have a stable `userId` to attach subscriptions to
+- [ ] Add user auth so you have a stable `userId` to attach purchases to
       (Supabase Auth is the simplest addition given the existing stack)
-- [ ] Create the `user_subscriptions` table
-- [ ] Implement the 4 backend endpoints above
-- [ ] Replace the 3 `PAYMENT_PROVIDER_HOOK` functions in `premiumService.ts`
+- [ ] Create the `user_purchases` table
+- [ ] Implement the backend endpoints above
+- [ ] Replace the 2 `PAYMENT_PROVIDER_HOOK` functions in `premiumService.ts`
 - [ ] Remove the "Phase 1 placeholder" note from the Premium UI
 - [ ] Test the full purchase → webhook → status flow in provider sandbox mode
 - [ ] Go live
