@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import Button from '../components/Button';
+import Card from '../components/Card';
 import Mascot from '../components/Mascot';
 import NavigationHeader from '../components/NavigationHeader';
 import { Page, AppState } from '../App';
@@ -88,7 +90,7 @@ export default function SentenceLearning({
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-pink-100 via-yellow-100 to-green-100 flex flex-col">
       <NavigationHeader
         onBack={() => navigate('vocabulary')}
         onLogout={() => navigate('landing')}
@@ -106,89 +108,88 @@ export default function SentenceLearning({
             initial={{ opacity: 0, x: 100 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ type: 'spring', stiffness: 150 }}
-            className="bg-gray-800 rounded-2xl p-6 shadow-2xl"
           >
-            {/* Illustration */}
-            <motion.div
-              animate={{
-                scale: [1, 1.05, 1],
-                rotate: [0, 2, -2, 0],
-              }}
-              transition={{ duration: 3, repeat: Infinity }}
-              className="text-6xl mb-6 text-center leading-none flex items-center justify-center"
-            >
-              {currentSentence.illustration}
-            </motion.div>
+            <Card className="text-center">
+              {/* Illustration */}
+              <motion.div
+                animate={{
+                  scale: [1, 1.05, 1],
+                  rotate: [0, 2, -2, 0],
+                }}
+                transition={{ duration: 3, repeat: Infinity }}
+                className="text-9xl mb-8 leading-none flex items-center justify-center"
+              >
+                {currentSentence.illustration}
+              </motion.div>
 
-            {/* Native Sentence */}
-            <div className="mb-4 bg-gray-700 rounded-lg p-4">
-              <p className="text-xs font-bold text-gray-400 mb-2">
-                {appState.targetLanguage}
-              </p>
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="text-lg font-bold text-white">
-                  {currentSentence.nativeSentence}
-                </h2>
-                <button
-                  onClick={(e) => playAudio(currentSentence.nativeSentence, e)}
-                  className="flex-shrink-0 px-3 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition-all"
-                >
-                  🔊
-                </button>
+              {/* Native Sentence */}
+              <div className="mb-8 bg-gradient-to-r from-purple-100 to-pink-100 rounded-2xl p-6">
+                <p className="text-sm font-bold text-gray-600 mb-3">
+                  {appState.targetLanguage}:
+                </p>
+                <div className="flex items-center justify-center gap-4">
+                  <h2 className="font-baloo text-3xl md:text-4xl font-bold text-gray-800 leading-relaxed">
+                    {currentSentence.nativeSentence}
+                  </h2>
+                  <button
+                    onClick={(e) => playAudio(currentSentence.nativeSentence, e)}
+                    className="bg-primary text-white p-4 rounded-full hover:scale-110 transition-transform flex-shrink-0"
+                  >
+                    🔊
+                  </button>
+                </div>
               </div>
-            </div>
 
-            {/* English Translation */}
-            <div className="bg-gray-700 rounded-lg p-4">
-              <p className="text-xs font-bold text-gray-400 mb-2">
-                {appState.nativeLanguage}
-              </p>
-              <div className="flex items-center justify-between gap-3">
-                <h3 className="text-lg font-bold text-white">
-                  {currentSentence.englishSentence}
-                </h3>
-                <button
-                  onClick={(e) => playAudio(currentSentence.englishSentence, e)}
-                  className="flex-shrink-0 px-3 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition-all"
-                >
-                  🔊
-                </button>
+              {/* English Translation */}
+              <div className="bg-white border-4 border-secondary rounded-2xl p-6 shadow-lg">
+                <p className="text-sm font-bold text-gray-600 mb-3">
+                  {appState.nativeLanguage}:
+                </p>
+                <div className="flex items-center justify-center gap-4">
+                  <h3 className="font-baloo text-3xl md:text-4xl font-bold text-secondary leading-relaxed">
+                    {currentSentence.englishSentence}
+                  </h3>
+                  <button
+                    onClick={(e) => playAudio(currentSentence.englishSentence, e)}
+                    className="bg-secondary text-white p-4 rounded-full hover:scale-110 transition-transform flex-shrink-0"
+                  >
+                    🔊
+                  </button>
+                </div>
               </div>
-            </div>
+            </Card>
           </motion.div>
 
-          {/* Navigation Buttons - Small */}
-          <div className="flex gap-2 mt-4">
-            <button
+          {/* Navigation Buttons */}
+          <div className="flex gap-4 mt-6">
+            <Button
+              variant="outline"
               onClick={handlePrevious}
               disabled={currentIndex === 0}
-              className={`flex-1 py-2 px-3 rounded-lg font-bold text-sm transition-all ${
-                currentIndex === 0
-                  ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                  : 'bg-gray-700 text-white hover:bg-gray-600'
-              }`}
+              className="flex-1"
             >
-              ← Prev
-            </button>
-            <button
+              ← Previous
+            </Button>
+            <Button
+              variant="primary"
               onClick={handleNext}
-              className="flex-1 py-2 px-3 bg-blue-600 text-white font-bold text-sm rounded-lg hover:bg-blue-700 transition-all"
+              className="flex-1"
             >
-              {currentIndex === sentenceData.length - 1 ? 'Done!' : 'Next →'}
-            </button>
+              {currentIndex === sentenceData.length - 1 ? 'Finish! 🎉' : 'Next →'}
+            </Button>
           </div>
 
           {/* Progress Dots */}
-          <div className="mt-4 flex justify-center gap-1">
+          <div className="mt-4 flex justify-center gap-2">
             {sentenceData.map((_, index) => (
               <div
                 key={index}
-                className={`w-2 h-2 rounded-full transition-all ${
+                className={`w-3 h-3 rounded-full transition-all ${
                   index === currentIndex
-                    ? 'bg-blue-600 w-4'
+                    ? 'bg-secondary w-6'
                     : index < currentIndex
-                    ? 'bg-green-600'
-                    : 'bg-gray-700'
+                    ? 'bg-success'
+                    : 'bg-gray-300'
                 }`}
               />
             ))}
