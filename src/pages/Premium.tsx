@@ -85,7 +85,7 @@ export default function Premium({ navigate, appState, updateState }: PremiumProp
       <div className="fixed inset-0 bg-gradient-to-br from-purple-900 via-pink-900 to-indigo-900 -z-10" />
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(251,191,36,0.15),transparent_50%)] -z-10" />
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(168,85,247,0.2),transparent_50%)] -z-10" />
-
+      
       {/* Animated stars */}
       {[...Array(20)].map((_, i) => (
         <motion.div
@@ -106,7 +106,7 @@ export default function Premium({ navigate, appState, updateState }: PremiumProp
           }}
         />
       ))}
-
+      
       <NavigationHeader
         onBack={() => navigate('dashboard')}
         onLogout={() => navigate('landing')}
