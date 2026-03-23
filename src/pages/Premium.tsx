@@ -67,7 +67,32 @@ export default function Premium({ navigate, appState, updateState }: PremiumProp
   ];
 
   return (
-    <div className="min-h-screen bg-gray-900 relative overflow-hidden pb-20">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Premium animated background */}
+      <div className="fixed inset-0 bg-gradient-to-br from-purple-900 via-pink-900 to-indigo-900 -z-10" />
+      <div className="fixed inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(251,191,36,0.15),transparent_50%)] -z-10" />
+      <div className="fixed inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(168,85,247,0.2),transparent_50%)] -z-10" />
+      
+      {/* Animated stars */}
+      {[...Array(20)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="fixed w-2 h-2 bg-yellow-300 rounded-full"
+          style={{
+            top: `${Math.random() * 100}%`,
+            left: `${Math.random() * 100}%`,
+          }}
+          animate={{
+            opacity: [0.2, 1, 0.2],
+            scale: [1, 1.5, 1],
+          }}
+          transition={{
+            duration: 2 + Math.random() * 2,
+            repeat: Infinity,
+            delay: Math.random() * 2,
+          }}
+        />
+      ))}
       
       <NavigationHeader
         onBack={() => navigate('dashboard')}

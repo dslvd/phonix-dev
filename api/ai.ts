@@ -19,9 +19,16 @@ async function callGemini(prompt: string, apiKey: string) {
   );
 
   const data = await response.json();
+  console.log('Gemini text response:', data);
+
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!response.ok || !text) {
-    throw new Error('gemini-failed');
+
+  if (!response.ok) {
+    throw new Error(data?.error?.message || 'gemini-failed');
+  }
+
+  if (!text) {
+    throw new Error('Gemini returned no text');
   }
 
   return { text, provider: 'gemini' };
@@ -43,9 +50,16 @@ async function callOpenRouter(prompt: string, apiKey: string) {
   });
 
   const data = await response.json();
+  console.log('OpenRouter text response:', data);
+
   const text = data?.choices?.[0]?.message?.content;
-  if (!response.ok || !text) {
-    throw new Error('openrouter-failed');
+
+  if (!response.ok) {
+    throw new Error(data?.error?.message || 'openrouter-failed');
+  }
+
+  if (!text) {
+    throw new Error('OpenRouter returned no text');
   }
 
   return { text, provider: 'openrouter' };
@@ -65,9 +79,16 @@ async function callGroq(prompt: string, apiKey: string) {
   });
 
   const data = await response.json();
+  console.log('Groq text response:', data);
+
   const text = data?.choices?.[0]?.message?.content;
-  if (!response.ok || !text) {
-    throw new Error('groq-failed');
+
+  if (!response.ok) {
+    throw new Error(data?.error?.message || 'groq-failed');
+  }
+
+  if (!text) {
+    throw new Error('Groq returned no text');
   }
 
   return { text, provider: 'groq' };
@@ -87,36 +108,46 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
+    console.log('AI route hit');
+    console.log('Has GEMINI_API_KEY:', !!process.env.GEMINI_API_KEY);
+    console.log('Has OPENROUTER_API_KEY:', !!process.env.OPENROUTER_API_KEY);
+    console.log('Has GROQ_API_KEY:', !!process.env.GROQ_API_KEY);
+
     const providers = [
-      process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY
-        ? () => callGemini(prompt, process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '')
+      process.env.GEMINI_API_KEY
+        ? () => callGemini(prompt, process.env.GEMINI_API_KEY as string)
         : null,
       process.env.OPENROUTER_API_KEY
-        ? () => callOpenRouter(prompt, process.env.OPENROUTER_API_KEY || '')
+        ? () => callOpenRouter(prompt, process.env.OPENROUTER_API_KEY as string)
         : null,
       process.env.GROQ_API_KEY
-        ? () => callGroq(prompt, process.env.GROQ_API_KEY || '')
+        ? () => callGroq(prompt, process.env.GROQ_API_KEY as string)
         : null,
     ].filter(Boolean) as Array<() => Promise<{ text: string; provider: string }>>;
 
     if (providers.length === 0) {
-      res.status(500).json({ error: 'No AI provider configured. Add GEMINI_API_KEY, OPENROUTER_API_KEY, or GROQ_API_KEY.' });
+      res.status(500).json({
+        error: 'No AI provider configured. Add GEMINI_API_KEY, OPENROUTER_API_KEY, or GROQ_API_KEY.',
+      });
       return;
     }
 
     let lastError: unknown = null;
+
     for (const provider of providers) {
       try {
         const result = await provider();
         res.status(200).json(result);
         return;
       } catch (error) {
+        console.error('Provider failed:', error);
         lastError = error;
       }
     }
 
     res.status(502).json({ error: 'All AI providers failed', details: String(lastError) });
   } catch (error) {
+    console.error('AI route internal error:', error);
     res.status(500).json({ error: 'Internal server error', details: String(error) });
   }
 }

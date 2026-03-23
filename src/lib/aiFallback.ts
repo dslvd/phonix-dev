@@ -115,7 +115,7 @@ export async function askCloudAI(prompt: string) {
   try {
     const apiResponse = await postJson<{ text?: string }>('/api/ai', { prompt });
     if (apiResponse.text) {
-      return apiResponse.text;
+      return apiResponse.text.replace(/\*\*/g, '');
     }
   } catch (error) {
     console.warn('Server AI route unavailable, falling back to browser request.', error);
@@ -127,16 +127,42 @@ export async function askCloudAI(prompt: string) {
     throw new Error('missing-api-key');
   }
 
-  const data = await postJson<{ candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> }>(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
+  const response = await fetch(
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
     {
-      contents: [{
-        parts: [{ text: prompt }],
-      }],
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey,
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: `${prompt}. Respond in plain text only. Do not use markdown, bold, or formatting.`,
+              },
+            ],
+          },
+        ],
+      }),
     }
   );
 
-  return data.candidates?.[0]?.content?.parts?.[0]?.text as string | undefined;
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    console.error('Gemini browser error:', data);
+    throw new Error(`request-failed:${response.status}`);
+  }
+
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+  if (!text) {
+    throw new Error('no-text-returned');
+  }
+
+  return text.replace(/\*\*/g, '');
 }
 
 export async function analyzeImageWithAI(base64Data: string, targetLanguage: string) {
@@ -147,7 +173,7 @@ export async function analyzeImageWithAI(base64Data: string, targetLanguage: str
     });
 
     if (apiResponse.text) {
-      return apiResponse.text;
+      return apiResponse.text.replace(/\*\*/g, '');
     }
   } catch (error) {
     console.warn('Server vision route unavailable, falling back to browser request.', error);
@@ -159,24 +185,46 @@ export async function analyzeImageWithAI(base64Data: string, targetLanguage: str
     throw new Error('missing-api-key');
   }
 
-  const data = await postJson<{ candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> }>(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+  const response = await fetch(
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
     {
-      contents: [{
-        parts: [
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey,
+      },
+      body: JSON.stringify({
+        contents: [
           {
-            text: `Identify the main object in this image in English. Then translate it to ${targetLanguage}. Format exactly: Object: [name] | Translation: [${targetLanguage} word]. Keep it simple and concise.`,
-          },
-          {
-            inline_data: {
-              mime_type: 'image/jpeg',
-              data: base64Data,
-            },
+            parts: [
+              {
+                text: `Identify the main object in this image in English. Then translate it to ${targetLanguage}. Format exactly: Object: [name] | Translation: [${targetLanguage} word]. Keep it simple and concise. Respond in plain text only. Do not use markdown, bold, or formatting.`,
+              },
+              {
+                inline_data: {
+                  mime_type: 'image/jpeg',
+                  data: base64Data,
+                },
+              },
+            ],
           },
         ],
-      }],
+      }),
     }
   );
 
-  return data.candidates?.[0]?.content?.parts?.[0]?.text as string | undefined;
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    console.error('Gemini vision browser error:', data);
+    throw new Error(`request-failed:${response.status}`);
+  }
+
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+  if (!text) {
+    throw new Error('no-text-returned');
+  }
+
+  return text.replace(/\*\*/g, '');
 }

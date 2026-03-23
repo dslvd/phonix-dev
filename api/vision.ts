@@ -29,9 +29,16 @@ async function callGeminiVision(image: string, targetLanguage: string, apiKey: s
   );
 
   const data = await response.json();
+  console.log('Gemini vision response:', data);
+
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!response.ok || !text) {
-    throw new Error('gemini-vision-failed');
+
+  if (!response.ok) {
+    throw new Error(data?.error?.message || 'gemini-vision-failed');
+  }
+
+  if (!text) {
+    throw new Error('Gemini vision returned no text');
   }
 
   return { text, provider: 'gemini' };
@@ -69,9 +76,16 @@ async function callOpenRouterVision(image: string, targetLanguage: string, apiKe
   });
 
   const data = await response.json();
+  console.log('OpenRouter vision response:', data);
+
   const text = data?.choices?.[0]?.message?.content;
-  if (!response.ok || !text) {
-    throw new Error('openrouter-vision-failed');
+
+  if (!response.ok) {
+    throw new Error(data?.error?.message || 'openrouter-vision-failed');
+  }
+
+  if (!text) {
+    throw new Error('OpenRouter vision returned no text');
   }
 
   return { text, provider: 'openrouter' };
@@ -92,33 +106,42 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
+    console.log('Vision route hit');
+    console.log('Has GEMINI_API_KEY:', !!process.env.GEMINI_API_KEY);
+    console.log('Has OPENROUTER_API_KEY:', !!process.env.OPENROUTER_API_KEY);
+
     const providers = [
-      process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY
-        ? () => callGeminiVision(image, targetLanguage, process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '')
+      process.env.GEMINI_API_KEY
+        ? () => callGeminiVision(image, targetLanguage, process.env.GEMINI_API_KEY as string)
         : null,
       process.env.OPENROUTER_API_KEY
-        ? () => callOpenRouterVision(image, targetLanguage, process.env.OPENROUTER_API_KEY || '')
+        ? () => callOpenRouterVision(image, targetLanguage, process.env.OPENROUTER_API_KEY as string)
         : null,
     ].filter(Boolean) as Array<() => Promise<{ text: string; provider: string }>>;
 
     if (providers.length === 0) {
-      res.status(500).json({ error: 'No vision provider configured. Add GEMINI_API_KEY or OPENROUTER_API_KEY.' });
+      res.status(500).json({
+        error: 'No vision provider configured. Add GEMINI_API_KEY or OPENROUTER_API_KEY.',
+      });
       return;
     }
 
     let lastError: unknown = null;
+
     for (const provider of providers) {
       try {
         const result = await provider();
         res.status(200).json(result);
         return;
       } catch (error) {
+        console.error('Vision provider failed:', error);
         lastError = error;
       }
     }
 
     res.status(502).json({ error: 'All vision providers failed', details: String(lastError) });
   } catch (error) {
+    console.error('Vision route internal error:', error);
     res.status(500).json({ error: 'Internal server error', details: String(error) });
   }
 }
