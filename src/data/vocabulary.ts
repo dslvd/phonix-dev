@@ -1,516 +1,180 @@
-export interface VocabularyItem {
-  id: string;
-  nativeWord: string; // e.g., "Kuring"
-  englishWord: string; // e.g., "Cat"
-  category: string;
-  emoji: string;
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
-  audioUrl?: string;
+// ─── Domain Model Classes ────────────────────────────────────────────────────
+
+export type Difficulty = 'beginner' | 'intermediate' | 'advanced';
+
+export class VocabularyItem {
+  constructor(
+    public readonly id: string,
+    public readonly nativeWord: string,
+    public readonly englishWord: string,
+    public readonly category: string,
+    public readonly emoji: string,
+    public readonly difficulty: Difficulty,
+    public readonly audioUrl?: string,
+  ) {}
+
+  matchesQuery(query: string): boolean {
+    const q = query.toLowerCase().trim();
+    return (
+      this.englishWord.toLowerCase() === q ||
+      this.nativeWord.toLowerCase() === q ||
+      this.englishWord.toLowerCase().includes(q) ||
+      q.includes(this.englishWord.toLowerCase()) ||
+      this.nativeWord.toLowerCase().includes(q) ||
+      q.includes(this.nativeWord.toLowerCase()) ||
+      this.category.toLowerCase() === q
+    );
+  }
+
+  toDisplayString(): string {
+    return `${this.emoji} ${this.englishWord} → ${this.nativeWord}`;
+  }
 }
 
-export interface SentenceItem {
-  id: string;
-  nativeSentence: string; // e.g., "Nagakatulog ang kuring"
-  englishSentence: string; // e.g., "The cat is sleeping"
-  illustration: string; // emoji or image
-  audioUrl?: string;
+export class SentenceItem {
+  constructor(
+    public readonly id: string,
+    public readonly nativeSentence: string,
+    public readonly englishSentence: string,
+    public readonly illustration: string,
+    public readonly audioUrl?: string,
+  ) {}
 }
 
-// Example vocabulary data (Filipino/Hiligaynon to English)
-export const vocabularyData: VocabularyItem[] = [
-  // Animals
-  // BEGINNER ANIMALS (9 words)
-  {
-    id: 'cat',
-    nativeWord: 'Kuring',
-    englishWord: 'Cat',
-    category: 'animals',
-    emoji: '🐱',
-    difficulty: 'beginner',
-  },
-  {
-    id: 'dog',
-    nativeWord: 'Ido',
-    englishWord: 'Dog',
-    category: 'animals',
-    emoji: '🐶',
-    difficulty: 'beginner',
-  },
-  {
-    id: 'sheep',
-    nativeWord: 'Karniro',
-    englishWord: 'Sheep',
-    category: 'animals',
-    emoji: '🐑',
-    difficulty: 'beginner',
-  },
-  {
-    id: 'duck',
-    nativeWord: 'Pato',
-    englishWord: 'Duck',
-    category: 'animals',
-    emoji: '🦆',
-    difficulty: 'beginner',
-  },
-  {
-    id: 'chicken',
-    nativeWord: 'Manok',
-    englishWord: 'Chicken',
-    category: 'animals',
-    emoji: '🐔',
-    difficulty: 'beginner',
-  },
-  {
-    id: 'pig',
-    nativeWord: 'Baboy',
-    englishWord: 'Pig',
-    category: 'animals',
-    emoji: '🐷',
-    difficulty: 'beginner',
-  },
-  {
-    id: 'cow',
-    nativeWord: 'Baka',
-    englishWord: 'Cow',
-    category: 'animals',
-    emoji: '🐄',
-    difficulty: 'beginner',
-  },
-  {
-    id: 'bird',
-    nativeWord: 'Pispis',
-    englishWord: 'Bird',
-    category: 'animals',
-    emoji: '🐦',
-    difficulty: 'beginner',
-  },
-  {
-    id: 'fish',
-    nativeWord: 'Isda',
-    englishWord: 'Fish',
-    category: 'animals',
-    emoji: '🐟',
-    difficulty: 'beginner',
-  },
+// ─── Vocabulary Repository ────────────────────────────────────────────────────
 
-  // INTERMEDIATE ANIMALS (9 words)
-  {
-    id: 'elephant',
-    nativeWord: 'Elepante',
-    englishWord: 'Elephant',
-    category: 'animals',
-    emoji: '🐘',
-    difficulty: 'intermediate',
-  },
-  {
-    id: 'horse',
-    nativeWord: 'Kabayo',
-    englishWord: 'Horse',
-    category: 'animals',
-    emoji: '🐴',
-    difficulty: 'intermediate',
-  },
-  {
-    id: 'carabao',
-    nativeWord: 'Karabaw',
-    englishWord: 'Carabao',
-    category: 'animals',
-    emoji: '🐃',
-    difficulty: 'intermediate',
-  },
-  {
-    id: 'monkey',
-    nativeWord: 'Amo',
-    englishWord: 'Monkey',
-    category: 'animals',
-    emoji: '🐵',
-    difficulty: 'intermediate',
-  },
-  {
-    id: 'butterfly',
-    nativeWord: 'Alibangbang',
-    englishWord: 'Butterfly',
-    category: 'animals',
-    emoji: '🦋',
-    difficulty: 'intermediate',
-  },
-  {
-    id: 'rabbit',
-    nativeWord: 'Kuneho',
-    englishWord: 'Rabbit',
-    category: 'animals',
-    emoji: '🐰',
-    difficulty: 'intermediate',
-  },
-  {
-    id: 'turtle',
-    nativeWord: 'Pawikan',
-    englishWord: 'Turtle',
-    category: 'animals',
-    emoji: '🐢',
-    difficulty: 'intermediate',
-  },
-  {
-    id: 'frog',
-    nativeWord: 'Tukak',
-    englishWord: 'Frog',
-    category: 'animals',
-    emoji: '🐸',
-    difficulty: 'intermediate',
-  },
-  {
-    id: 'snake',
-    nativeWord: 'Halas',
-    englishWord: 'Snake',
-    category: 'animals',
-    emoji: '🐍',
-    difficulty: 'intermediate',
-  },
+export class VocabularyRepository {
+  private static instance: VocabularyRepository;
+  private readonly items: VocabularyItem[];
+  private readonly sentences: SentenceItem[];
 
-  // ADVANCED ANIMALS (2 words)
-  {
-    id: 'crab',
-    nativeWord: 'Kasag',
-    englishWord: 'Crab',
-    category: 'animals',
-    emoji: '🦀',
-    difficulty: 'advanced',
-  },
-  {
-    id: 'shrimp',
-    nativeWord: 'Pasayan',
-    englishWord: 'Shrimp',
-    category: 'animals',
-    emoji: '🦐',
-    difficulty: 'advanced',
-  },
+  private constructor() {
+    this.items = VocabularyRepository.buildItems();
+    this.sentences = VocabularyRepository.buildSentences();
+  }
 
-  // Food
-  // BEGINNER FOOD (5 words)
-  {
-    id: 'rice',
-    nativeWord: 'Kan-on',
-    englishWord: 'Rice',
-    category: 'food',
-    emoji: '🍚',
-    difficulty: 'beginner',
-  },
-  {
-    id: 'bread',
-    nativeWord: 'Tinapay',
-    englishWord: 'Bread',
-    category: 'food',
-    emoji: '🍞',
-    difficulty: 'beginner',
-  },
-  {
-    id: 'egg',
-    nativeWord: 'Itlog',
-    englishWord: 'Egg',
-    category: 'food',
-    emoji: '🥚',
-    difficulty: 'beginner',
-  },
-  {
-    id: 'water',
-    nativeWord: 'Tubig',
-    englishWord: 'Water',
-    category: 'food',
-    emoji: '💧',
-    difficulty: 'beginner',
-  },
-  {
-    id: 'milk',
-    nativeWord: 'Gatas',
-    englishWord: 'Milk',
-    category: 'food',
-    emoji: '🥛',
-    difficulty: 'beginner',
-  },
+  static getInstance(): VocabularyRepository {
+    if (!VocabularyRepository.instance) {
+      VocabularyRepository.instance = new VocabularyRepository();
+    }
+    return VocabularyRepository.instance;
+  }
 
-  // INTERMEDIATE FOOD (5 words)
-  {
-    id: 'banana',
-    nativeWord: 'Saging',
-    englishWord: 'Banana',
-    category: 'food',
-    emoji: '🍌',
-    difficulty: 'intermediate',
-  },
-  {
-    id: 'mango',
-    nativeWord: 'Mangga',
-    englishWord: 'Mango',
-    category: 'food',
-    emoji: '🥭',
-    difficulty: 'intermediate',
-  },
-  {
-    id: 'coconut',
-    nativeWord: 'Lubi',
-    englishWord: 'Coconut',
-    category: 'food',
-    emoji: '🥥',
-    difficulty: 'intermediate',
-  },
-  {
-    id: 'apple',
-    nativeWord: 'Mansanas',
-    englishWord: 'Apple',
-    category: 'food',
-    emoji: '🍎',
-    difficulty: 'intermediate',
-  },
-  {
-    id: 'orange',
-    nativeWord: 'Dalandan',
-    englishWord: 'Orange',
-    category: 'food',
-    emoji: '🍊',
-    difficulty: 'intermediate',
-  },
+  getAll(): VocabularyItem[] {
+    return [...this.items];
+  }
 
-  // Colors
-  // BEGINNER COLORS (6 words)
-  {
-    id: 'red',
-    nativeWord: 'Pula',
-    englishWord: 'Red',
-    category: 'colors',
-    emoji: '🔴',
-    difficulty: 'beginner',
-  },
-  {
-    id: 'blue',
-    nativeWord: 'Asul',
-    englishWord: 'Blue',
-    category: 'colors',
-    emoji: '🔵',
-    difficulty: 'beginner',
-  },
-  {
-    id: 'yellow',
-    nativeWord: 'Dalag',
-    englishWord: 'Yellow',
-    category: 'colors',
-    emoji: '🟡',
-    difficulty: 'beginner',
-  },
-  {
-    id: 'green',
-    nativeWord: 'Lunhaw',
-    englishWord: 'Green',
-    category: 'colors',
-    emoji: '🟢',
-    difficulty: 'beginner',
-  },
-  {
-    id: 'white',
-    nativeWord: 'Puti',
-    englishWord: 'White',
-    category: 'colors',
-    emoji: '⚪',
-    difficulty: 'beginner',
-  },
-  {
-    id: 'black',
-    nativeWord: 'Itom',
-    englishWord: 'Black',
-    category: 'colors',
-    emoji: '⚫',
-    difficulty: 'beginner',
-  },
+  getByDifficulty(difficulty: Difficulty): VocabularyItem[] {
+    return this.items.filter((item) => item.difficulty === difficulty);
+  }
 
-  // Body Parts
-  // INTERMEDIATE BODY PARTS (6 words)
-  {
-    id: 'head',
-    nativeWord: 'Ulo',
-    englishWord: 'Head',
-    category: 'body',
-    emoji: '👤',
-    difficulty: 'intermediate',
-  },
-  {
-    id: 'eye',
-    nativeWord: 'Mata',
-    englishWord: 'Eye',
-    category: 'body',
-    emoji: '👁️',
-    difficulty: 'intermediate',
-  },
-  {
-    id: 'nose',
-    nativeWord: 'Ilong',
-    englishWord: 'Nose',
-    category: 'body',
-    emoji: '👃',
-    difficulty: 'intermediate',
-  },
-  {
-    id: 'mouth',
-    nativeWord: 'Baba',
-    englishWord: 'Mouth',
-    category: 'body',
-    emoji: '👄',
-    difficulty: 'intermediate',
-  },
-  {
-    id: 'hand',
-    nativeWord: 'Kamot',
-    englishWord: 'Hand',
-    category: 'body',
-    emoji: '✋',
-    difficulty: 'intermediate',
-  },
-  {
-    id: 'foot',
-    nativeWord: 'Tiil',
-    englishWord: 'Foot',
-    category: 'body',
-    emoji: '🦶',
-    difficulty: 'intermediate',
-  },
+  getByCategory(category: string): VocabularyItem[] {
+    return this.items.filter((item) => item.category === category);
+  }
 
-  // Family
-  // ADVANCED FAMILY (5 words)
-  {
-    id: 'mother',
-    nativeWord: 'Iloy',
-    englishWord: 'Mother',
-    category: 'family',
-    emoji: '👩',
-    difficulty: 'advanced',
-  },
-  {
-    id: 'father',
-    nativeWord: 'Tatay',
-    englishWord: 'Father',
-    category: 'family',
-    emoji: '👨',
-    difficulty: 'advanced',
-  },
-  {
-    id: 'sister',
-    nativeWord: 'Manghod',
-    englishWord: 'Sister',
-    category: 'family',
-    emoji: '👧',
-    difficulty: 'advanced',
-  },
-  {
-    id: 'brother',
-    nativeWord: 'Manghod',
-    englishWord: 'Brother',
-    category: 'family',
-    emoji: '👦',
-    difficulty: 'advanced',
-  },
-  {
-    id: 'baby',
-    nativeWord: 'Bata',
-    englishWord: 'Baby',
-    category: 'family',
-    emoji: '👶',
-    difficulty: 'advanced',
-  },
-];
+  findById(id: string): VocabularyItem | undefined {
+    return this.items.find((item) => item.id === id);
+  }
 
-// Helper functions to filter vocabulary by difficulty
-export const getBeginnerWords = () => vocabularyData.filter(item => item.difficulty === 'beginner');
-export const getIntermediateWords = () => vocabularyData.filter(item => item.difficulty === 'intermediate');
-export const getAdvancedWords = () => vocabularyData.filter(item => item.difficulty === 'advanced');
+  findByQuery(query: string): VocabularyItem | undefined {
+    return this.items.find((item) => item.matchesQuery(query));
+  }
 
-// Example sentence data
-export const sentenceData: SentenceItem[] = [
-  {
-    id: 'cat-sleeping',
-    nativeSentence: 'Nagakatulog ang kuring',
-    englishSentence: 'The cat is sleeping',
-    illustration: '😴🐱',
-  },
-  {
-    id: 'dog-running',
-    nativeSentence: 'Nagadalagan ang ido',
-    englishSentence: 'The dog is running',
-    illustration: '🏃🐶',
-  },
-  {
-    id: 'bird-flying',
-    nativeSentence: 'Nagalupad ang pispis',
-    englishSentence: 'The bird is flying',
-    illustration: '🦅✈️',
-  },
-  {
-    id: 'fish-swimming',
-    nativeSentence: 'Nagalangoy ang isda',
-    englishSentence: 'The fish is swimming',
-    illustration: '🐟💦',
-  },
-  {
-    id: 'chicken-eating',
-    nativeSentence: 'Nagakaon ang manok',
-    englishSentence: 'The chicken is eating',
-    illustration: '🐔🌾',
-  },
-  {
-    id: 'elephant-big',
-    nativeSentence: 'Dako ang elepante',
-    englishSentence: 'The elephant is big',
-    illustration: '🐘💪',
-  },
-  {
-    id: 'monkey-jumping',
-    nativeSentence: 'Nagalukso ang amo',
-    englishSentence: 'The monkey is jumping',
-    illustration: '🐵🤸',
-  },
-  {
-    id: 'rabbit-eating',
-    nativeSentence: 'Nagakaon ang kuneho',
-    englishSentence: 'The rabbit is eating',
-    illustration: '🐰🥕',
-  },
-  {
-    id: 'happy-child',
-    nativeSentence: 'Malipayon ang bata',
-    englishSentence: 'The child is happy',
-    illustration: '😊👶',
-  },
-  {
-    id: 'mother-cooking',
-    nativeSentence: 'Nagaluto ang iloy',
-    englishSentence: 'Mother is cooking',
-    illustration: '👩‍🍳🍳',
-  },
-  {
-    id: 'father-working',
-    nativeSentence: 'Nagaobra ang tatay',
-    englishSentence: 'Father is working',
-    illustration: '👨‍💼💼',
-  },
-  {
-    id: 'eating-rice',
-    nativeSentence: 'Nagakaon ako sang kan-on',
-    englishSentence: 'I am eating rice',
-    illustration: '🍚😋',
-  },
-  {
-    id: 'drinking-water',
-    nativeSentence: 'Nagainom ako sang tubig',
-    englishSentence: 'I am drinking water',
-    illustration: '💧🥤',
-  },
-  {
-    id: 'red-apple',
-    nativeSentence: 'Pula ang mansanas',
-    englishSentence: 'The apple is red',
-    illustration: '🍎🔴',
-  },
-  {
-    id: 'sun-shining',
-    nativeSentence: 'Naga-init ang adlaw',
-    englishSentence: 'The sun is hot',
-    illustration: '☀️🔥',
-  },
-];
+  getAllSentences(): SentenceItem[] {
+    return [...this.sentences];
+  }
+
+  get totalCount(): number {
+    return this.items.length;
+  }
+
+  private static buildItems(): VocabularyItem[] {
+    return [
+      // BEGINNER ANIMALS
+      new VocabularyItem('cat', 'Kuring', 'Cat', 'animals', '🐱', 'beginner'),
+      new VocabularyItem('dog', 'Ido', 'Dog', 'animals', '🐶', 'beginner'),
+      new VocabularyItem('sheep', 'Karniro', 'Sheep', 'animals', '🐑', 'beginner'),
+      new VocabularyItem('duck', 'Pato', 'Duck', 'animals', '🦆', 'beginner'),
+      new VocabularyItem('chicken', 'Manok', 'Chicken', 'animals', '🐔', 'beginner'),
+      new VocabularyItem('pig', 'Baboy', 'Pig', 'animals', '🐷', 'beginner'),
+      new VocabularyItem('cow', 'Baka', 'Cow', 'animals', '🐄', 'beginner'),
+      new VocabularyItem('bird', 'Pispis', 'Bird', 'animals', '🐦', 'beginner'),
+      new VocabularyItem('fish', 'Isda', 'Fish', 'animals', '🐟', 'beginner'),
+      // INTERMEDIATE ANIMALS
+      new VocabularyItem('elephant', 'Elepante', 'Elephant', 'animals', '🐘', 'intermediate'),
+      new VocabularyItem('horse', 'Kabayo', 'Horse', 'animals', '🐴', 'intermediate'),
+      new VocabularyItem('carabao', 'Karabaw', 'Carabao', 'animals', '🐃', 'intermediate'),
+      new VocabularyItem('monkey', 'Amo', 'Monkey', 'animals', '🐵', 'intermediate'),
+      new VocabularyItem('butterfly', 'Alibangbang', 'Butterfly', 'animals', '🦋', 'intermediate'),
+      new VocabularyItem('rabbit', 'Kuneho', 'Rabbit', 'animals', '🐰', 'intermediate'),
+      new VocabularyItem('turtle', 'Pawikan', 'Turtle', 'animals', '🐢', 'intermediate'),
+      new VocabularyItem('frog', 'Tukak', 'Frog', 'animals', '🐸', 'intermediate'),
+      new VocabularyItem('snake', 'Halas', 'Snake', 'animals', '🐍', 'intermediate'),
+      // ADVANCED ANIMALS
+      new VocabularyItem('crab', 'Kasag', 'Crab', 'animals', '🦀', 'advanced'),
+      new VocabularyItem('shrimp', 'Pasayan', 'Shrimp', 'animals', '🦐', 'advanced'),
+      // BEGINNER FOOD
+      new VocabularyItem('rice', 'Kan-on', 'Rice', 'food', '🍚', 'beginner'),
+      new VocabularyItem('bread', 'Tinapay', 'Bread', 'food', '🍞', 'beginner'),
+      new VocabularyItem('egg', 'Itlog', 'Egg', 'food', '🥚', 'beginner'),
+      new VocabularyItem('water', 'Tubig', 'Water', 'food', '💧', 'beginner'),
+      new VocabularyItem('milk', 'Gatas', 'Milk', 'food', '🥛', 'beginner'),
+      // INTERMEDIATE FOOD
+      new VocabularyItem('banana', 'Saging', 'Banana', 'food', '🍌', 'intermediate'),
+      new VocabularyItem('mango', 'Mangga', 'Mango', 'food', '🥭', 'intermediate'),
+      new VocabularyItem('coconut', 'Lubi', 'Coconut', 'food', '🥥', 'intermediate'),
+      new VocabularyItem('apple', 'Mansanas', 'Apple', 'food', '🍎', 'intermediate'),
+      new VocabularyItem('orange', 'Dalandan', 'Orange', 'food', '🍊', 'intermediate'),
+      // BEGINNER COLORS
+      new VocabularyItem('red', 'Pula', 'Red', 'colors', '🔴', 'beginner'),
+      new VocabularyItem('blue', 'Asul', 'Blue', 'colors', '🔵', 'beginner'),
+      new VocabularyItem('yellow', 'Dalag', 'Yellow', 'colors', '🟡', 'beginner'),
+      new VocabularyItem('green', 'Lunhaw', 'Green', 'colors', '🟢', 'beginner'),
+      new VocabularyItem('white', 'Puti', 'White', 'colors', '⚪', 'beginner'),
+      new VocabularyItem('black', 'Itom', 'Black', 'colors', '⚫', 'beginner'),
+      // INTERMEDIATE BODY PARTS
+      new VocabularyItem('head', 'Ulo', 'Head', 'body', '👤', 'intermediate'),
+      new VocabularyItem('eye', 'Mata', 'Eye', 'body', '👁️', 'intermediate'),
+      new VocabularyItem('nose', 'Ilong', 'Nose', 'body', '👃', 'intermediate'),
+      new VocabularyItem('mouth', 'Baba', 'Mouth', 'body', '👄', 'intermediate'),
+      new VocabularyItem('hand', 'Kamot', 'Hand', 'body', '✋', 'intermediate'),
+      new VocabularyItem('foot', 'Tiil', 'Foot', 'body', '🦶', 'intermediate'),
+      // ADVANCED FAMILY
+      new VocabularyItem('mother', 'Iloy', 'Mother', 'family', '👩', 'advanced'),
+      new VocabularyItem('father', 'Tatay', 'Father', 'family', '👨', 'advanced'),
+      new VocabularyItem('sister', 'Manghod', 'Sister', 'family', '👧', 'advanced'),
+      new VocabularyItem('brother', 'Manghod', 'Brother', 'family', '👦', 'advanced'),
+      new VocabularyItem('baby', 'Bata', 'Baby', 'family', '👶', 'advanced'),
+    ];
+  }
+
+  private static buildSentences(): SentenceItem[] {
+    return [
+      new SentenceItem('cat-sleeping', 'Nagakatulog ang kuring', 'The cat is sleeping', '😴🐱'),
+      new SentenceItem('dog-running', 'Nagadalagan ang ido', 'The dog is running', '🏃🐶'),
+      new SentenceItem('bird-flying', 'Nagalupad ang pispis', 'The bird is flying', '🦅✈️'),
+      new SentenceItem('fish-swimming', 'Nagalangoy ang isda', 'The fish is swimming', '🐟💦'),
+      new SentenceItem('chicken-eating', 'Nagakaon ang manok', 'The chicken is eating', '🐔🌾'),
+      new SentenceItem('elephant-big', 'Dako ang elepante', 'The elephant is big', '🐘💪'),
+      new SentenceItem('monkey-jumping', 'Nagalukso ang amo', 'The monkey is jumping', '🐵🤸'),
+      new SentenceItem('rabbit-eating', 'Nagakaon ang kuneho', 'The rabbit is eating', '🐰🥕'),
+      new SentenceItem('happy-child', 'Malipayon ang bata', 'The child is happy', '😊👶'),
+      new SentenceItem('mother-cooking', 'Nagaluto ang iloy', 'Mother is cooking', '👩‍🍳🍳'),
+      new SentenceItem('father-working', 'Nagaobra ang tatay', 'Father is working', '👨‍💼💼'),
+      new SentenceItem('eating-rice', 'Nagakaon ako sang kan-on', 'I am eating rice', '🍚😋'),
+      new SentenceItem('drinking-water', 'Nagainom ako sang tubig', 'I am drinking water', '💧🥤'),
+      new SentenceItem('red-apple', 'Pula ang mansanas', 'The apple is red', '🍎🔴'),
+      new SentenceItem('sun-shining', 'Naga-init ang adlaw', 'The sun is hot', '☀️🔥'),
+    ];
+  }
+}
+
+// ─── Convenience helpers (backward-compatible exports) ────────────────────────
+
+const repo = VocabularyRepository.getInstance();
+
+export const vocabularyData = repo.getAll();
+export const sentenceData = repo.getAllSentences();
+export const getBeginnerWords = () => repo.getByDifficulty('beginner');
+export const getIntermediateWords = () => repo.getByDifficulty('intermediate');
+export const getAdvancedWords = () => repo.getByDifficulty('advanced');
