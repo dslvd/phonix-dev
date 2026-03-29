@@ -10,7 +10,7 @@ import VocabularyCollection from './pages/VocabularyCollection';
 import Profile from './pages/Profile';
 import Premium from './pages/Premium';
 
-export type Page = 
+export type Page =
   | 'landing'
   | 'setup'
   | 'mode'
@@ -38,24 +38,23 @@ export interface AppState {
   scansRemaining: number;
 }
 
-function App() {
-  const getTodayKey = () => new Date().toISOString().split('T')[0];
-  const getYesterdayKey = () => {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    return yesterday.toISOString().split('T')[0];
-  };
+// ─── AppStateManager — encapsulates all state logic ──────────────────────────
 
-  const [isMobile, setIsMobile] = useState(() => {
-    if (typeof window === 'undefined') {
-      return true;
-    }
+class AppStateManager {
+  private static readonly STORAGE_KEY = 'phonix-app-state';
 
-    return window.innerWidth < 1024;
-  });
-  const [currentPage, setCurrentPage] = useState<Page>('landing');
-  const [appState, setAppState] = useState<AppState>(() => {
-    const defaultState: AppState = {
+  static todayKey(): string {
+    return new Date().toISOString().split('T')[0];
+  }
+
+  static yesterdayKey(): string {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return d.toISOString().split('T')[0];
+  }
+
+  static defaultState(): AppState {
+    return {
       nativeLanguage: '',
       targetLanguage: '',
       mode: null,
@@ -65,103 +64,111 @@ function App() {
       currentStreak: 1,
       longestStreak: 1,
       totalXP: 0,
-      lastActiveDate: getTodayKey(),
+      lastActiveDate: AppStateManager.todayKey(),
       heartsRemaining: 5,
       isPremium: false,
       scansRemaining: 20,
     };
+  }
 
-    if (typeof window === 'undefined') {
-      return defaultState;
-    }
-
-    const stored = window.localStorage.getItem('phonix-app-state');
-    if (!stored) {
-      return defaultState;
-    }
-
+  static load(): AppState {
+    const defaults = AppStateManager.defaultState();
+    if (typeof window === 'undefined') return defaults;
     try {
-      return { ...defaultState, ...JSON.parse(stored) };
+      const stored = window.localStorage.getItem(AppStateManager.STORAGE_KEY);
+      return stored ? { ...defaults, ...JSON.parse(stored) } : defaults;
     } catch {
-      return defaultState;
+      return defaults;
     }
-  });
+  }
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 1024);
+  static save(state: AppState): void {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(AppStateManager.STORAGE_KEY, JSON.stringify(state));
+    }
+  }
+
+  static applyStreakUpdate(state: AppState): AppState {
+    const today = AppStateManager.todayKey();
+    const yesterday = AppStateManager.yesterdayKey();
+    if (state.lastActiveDate === today) return state;
+
+    const nextStreak =
+      state.lastActiveDate === yesterday ? state.currentStreak + 1 : 1;
+
+    return {
+      ...state,
+      currentStreak: nextStreak,
+      longestStreak: Math.max(state.longestStreak, nextStreak),
+      lastActiveDate: today,
     };
+  }
+}
 
-    handleResize();
-    window.addEventListener('resize', handleResize);
+// ─── Router — maps page keys to components ────────────────────────────────────
 
-    return () => window.removeEventListener('resize', handleResize);
+class AppRouter {
+  static render(
+    page: Page,
+    navigate: (p: Page) => void,
+    appState: AppState,
+    updateState: (u: Partial<AppState>) => void,
+  ): JSX.Element {
+    const props = { navigate, appState, updateState };
+    switch (page) {
+      case 'landing':    return <Landing navigate={navigate} />;
+      case 'setup':      return <LanguageSetup {...props} />;
+      case 'mode':       return <ModeSelection {...props} />;
+      case 'dashboard':  return <Dashboard navigate={navigate} appState={appState} />;
+      case 'scan':       return <ScanMode {...props} />;
+      case 'vocabulary': return <VocabularyLearning {...props} />;
+      case 'sentence':   return <SentenceLearning {...props} />;
+      case 'collection': return <VocabularyCollection navigate={navigate} appState={appState} />;
+      case 'profile':    return <Profile navigate={navigate} appState={appState} />;
+      case 'premium':    return <Premium {...props} />;
+      default:           return <Landing navigate={navigate} />;
+    }
+  }
+}
+
+// ─── App Component ────────────────────────────────────────────────────────────
+
+function App() {
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' ? window.innerWidth < 1024 : true,
+  );
+  const [currentPage, setCurrentPage] = useState<Page>('landing');
+  const [appState, setAppState] = useState<AppState>(() => AppStateManager.load());
+
+  // Responsive listener
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 1024);
+    onResize();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
   }, []);
 
+  // Streak update
   useEffect(() => {
-    const today = getTodayKey();
-    const yesterday = getYesterdayKey();
-
-    if (appState.lastActiveDate === today) {
-      return;
-    }
-
     setAppState((prev) => {
-      const nextStreak = prev.lastActiveDate === yesterday ? prev.currentStreak + 1 : 1;
-      return {
-        ...prev,
-        currentStreak: nextStreak,
-        longestStreak: Math.max(prev.longestStreak, nextStreak),
-        lastActiveDate: today,
-      };
+      const updated = AppStateManager.applyStreakUpdate(prev);
+      return updated === prev ? prev : updated;
     });
   }, [appState.lastActiveDate]);
 
+  // Persist state
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    window.localStorage.setItem('phonix-app-state', JSON.stringify(appState));
+    AppStateManager.save(appState);
   }, [appState]);
 
-  const navigate = (page: Page) => {
-    setCurrentPage(page);
-  };
-
-  const updateState = (updates: Partial<AppState>) => {
+  const navigate = (page: Page) => setCurrentPage(page);
+  const updateState = (updates: Partial<AppState>) =>
     setAppState((prev) => ({ ...prev, ...updates }));
-  };
 
-  const renderPage = () => {
-    switch (currentPage) {
-      case 'landing':
-        return <Landing navigate={navigate} />;
-      case 'setup':
-        return <LanguageSetup navigate={navigate} updateState={updateState} />;
-      case 'mode':
-        return <ModeSelection navigate={navigate} updateState={updateState} />;
-      case 'dashboard':
-        return <Dashboard navigate={navigate} appState={appState} />;
-      case 'scan':
-        return <ScanMode navigate={navigate} appState={appState} updateState={updateState} />;
-      case 'vocabulary':
-        return <VocabularyLearning navigate={navigate} appState={appState} updateState={updateState} />;
-      case 'sentence':
-        return <SentenceLearning navigate={navigate} appState={appState} updateState={updateState} />;
-      case 'collection':
-        return <VocabularyCollection navigate={navigate} appState={appState} />;
-      case 'profile':
-        return <Profile navigate={navigate} appState={appState} />;
-      case 'premium':
-        return <Premium navigate={navigate} appState={appState} updateState={updateState} />;
-      default:
-        return <Landing navigate={navigate} />;
-    }
-  };
+  const page = AppRouter.render(currentPage, navigate, appState, updateState);
 
   if (isMobile) {
-    return <div className="min-h-screen bg-white">{renderPage()}</div>;
+    return <div className="min-h-screen bg-white">{page}</div>;
   }
 
   return (
@@ -185,7 +192,9 @@ function App() {
                   {appState.targetLanguage || 'Choose a language'}
                 </h2>
                 <p className="mt-2 text-sm font-semibold text-white/85">
-                  {appState.nativeLanguage ? `From ${appState.nativeLanguage}` : 'Set up your first lesson to begin'}
+                  {appState.nativeLanguage
+                    ? `From ${appState.nativeLanguage}`
+                    : 'Set up your first lesson to begin'}
                 </p>
               </div>
             </div>
@@ -219,7 +228,7 @@ function App() {
         </aside>
 
         <main className="min-w-0 overflow-hidden rounded-[36px] border border-white/80 bg-[rgba(255,255,255,0.96)] shadow-[0_30px_80px_rgba(255,145,38,0.12)]">
-          {renderPage()}
+          {page}
         </main>
       </div>
     </div>
