@@ -7,16 +7,124 @@ import EnergyBar from '../components/EnergyBar';
 import { Page, AppState } from '../App';
 import { analyzeImageWithAI, getFallbackScanResult } from '../lib/aiFallback';
 
-interface ScanModeProps {
-  navigate: (page: Page) => void;
-  appState: AppState;
-  updateState: (updates: Partial<AppState>) => void;
-}
+// ─── Domain types ─────────────────────────────────────────────────────────────
 
 interface DetectedObject {
   object: string;
   translation: string;
   confidence: string;
+}
+
+// ─── CameraController — encapsulates all camera / WebRTC logic ────────────────
+
+class CameraController {
+  private stream: MediaStream | null = null;
+
+  async start(videoEl: HTMLVideoElement): Promise<void> {
+    const constraints = { video: { width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false };
+
+    try {
+      this.stream = await navigator.mediaDevices.getUserMedia({
+        ...constraints,
+        video: { ...constraints.video, facingMode: 'environment' },
+      });
+    } catch {
+      this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+    }
+
+    videoEl.srcObject = this.stream;
+    await new Promise<void>((resolve, reject) => {
+      videoEl.onloadedmetadata = async () => {
+        try {
+          await videoEl.play();
+          resolve();
+        } catch (e) {
+          reject(e);
+        }
+      };
+    });
+  }
+
+  stop(videoEl?: HTMLVideoElement): void {
+    this.stream?.getTracks().forEach((t) => t.stop());
+    this.stream = null;
+    if (videoEl) videoEl.srcObject = null;
+  }
+
+  capture(videoEl: HTMLVideoElement, canvasEl: HTMLCanvasElement): string {
+    canvasEl.width = videoEl.videoWidth;
+    canvasEl.height = videoEl.videoHeight;
+    canvasEl.getContext('2d')!.drawImage(videoEl, 0, 0);
+    const dataUrl = canvasEl.toDataURL('image/jpeg', 0.8);
+    return dataUrl.split(',')[1]; // base64 only
+  }
+
+  get isActive(): boolean {
+    return !!this.stream;
+  }
+
+  static parseCameraError(err: any): string {
+    const map: Record<string, string> = {
+      NotAllowedError: '❌ Camera permission denied. Please allow camera access and refresh.',
+      PermissionDeniedError: '❌ Camera permission denied. Please allow camera access and refresh.',
+      NotFoundError: '❌ No camera found. Please connect a camera and try again.',
+      DevicesNotFoundError: '❌ No camera found. Please connect a camera and try again.',
+      NotReadableError: '❌ Camera is already in use by another app.',
+      TrackStartError: '❌ Camera is already in use by another app.',
+      OverconstrainedError: '❌ Camera constraints not supported. Try a different device.',
+      SecurityError: "❌ Camera access blocked. Make sure you're using HTTPS or localhost.",
+    };
+    return map[err?.name] ?? `❌ Camera error: ${err?.message || 'Unknown error'}. Try refreshing.`;
+  }
+}
+
+// ─── SpeechService — encapsulates Web Speech API ─────────────────────────────
+
+class SpeechService {
+  static speak(text: string, lang = 'fil-PH'): void {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = lang;
+    utterance.rate = 0.75;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+
+    const voices = window.speechSynthesis.getVoices();
+    const preferred = voices.find(
+      (v) => v.lang.includes('fil') || v.lang.includes('tl') || v.lang.includes('PH'),
+    );
+    if (preferred) utterance.voice = preferred;
+
+    window.speechSynthesis.speak(utterance);
+  }
+
+  static playSuccessBeep(): void {
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 800;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.1);
+    } catch {
+      // Audio not critical
+    }
+  }
+}
+
+// ─── ScanMode Component ───────────────────────────────────────────────────────
+
+interface ScanModeProps {
+  navigate: (page: Page) => void;
+  appState: AppState;
+  updateState: (updates: Partial<AppState>) => void;
 }
 
 export default function ScanMode({ navigate, appState, updateState }: ScanModeProps) {
@@ -28,412 +136,149 @@ export default function ScanMode({ navigate, appState, updateState }: ScanModePr
   const [savedWords, setSavedWords] = useState<DetectedObject[]>([]);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [manualObject, setManualObject] = useState('');
-  
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+  const cameraRef = useRef(new CameraController());
 
   const startCamera = async () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setError('Camera not supported in this browser. Try Chrome, Firefox, or Safari.');
+      return;
+    }
     try {
       setError(null);
       setCameraLoading(true);
-      console.log('🎥 Starting camera...');
-      
-      // Check if getUserMedia is supported
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        setError('Camera not supported in this browser. Try Chrome, Firefox, or Safari.');
-        setCameraLoading(false);
-        return;
-      }
-
-      // Try back camera first (for mobile), fallback to any camera
-      let stream: MediaStream | null = null;
-      try {
-        console.log('📱 Trying back camera...');
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { 
-            facingMode: 'environment',
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          },
-          audio: false,
-        });
-      } catch (err) {
-        console.log('🔄 Back camera not available, trying any camera...');
-        // Fallback to any available camera
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          },
-          audio: false,
-        });
-      }
-      
-      console.log('✅ Camera stream obtained:', stream);
-      console.log('📹 Video tracks:', stream.getVideoTracks());
-      
-      if (stream) {
-        streamRef.current = stream;
-        
-        // Wait a bit for React to render the video element
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        if (videoRef.current) {
-          console.log('🎬 Setting video source...');
-          videoRef.current.srcObject = stream;
-          
-          // Wait for video to be ready and play
-          videoRef.current.onloadedmetadata = async () => {
-            console.log('📊 Video metadata loaded');
-            try {
-              await videoRef.current?.play();
-              console.log('▶️ Video playing!');
-              setCameraActive(true);
-              setCameraLoading(false);
-            } catch (playErr) {
-              console.error('Play error:', playErr);
-              setError('❌ Failed to start video playback. Try clicking the video to play it.');
-              setCameraLoading(false);
-            }
-          };
-        } else {
-          console.error('❌ Video ref still null after waiting');
-          setError('❌ Video element not ready. Please try again.');
-          setCameraLoading(false);
-          // Clean up stream
-          stream.getTracks().forEach(track => track.stop());
-        }
-      } else {
-        console.error('❌ No stream obtained');
-        setError('❌ Failed to access camera.');
-        setCameraLoading(false);
-      }
+      await new Promise((r) => setTimeout(r, 100)); // wait for video ref to mount
+      await cameraRef.current.start(videoRef.current!);
+      setCameraActive(true);
     } catch (err: any) {
-      console.error('❌ Camera error:', err);
+      setError(CameraController.parseCameraError(err));
+    } finally {
       setCameraLoading(false);
-      
-      // Provide specific error messages
-      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        setError('❌ Camera permission denied. Please allow camera access in your browser settings and refresh.');
-      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-        setError('❌ No camera found. Please connect a camera and try again.');
-      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
-        setError('❌ Camera is already in use by another app. Close other apps and try again.');
-      } else if (err.name === 'OverconstrainedError') {
-        setError('❌ Camera constraints not supported. Try a different device.');
-      } else if (err.name === 'SecurityError') {
-        setError('❌ Camera access blocked. Make sure you\'re using HTTPS or localhost.');
-      } else {
-        setError(`❌ Camera error: ${err.message || 'Unknown error'}. Try refreshing the page.`);
-      }
     }
   };
 
   const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
+    cameraRef.current.stop(videoRef.current ?? undefined);
     setCameraActive(false);
     setCameraLoading(false);
   };
 
-  const runManualSmartAssist = () => {
-    if (!manualObject.trim()) {
-      setError('Type what you see first, then use Smart Assist.');
-      return;
-    }
-
-    const fallback = getFallbackScanResult(manualObject, appState.targetLanguage || 'Hiligaynon');
-    if (!fallback) {
-      setError('Smart Assist could not understand that object yet. Try a simple word like cat, dog, rice, or water.');
-      return;
-    }
-
-    setDetectedObject({
-      object: fallback.object,
-      translation: fallback.translation,
-      confidence: fallback.confidence,
-    });
+  const runSmartAssist = (label: string): boolean => {
+    const fallback = getFallbackScanResult(label, appState.targetLanguage || 'Hiligaynon');
+    if (!fallback) return false;
+    setDetectedObject({ object: fallback.object, translation: fallback.translation, confidence: fallback.confidence });
     setError(null);
+    return true;
   };
 
   const captureAndAnalyze = async () => {
     if (!videoRef.current || !canvasRef.current) return;
-
     setIsScanning(true);
     setError(null);
 
     try {
-      // Capture image from video
-      const canvas = canvasRef.current;
-      const video = videoRef.current;
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-      
-      ctx.drawImage(video, 0, 0);
-      const imageData = canvas.toDataURL('image/jpeg', 0.8);
-      
-      // Convert base64 to blob for API
-      const base64Data = imageData.split(',')[1];
-      
-      const aiText = await analyzeImageWithAI(
-        base64Data,
-        appState.targetLanguage || 'Hiligaynon'
-      );
+      const base64 = cameraRef.current.capture(videoRef.current, canvasRef.current);
+      const aiText = await analyzeImageWithAI(base64, appState.targetLanguage || 'Hiligaynon');
 
       if (!aiText) {
-        if (manualObject.trim()) {
-          runManualSmartAssist();
-          setIsScanning(false);
-          return;
-        }
-        setError('Cloud AI did not return a result. Use Smart Assist below and type the object name to keep scanning.');
+        if (manualObject.trim()) { runSmartAssist(manualObject); return; }
+        setError('Cloud AI did not return a result. Use Smart Assist below.');
         return;
       }
-      if (aiText) {
-        const text = aiText;
-        
-        // Parse response
-        const objectMatch = text.match(/Object:\s*([^|]+)/i);
-        const translationMatch = text.match(/Translation:\s*(.+)/i);
-        
-        if (objectMatch && translationMatch) {
-          const result = {
-            object: objectMatch[1].trim(),
-            translation: translationMatch[1].trim(),
-            confidence: 'high'
-          };
-          setDetectedObject(result);
-          
-          // Play sound effect (optional)
-          playSuccessSound();
-        } else {
-          // If parsing fails, show the raw response
-          setDetectedObject({
-            object: 'Detected',
-            translation: text,
-            confidence: 'medium'
-          });
-        }
-      }
-    } catch (err) {
-      console.error('Analysis error:', err);
-      if (manualObject.trim()) {
-        runManualSmartAssist();
+
+      const objectMatch = aiText.match(/Object:\s*([^|]+)/i);
+      const translationMatch = aiText.match(/Translation:\s*(.+)/i);
+
+      if (objectMatch && translationMatch) {
+        setDetectedObject({ object: objectMatch[1].trim(), translation: translationMatch[1].trim(), confidence: 'high' });
+        SpeechService.playSuccessBeep();
       } else {
-        setError('Failed to analyze image. Check your connection or use Smart Assist below.');
+        setDetectedObject({ object: 'Detected', translation: aiText, confidence: 'medium' });
       }
+    } catch {
+      if (manualObject.trim()) { runSmartAssist(manualObject); }
+      else setError('Failed to analyze image. Check your connection or use Smart Assist below.');
     } finally {
       setIsScanning(false);
     }
   };
 
-  const playSuccessSound = () => {
-    // Create a simple success beep
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    oscillator.frequency.value = 800;
-    oscillator.type = 'sine';
-    
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-    
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.1);
-  };
-
   const saveWord = () => {
     if (!detectedObject) return;
-    
-    setSavedWords(prev => [detectedObject, ...prev]);
-    
-    // Add to learned words in app state
+    setSavedWords((prev) => [detectedObject, ...prev]);
     if (!appState.learnedWords.includes(detectedObject.translation)) {
-      updateState({
-        learnedWords: [...appState.learnedWords, detectedObject.translation],
-        stars: appState.stars + 1,
-        totalXP: appState.totalXP + 12
-      });
+      updateState({ learnedWords: [...appState.learnedWords, detectedObject.translation], stars: appState.stars + 1, totalXP: appState.totalXP + 12 });
     } else {
-      updateState({
-        totalXP: appState.totalXP + 3
-      });
+      updateState({ totalXP: appState.totalXP + 3 });
     }
-    
     setDetectedObject(null);
   };
 
-  const speakWord = (text: string, language: string = 'fil-PH') => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = language;
-      utterance.rate = 0.75;
-      utterance.pitch = 1.0;
-      utterance.volume = 1.0;
-      
-      // Try to find a Filipino voice
-      const voices = window.speechSynthesis.getVoices();
-      const filipinoVoice = voices.find(voice => 
-        voice.lang.includes('fil') || voice.lang.includes('tl') || voice.lang.includes('PH')
-      );
-      
-      if (filipinoVoice) {
-        utterance.voice = filipinoVoice;
-      }
-      
-      window.speechSynthesis.speak(utterance);
-    }
-  };
-
-  useEffect(() => {
-    // Cleanup camera on unmount
-    return () => {
-      stopCamera();
-    };
-  }, []);
+  useEffect(() => () => stopCamera(), []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-200 via-pink-200 to-orange-200">
       <NavigationHeader
-        onBack={() => {
-          stopCamera();
-          navigate('dashboard');
-        }}
-        onLogout={() => {
-          stopCamera();
-          navigate('landing');
-        }}
+        onBack={() => { stopCamera(); navigate('dashboard'); }}
+        onLogout={() => { stopCamera(); navigate('landing'); }}
         onProfile={() => navigate('profile')}
-        showStats={true}
-        streakCount={appState.currentStreak}
-        starCount={appState.stars}
+        showStats streakCount={appState.currentStreak} starCount={appState.stars}
       />
 
       <div className="max-w-4xl mx-auto p-4 mt-6">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-6"
-        >
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-6">
           <h1 className="font-baloo text-4xl font-bold text-gray-800 mb-2 flex items-center justify-center gap-3">
-            <span>📸</span>
-            Scan Mode
-            <span>🤖</span>
+            <span>📸</span>Scan Mode<span>🤖</span>
           </h1>
-          <p className="text-gray-600 font-semibold">
-            Point your camera at objects to learn instantly!
-          </p>
+          <p className="text-gray-600 font-semibold">Point your camera at objects to learn instantly!</p>
         </motion.div>
 
-        {/* Energy Bar */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2 }}
-          className="mb-6"
-        >
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }} className="mb-6">
           <Card className="bg-white/90 backdrop-blur-xl border-2 border-purple-300">
-            <EnergyBar
-              current={appState.heartsRemaining}
-              max={5}
-              isPremium={appState.isPremium}
-              onUpgrade={() => setShowUpgradeModal(true)}
-            />
+            <EnergyBar current={appState.heartsRemaining} max={5} isPremium={appState.isPremium} onUpgrade={() => setShowUpgradeModal(true)} />
           </Card>
         </motion.div>
 
         <div className="grid lg:grid-cols-2 gap-6">
-          {/* Camera View */}
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
-          >
+          {/* Camera */}
+          <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
             <Card className="relative">
               <div className="aspect-video bg-gray-900 rounded-lg overflow-hidden relative">
-                {/* Always render video element, just hide it */}
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className={`w-full h-full object-cover ${
-                    cameraActive ? 'opacity-100' : 'opacity-0'
-                  }`}
-                />
-                
-                {!cameraActive && !cameraLoading ? (
+                <video ref={videoRef} autoPlay playsInline muted className={`w-full h-full object-cover ${cameraActive ? 'opacity-100' : 'opacity-0'}`} />
+
+                {!cameraActive && !cameraLoading && (
                   <div className="absolute inset-0 flex items-center justify-center flex-col gap-4 p-4">
                     <div className="text-6xl animate-bounce leading-none flex items-center justify-center">📷</div>
-                    <h3 className="text-white font-baloo text-xl font-bold text-center">
-                      Ready to Scan Objects?
-                    </h3>
-                    <Button
-                      variant="primary"
-                      onClick={startCamera}
-                      className="text-lg px-8 py-3"
-                    >
-                      🎥 Start Camera
-                    </Button>
-                    <div className="text-white text-xs px-4 text-center space-y-1 bg-gray-800/50 rounded-lg p-3">
+                    <h3 className="text-white font-baloo text-xl font-bold text-center">Ready to Scan Objects?</h3>
+                    <Button variant="primary" onClick={startCamera}>🎥 Start Camera</Button>
+                    <div className="text-white text-xs px-4 text-center bg-gray-800/50 rounded-lg p-3">
                       <p className="font-bold">📱 You'll be asked for camera permission</p>
                       <p className="text-gray-300">Point at objects → AI translates instantly!</p>
                     </div>
                   </div>
-                ) : cameraLoading ? (
+                )}
+
+                {cameraLoading && (
                   <div className="absolute inset-0 flex items-center justify-center flex-col gap-4 bg-gray-800">
-                    <motion.div
-                      animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                      className="text-6xl leading-none flex items-center justify-center"
-                    >
-                      📹
-                    </motion.div>
+                    <motion.div animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }} transition={{ duration: 2, repeat: Infinity }} className="text-6xl leading-none flex items-center justify-center">📹</motion.div>
                     <p className="text-white font-baloo text-xl font-bold">Starting camera...</p>
-                    <p className="text-gray-400 text-sm">This may take a few seconds</p>
                   </div>
-                ) : null}
-                    
-                {/* Scanning overlay - show when camera is active and scanning */}
+                )}
+
                 {cameraActive && (
                   <>
                     <AnimatePresence>
                       {isScanning && (
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className="absolute inset-0 bg-primary/30 flex items-center justify-center"
-                        >
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-primary/30 flex items-center justify-center">
                           <div className="text-white text-2xl font-bold font-baloo flex items-center gap-3">
-                            <motion.div
-                              animate={{ rotate: 360 }}
-                              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                            >
-                              🔍
-                            </motion.div>
+                            <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>🔍</motion.div>
                             Analyzing...
                           </div>
                         </motion.div>
                       )}
                     </AnimatePresence>
-
-                    {/* Center guide frame */}
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <div className="border-4 border-white border-dashed rounded-lg w-64 h-64 opacity-50" />
                     </div>
@@ -441,128 +286,49 @@ export default function ScanMode({ navigate, appState, updateState }: ScanModePr
                 )}
               </div>
 
-              {/* Camera Controls */}
               {cameraActive && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-4 flex gap-3 justify-center"
-                >
-                  <Button
-                    variant="primary"
-                    onClick={captureAndAnalyze}
-                    disabled={isScanning}
-                    className="flex-1"
-                  >
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-4 flex gap-3 justify-center">
+                  <Button variant="primary" onClick={captureAndAnalyze} disabled={isScanning} className="flex-1">
                     {isScanning ? '⏳ Scanning...' : '📸 Scan Object'}
                   </Button>
-                  <Button
-                    variant="outline"
-                    onClick={stopCamera}
-                  >
-                    ⏹️
-                  </Button>
+                  <Button variant="outline" onClick={stopCamera}>⏹️</Button>
                 </motion.div>
               )}
 
               {error && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="mt-3"
-                >
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="mt-3">
                   <div className="p-4 bg-red-100 border-2 border-red-400 rounded-lg">
-                    <div className="text-red-700 font-bold mb-2">
-                      {error}
-                    </div>
-                    <div className="bg-white rounded-lg p-3 mt-3">
-                      <p className="font-bold text-gray-800 text-sm mb-2">🔧 Troubleshooting:</p>
-                      <ul className="text-xs text-gray-700 space-y-1">
-                        <li>✓ Allow camera permissions when prompted</li>
-                        <li>✓ Refresh the page after allowing permissions</li>
-                        <li>✓ Close other apps using your camera</li>
-                        <li>✓ Use Chrome, Firefox, or Safari browser</li>
-                        <li>✓ Check if camera works in other apps</li>
-                      </ul>
-                      <Button
-                        variant="primary"
-                        onClick={startCamera}
-                        className="w-full mt-3 text-sm"
-                      >
-                        🔄 Try Again
-                      </Button>
-                    </div>
+                    <div className="text-red-700 font-bold mb-2">{error}</div>
+                    <Button variant="primary" onClick={startCamera} className="w-full mt-3 text-sm">🔄 Try Again</Button>
                   </div>
                 </motion.div>
               )}
 
-              {/* Hidden canvas for image capture */}
               <canvas ref={canvasRef} className="hidden" />
             </Card>
           </motion.div>
 
-          {/* Results & History */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            className="space-y-4"
-          >
-            {/* Current Detection */}
+          {/* Results */}
+          <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }} className="space-y-4">
             <AnimatePresence>
               {detectedObject && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.8, y: -20 }}
-                >
+                <motion.div initial={{ opacity: 0, scale: 0.8, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.8, y: -20 }}>
                   <Card className="bg-gradient-to-br from-green-100 to-emerald-200 border-4 border-green-400">
                     <div className="text-center">
                       <div className="text-5xl mb-3 leading-none flex items-center justify-center">✨</div>
-                      <h3 className="font-baloo text-2xl font-bold text-gray-800 mb-2">
-                        Found!
-                      </h3>
-                      <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-gray-500">
-                        {detectedObject.confidence === 'high'
-                          ? 'Cloud AI'
-                          : detectedObject.confidence === 'smart-assist'
-                          ? 'Smart Assist'
-                          : 'AI Assisted'}
-                      </p>
+                      <h3 className="font-baloo text-2xl font-bold text-gray-800 mb-2">Found!</h3>
                       <div className="bg-white rounded-lg p-4 mb-4">
                         <p className="text-gray-600 font-semibold mb-1">English:</p>
-                        <p className="text-2xl font-bold text-gray-800 mb-3">
-                          {detectedObject.object}
-                        </p>
-                        <p className="text-gray-600 font-semibold mb-1">
-                          {appState.targetLanguage}:
-                        </p>
+                        <p className="text-2xl font-bold text-gray-800 mb-3">{detectedObject.object}</p>
+                        <p className="text-gray-600 font-semibold mb-1">{appState.targetLanguage}:</p>
                         <div className="flex items-center justify-center gap-2">
-                          <p className="text-3xl font-bold text-primary">
-                            {detectedObject.translation}
-                          </p>
-                          <button
-                            onClick={() => speakWord(detectedObject.translation)}
-                            className="text-3xl hover:scale-110 transition-transform leading-none flex items-center justify-center flex-shrink-0"
-                          >
-                            🔊
-                          </button>
+                          <p className="text-3xl font-bold text-primary">{detectedObject.translation}</p>
+                          <button onClick={() => SpeechService.speak(detectedObject.translation)} className="text-3xl hover:scale-110 transition-transform leading-none flex items-center justify-center">🔊</button>
                         </div>
                       </div>
                       <div className="flex gap-3">
-                        <Button
-                          variant="success"
-                          onClick={saveWord}
-                          className="flex-1"
-                        >
-                          💾 Save to Collection
-                        </Button>
-                        <Button
-                          variant="outline"
-                          onClick={() => setDetectedObject(null)}
-                        >
-                          ✖️
-                        </Button>
+                        <Button variant="success" onClick={saveWord} className="flex-1">💾 Save to Collection</Button>
+                        <Button variant="outline" onClick={() => setDetectedObject(null)}>✖️</Button>
                       </div>
                     </div>
                   </Card>
@@ -570,113 +336,43 @@ export default function ScanMode({ navigate, appState, updateState }: ScanModePr
               )}
             </AnimatePresence>
 
+            {/* Smart Assist */}
             <Card className="bg-gradient-to-br from-blue-100 to-cyan-100 border-2 border-blue-300">
-              <h3 className="mb-3 flex items-center gap-2 font-baloo text-xl font-bold text-gray-800">
-                <span>⚡</span>
-                AI Alternative: Smart Assist
-              </h3>
-              <p className="mb-3 text-sm font-semibold text-gray-700">
-                If cloud AI is slow or unavailable, type what you see and the website will still translate it instantly.
-              </p>
+              <h3 className="mb-3 flex items-center gap-2 font-baloo text-xl font-bold text-gray-800"><span>⚡</span>AI Alternative: Smart Assist</h3>
+              <p className="mb-3 text-sm font-semibold text-gray-700">If cloud AI is slow, type what you see and translate instantly.</p>
               <div className="flex flex-col gap-3 sm:flex-row">
-                <input
-                  type="text"
-                  value={manualObject}
-                  onChange={(e) => setManualObject(e.target.value)}
-                  placeholder="Type object name, like cat, rice, dog..."
-                  className="flex-1 rounded-2xl border-2 border-blue-300 px-4 py-3 font-semibold text-gray-800 outline-none transition-all focus:border-blue-500"
-                />
-                <Button
-                  variant="secondary"
-                  onClick={runManualSmartAssist}
-                >
-                  ⚡ Translate Now
-                </Button>
+                <input type="text" value={manualObject} onChange={(e) => setManualObject(e.target.value)} placeholder="Type object name, like cat, rice, dog..." className="flex-1 rounded-2xl border-2 border-blue-300 px-4 py-3 font-semibold text-gray-800 outline-none focus:border-blue-500" />
+                <Button variant="secondary" onClick={() => { if (!manualObject.trim()) { setError('Type what you see first.'); return; } if (!runSmartAssist(manualObject)) setError('Smart Assist could not understand that. Try a simple word.'); }}>⚡ Translate Now</Button>
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
                 {['cat', 'dog', 'rice', 'water', 'bird', 'mother'].map((item) => (
-                  <button
-                    key={item}
-                    onClick={() => setManualObject(item)}
-                    className="rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-bold text-blue-700 transition-all hover:border-blue-400 hover:bg-blue-50"
-                  >
-                    {item}
-                  </button>
+                  <button key={item} onClick={() => setManualObject(item)} className="rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-bold text-blue-700 hover:bg-blue-50">{item}</button>
                 ))}
               </div>
             </Card>
 
-            {/* Saved Words History */}
+            {/* Saved words */}
             <Card>
-              <h3 className="font-baloo text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
-                <span>🎒</span>
-                Scanned Words ({savedWords.length})
-              </h3>
+              <h3 className="font-baloo text-xl font-bold text-gray-800 mb-3 flex items-center gap-2"><span>🎒</span>Scanned Words ({savedWords.length})</h3>
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {savedWords.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     <div className="text-4xl mb-2 leading-none flex items-center justify-center">👀</div>
                     <p className="font-semibold">No words scanned yet!</p>
-                    <p className="text-sm">Start scanning objects around you</p>
                   </div>
                 ) : (
-                  savedWords.map((word, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-lg p-3 flex items-center justify-between"
-                    >
+                  savedWords.map((word, i) => (
+                    <motion.div key={i} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-lg p-3 flex items-center justify-between">
                       <div className="flex-1">
                         <p className="font-bold text-gray-800">{word.object}</p>
                         <p className="text-primary font-bold text-lg">{word.translation}</p>
                       </div>
-                      <button
-                        onClick={() => speakWord(word.translation)}
-                        className="text-2xl hover:scale-110 transition-transform leading-none flex items-center justify-center flex-shrink-0"
-                      >
-                        🔊
-                      </button>
+                      <button onClick={() => SpeechService.speak(word.translation)} className="text-2xl hover:scale-110 transition-transform leading-none flex items-center justify-center">🔊</button>
                     </motion.div>
                   ))
                 )}
               </div>
-              {savedWords.length > 0 && (
-                <Button
-                  variant="outline"
-                  onClick={() => navigate('collection')}
-                  className="w-full mt-4"
-                >
-                  View Full Collection 🎒
-                </Button>
-              )}
-            </Card>
-
-            {/* Quick Tips */}
-            <Card className="bg-gradient-to-br from-yellow-100 to-orange-100">
-              <h4 className="font-baloo text-lg font-bold text-gray-800 mb-2 flex items-center gap-2">
-                <span>💡</span>
-                Quick Tips
-              </h4>
-              <ul className="space-y-2 text-sm font-semibold text-gray-700">
-                <li className="flex gap-2">
-                  <span>✨</span>
-                  <span>Point camera at clear, well-lit objects</span>
-                </li>
-                <li className="flex gap-2">
-                  <span>📷</span>
-                  <span>Center the object in the frame</span>
-                </li>
-                <li className="flex gap-2">
-                  <span>🔊</span>
-                  <span>Tap speaker icon to hear pronunciation</span>
-                </li>
-                <li className="flex gap-2">
-                  <span>💾</span>
-                  <span>Save words to practice later</span>
-                </li>
-              </ul>
+              {savedWords.length > 0 && <Button variant="outline" onClick={() => navigate('collection')} className="w-full mt-4">View Full Collection 🎒</Button>}
             </Card>
           </motion.div>
         </div>
@@ -685,84 +381,16 @@ export default function ScanMode({ navigate, appState, updateState }: ScanModePr
       {/* Upgrade Modal */}
       <AnimatePresence>
         {showUpgradeModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setShowUpgradeModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.8, y: 50 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.8, y: 50 }}
-              onClick={(e) => e.stopPropagation()}
-              className="max-w-md w-full"
-            >
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowUpgradeModal(false)}>
+            <motion.div initial={{ scale: 0.8, y: 50 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.8, y: 50 }} onClick={(e) => e.stopPropagation()} className="max-w-md w-full">
               <Card className="bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500 border-4 border-yellow-300 shadow-2xl">
                 <div className="text-center text-white">
-                  <motion.div
-                    animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.2, 1] }}
-                    transition={{ duration: 0.5 }}
-                    className="text-8xl mb-4 leading-none flex items-center justify-center"
-                  >
-                    🚫
-                  </motion.div>
-                  
-                  <h2 className="font-baloo text-3xl font-bold mb-4">
-                    Need More Hearts?
-                  </h2>
-                  
-                  <p className="text-lg mb-6 opacity-90">
-                    Free learners get 5 batteries, and every lesson mistake removes 1. Upgrade to <strong>Unlimited Hearts</strong> for stress-free practice!
-                  </p>
-
-                  <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-6">
-                    <div className="flex items-center justify-center gap-2 mb-3">
-                      <span className="text-3xl leading-none flex items-center justify-center">✨</span>
-                      <h3 className="font-bold text-xl">Premium Features</h3>
-                      <span className="text-3xl leading-none flex items-center justify-center">✨</span>
-                    </div>
-                    <ul className="text-left space-y-2 text-sm">
-                      <li className="flex items-center gap-2">
-                        <span className="text-xl leading-none flex items-center justify-center">∞</span>
-                        <span>Unlimited hearts forever</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <span className="text-xl leading-none flex items-center justify-center">📄</span>
-                        <span>Document translation</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <span className="text-xl leading-none flex items-center justify-center">🔌</span>
-                        <span>Offline mode</span>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <div className="space-y-3">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => {
-                        setShowUpgradeModal(false);
-                        navigate('premium');
-                      }}
-                      className="w-full bg-white text-purple-600 font-bold py-4 rounded-xl shadow-lg hover:bg-yellow-100 transition-colors"
-                    >
-                      <span className="flex items-center justify-center gap-2 text-lg">
-                        <span>🚀</span>
-                        Unlock Unlimited Hearts
-                        <span>💖</span>
-                      </span>
-                    </motion.button>
-
-                    <button
-                      onClick={() => setShowUpgradeModal(false)}
-                      className="w-full text-white/80 hover:text-white font-semibold py-2 transition-colors text-sm"
-                    >
-                      Maybe Later
-                    </button>
-                  </div>
+                  <h2 className="font-baloo text-3xl font-bold mb-4">Need More Hearts?</h2>
+                  <p className="text-lg mb-6 opacity-90">Upgrade to <strong>Unlimited Hearts</strong> for stress-free practice!</p>
+                  <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => { setShowUpgradeModal(false); navigate('premium'); }} className="w-full bg-white text-purple-600 font-bold py-4 rounded-xl shadow-lg">
+                    🚀 Unlock Unlimited Hearts 💖
+                  </motion.button>
+                  <button onClick={() => setShowUpgradeModal(false)} className="w-full text-white/80 hover:text-white font-semibold py-2 mt-3 text-sm">Maybe Later</button>
                 </div>
               </Card>
             </motion.div>
