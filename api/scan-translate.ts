@@ -119,13 +119,7 @@ async function translateWithGeminiFallback(text: string, targetLanguage: string,
 }
 
 function getVisionApiKey() {
-  return (
-    process.env.GOOGLE_VISION_API_KEY ||
-    process.env.GOOGLE_API_KEY ||
-    process.env.GEMINI_API_KEY ||
-    process.env.VITE_GEMINI_API_KEY ||
-    ''
-  );
+  return process.env.GOOGLE_VISION_API_KEY || '';
 }
 
 function getGeminiApiKeys() {
@@ -166,7 +160,7 @@ export default async function handler(req: any, res: any) {
 
       if (!visionApiKey) {
         return res.status(500).json({
-          error: 'Missing Google Vision API key. Add GOOGLE_VISION_API_KEY or GOOGLE_API_KEY.',
+          error: 'Missing Google Vision API key. Add GOOGLE_VISION_API_KEY.',
         });
       }
 
