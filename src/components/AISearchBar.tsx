@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from './Button';
 import Card from './Card';
-import { askCloudAI, generateFallbackAIAnswer } from '../lib/aiFallback';
+import { AIRequestError, askCloudAI, generateFallbackAIAnswer } from '../lib/aiFallback';
 
 interface AISearchBarProps {
   onSearch?: (query: string, result: string) => void;
@@ -24,9 +24,8 @@ export default function AISearchBar({ onSearch }: AISearchBarProps) {
     setUsingFallback(false);
 
     try {
-      const aiResult = (await askCloudAI(
-        `You are a helpful Filipino language learning assistant for kids. Answer this question in a simple, fun way with emojis: ${query}`
-      )) || '✨ I am ready to help you practice more words!';
+      const aiResult =
+        (await askCloudAI(query, 'Hiligaynon')) || 'I am ready to help you practice more words!';
 
       setResult(aiResult);
       if (onSearch) {
@@ -36,7 +35,15 @@ export default function AISearchBar({ onSearch }: AISearchBarProps) {
       const fallbackResult = generateFallbackAIAnswer(query, 'Hiligaynon');
       setUsingFallback(true);
       setResult(fallbackResult);
-      setError('⚡ Cloud AI is unavailable right now. Smart Helper Mode is answering locally.');
+
+      if (err instanceof AIRequestError && err.code === 'rate_limited') {
+        setError('Gemini hit a rate limit or quota limit. Smart Helper Mode is answering locally for now.');
+      } else if (err instanceof AIRequestError && err.code === 'missing_api_key') {
+        setError('Gemini API key is missing. Smart Helper Mode is answering locally.');
+      } else {
+        setError('Cloud AI is unavailable right now. Smart Helper Mode is answering locally.');
+      }
+
       console.error('AI Search Error:', err);
 
       if (onSearch) {
@@ -56,7 +63,6 @@ export default function AISearchBar({ onSearch }: AISearchBarProps) {
   return (
     <Card className="bg-gradient-to-br from-purple-100 to-pink-100">
       <div className="space-y-4">
-        {/* Header */}
         <div className="flex items-center gap-2 mb-2">
           <span className="text-3xl">🤖</span>
           <div>
@@ -75,13 +81,12 @@ export default function AISearchBar({ onSearch }: AISearchBarProps) {
           </div>
         )}
 
-        {/* Search Input */}
         <div className="flex gap-2">
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyPress}
             placeholder="e.g., How do I say 'hello' in Hiligaynon?"
             className="flex-1 px-4 py-3 rounded-2xl border-2 border-purple-300 focus:border-primary outline-none text-base font-semibold transition-all"
             disabled={loading}
@@ -96,7 +101,6 @@ export default function AISearchBar({ onSearch }: AISearchBarProps) {
           </Button>
         </div>
 
-        {/* Loading Animation */}
         {loading && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -114,7 +118,6 @@ export default function AISearchBar({ onSearch }: AISearchBarProps) {
           </motion.div>
         )}
 
-        {/* Error Message */}
         <AnimatePresence>
           {error && (
             <motion.div
@@ -128,7 +131,6 @@ export default function AISearchBar({ onSearch }: AISearchBarProps) {
           )}
         </AnimatePresence>
 
-        {/* Result */}
         <AnimatePresence>
           {result && (
             <motion.div
@@ -157,7 +159,6 @@ export default function AISearchBar({ onSearch }: AISearchBarProps) {
           )}
         </AnimatePresence>
 
-        {/* Suggested Questions */}
         {!result && !loading && (
           <div className="pt-2">
             <p className="text-xs text-gray-500 mb-2 font-semibold">💡 Try asking:</p>
@@ -166,7 +167,7 @@ export default function AISearchBar({ onSearch }: AISearchBarProps) {
                 'How do I count to 10?',
                 'Teach me greetings',
                 'What are common phrases?',
-                'Tell me about animals'
+                'Tell me about animals',
               ].map((suggestion) => (
                 <button
                   key={suggestion}
