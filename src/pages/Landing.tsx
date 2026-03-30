@@ -6,6 +6,7 @@ import { Page } from '../App';
 
 interface LandingProps {
   navigate: (page: Page) => void;
+  resetAppState: () => void;
 }
 
 declare global {
@@ -14,7 +15,7 @@ declare global {
   }
 }
 
-export default function Landing({ navigate }: LandingProps) {
+export default function Landing({ navigate, resetAppState }: LandingProps) {
   const googleButtonRef = useRef<HTMLDivElement>(null);
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
@@ -65,6 +66,8 @@ export default function Landing({ navigate }: LandingProps) {
     try {
       const payload = JSON.parse(atob(response.credential.split('.')[1]));
       console.log('Google Sign-In successful:', payload);
+
+      resetAppState();
       
       // Store user data (you can expand this)
       localStorage.setItem('user', JSON.stringify({
@@ -81,6 +84,7 @@ export default function Landing({ navigate }: LandingProps) {
   };
 
   const handleGuestLogin = () => {
+    resetAppState();
     localStorage.setItem('user', JSON.stringify({
       name: 'Guest',
       email: '',

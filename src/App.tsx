@@ -38,6 +38,24 @@ export interface AppState {
   scansRemaining: number;
 }
 
+function createDefaultAppState(getTodayKey: () => string): AppState {
+  return {
+    nativeLanguage: '',
+    targetLanguage: '',
+    mode: null,
+    currentVocabIndex: 0,
+    learnedWords: [],
+    stars: 0,
+    currentStreak: 1,
+    longestStreak: 1,
+    totalXP: 0,
+    lastActiveDate: getTodayKey(),
+    heartsRemaining: 5,
+    isPremium: false,
+    scansRemaining: 20,
+  };
+}
+
 function App() {
   const getTodayKey = () => new Date().toISOString().split('T')[0];
   const getYesterdayKey = () => {
@@ -55,23 +73,15 @@ function App() {
   });
   const [currentPage, setCurrentPage] = useState<Page>('landing');
   const [appState, setAppState] = useState<AppState>(() => {
-    const defaultState: AppState = {
-      nativeLanguage: '',
-      targetLanguage: '',
-      mode: null,
-      currentVocabIndex: 0,
-      learnedWords: [],
-      stars: 0,
-      currentStreak: 1,
-      longestStreak: 1,
-      totalXP: 0,
-      lastActiveDate: getTodayKey(),
-      heartsRemaining: 5,
-      isPremium: false,
-      scansRemaining: 20,
-    };
+    const defaultState = createDefaultAppState(getTodayKey);
 
     if (typeof window === 'undefined') {
+      return defaultState;
+    }
+
+    const storedUser = window.localStorage.getItem('user');
+    if (!storedUser) {
+      window.localStorage.removeItem('phonix-app-state');
       return defaultState;
     }
 
@@ -97,6 +107,21 @@ function App() {
 
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const hasUser = !!window.localStorage.getItem('user');
+    if (currentPage !== 'landing' || hasUser) {
+      return;
+    }
+
+    const defaultState = createDefaultAppState(getTodayKey);
+    window.localStorage.removeItem('phonix-app-state');
+    setAppState(defaultState);
+  }, [currentPage]);
 
   useEffect(() => {
     const today = getTodayKey();
@@ -133,10 +158,19 @@ function App() {
     setAppState((prev) => ({ ...prev, ...updates }));
   };
 
+  const resetAppState = () => {
+    const defaultState = createDefaultAppState(getTodayKey);
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem('phonix-app-state');
+      window.localStorage.removeItem('isPremium');
+    }
+    setAppState(defaultState);
+  };
+
   const renderPage = () => {
     switch (currentPage) {
       case 'landing':
-        return <Landing navigate={navigate} />;
+        return <Landing navigate={navigate} resetAppState={resetAppState} />;
       case 'setup':
         return <LanguageSetup navigate={navigate} updateState={updateState} />;
       case 'mode':
@@ -156,7 +190,7 @@ function App() {
       case 'premium':
         return <Premium navigate={navigate} appState={appState} updateState={updateState} />;
       default:
-        return <Landing navigate={navigate} />;
+        return <Landing navigate={navigate} resetAppState={resetAppState} />;
     }
   };
 
