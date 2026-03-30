@@ -5,7 +5,6 @@ import Card from '../components/Card';
 import NavigationHeader from '../components/NavigationHeader';
 import EnergyBar from '../components/EnergyBar';
 import { Page, AppState } from '../App';
-import Tesseract from 'tesseract.js';
 
 interface ScanModeProps {
   navigate: (page: Page) => void;
@@ -17,6 +16,12 @@ interface ScanResult {
   detectedText: string;
   translatedText: string;
   confidence: string;
+}
+
+interface ScanApiResponse {
+  detectedText: string;
+  translatedText: string;
+  confidence?: string;
 }
 
 export default function ScanMode({ navigate, appState, updateState }: ScanModeProps) {
@@ -82,11 +87,13 @@ export default function ScanMode({ navigate, appState, updateState }: ScanModePr
       return;
     }
 
-    videoRef.current.srcObject = stream;
+    const videoElement = videoRef.current;
 
-    videoRef.current.onloadedmetadata = async () => {
+    videoElement.srcObject = stream;
+
+    videoElement.onloadedmetadata = async () => {
       try {
-        await videoRef.current.play();
+        await videoElement.play();
         setCameraActive(true);
         setCameraLoading(false);
       } catch {
@@ -142,33 +149,14 @@ export default function ScanMode({ navigate, appState, updateState }: ScanModePr
     oscillator.stop(audioContext.currentTime + 0.1);
   };
 
-const translateTextWithAI = async (text: string, targetLanguage: string) => {
-  const response = await fetch('/api/ai', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      mode: 'translate',
-      text,
-      targetLanguage,
-    }),
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.error || 'AI translation failed');
-  }
-
-  return data.translation;
-};
-
 const translateTextWithGemini = async (text: string, targetLanguage: string) => {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  const apiKeys = [
+    import.meta.env.VITE_GEMINI_API_KEY,
+    import.meta.env.VITE_GEMINI_API_KEY_BACKUP,
+  ].filter(Boolean) as string[];
 
-  if (!apiKey) {
-    throw new Error('Missing VITE_GEMINI_API_KEY in .env');
+  if (apiKeys.length === 0) {
+    throw new Error('Missing VITE_GEMINI_API_KEY or VITE_GEMINI_API_KEY_BACKUP in .env');
   }
 
   const prompt = `
@@ -179,42 +167,73 @@ Do not explain anything.
 Text: ${text}
   `.trim();
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [{ text: prompt }],
-          },
-        ],
-      }),
+  let lastError: unknown = null;
+
+  for (let index = 0; index < apiKeys.length; index += 1) {
+    const apiKey = apiKeys[index];
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [{ text: prompt }],
+            },
+          ],
+        }),
+      }
+    );
+
+    const data = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      lastError = new Error(data?.error?.message || 'Gemini translation failed');
+
+      if (response.status === 429 && index < apiKeys.length - 1) {
+        console.warn('Primary Gemini key is rate-limited for translation, trying backup Gemini key.');
+        continue;
+      }
+
+      throw lastError;
     }
-  );
 
-  const data = await response.json();
+    const translatedText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
-  if (!response.ok) {
-    throw new Error(data?.error?.message || 'Gemini translation failed');
+    if (!translatedText) {
+      lastError = new Error('Gemini returned no text');
+      break;
+    }
+
+    return translatedText.trim();
   }
 
-  const translatedText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-  if (!translatedText) {
-    throw new Error('Gemini returned no text');
-  }
-
-  return translatedText.trim();
+  throw lastError instanceof Error ? lastError : new Error('Gemini translation failed');
 };
 
-const cleanOCRText = (text: string) => {
-  return text
-    .replace(/\s+/g, ' ')
-    .trim();
+const scanTextWithVision = async (image: string, targetLanguage: string) => {
+  const response = await fetch('/api/scan-translate', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      image,
+      targetLanguage,
+    }),
+  });
+
+  const data = (await response.json()) as ScanApiResponse & { error?: string };
+
+  if (!response.ok) {
+    throw new Error(data.error || 'Vision scan failed');
+  }
+
+  return data;
 };
 
 const captureAndAnalyze = async () => {
@@ -300,40 +319,21 @@ const captureAndAnalyze = async () => {
       upscaleCanvas.height
     );
 
-    const result = await Tesseract.recognize(
+    const result = await scanTextWithVision(
       upscaleCanvas.toDataURL('image/jpeg', 0.95),
-      'eng',
-      {
-        logger: (m) => console.log(m),
-        tessedit_pageseg_mode: Tesseract.PSM.SINGLE_LINE,
-      }
-    );
-
-    const rawText = result.data.text || '';
-    const detectedText = cleanOCRText(rawText);
-
-    if (!detectedText) {
-      setError('No readable text found. Place one clear word or one short line inside the white box.');
-      return;
-    }
-
-    const translatedText = await translateTextWithGemini(
-      detectedText,
       appState.targetLanguage || 'Hiligaynon'
     );
 
     setScanResult({
-      detectedText,
-      translatedText,
-      confidence: result.data.confidence
-        ? `${Math.round(result.data.confidence)}%`
-        : 'camera',
+      detectedText: result.detectedText,
+      translatedText: result.translatedText,
+      confidence: result.confidence || 'vision',
     });
 
     playSuccessSound();
   } catch (err) {
     console.error('Scan error:', err);
-    setError('Failed to scan and translate text.');
+    setError(err instanceof Error ? err.message : 'Failed to scan and translate text.');
   } finally {
     setIsScanning(false);
   }
