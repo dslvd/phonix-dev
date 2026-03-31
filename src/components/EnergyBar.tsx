@@ -154,7 +154,7 @@ export default function EnergyBar({ current, max, isPremium, onUpgrade }: Energy
           className="flex items-center justify-center gap-2 mt-2"
         >
           <div className="bg-gradient-to-r from-yellow-400 to-amber-500 text-white px-4 py-1 rounded-full text-xs font-bold shadow-lg">
-            💖 UNLIMITED HEARTS 💖
+             UNLIMITED BATTERIES 
           </div>
         </motion.div>
       )}
