@@ -422,7 +422,7 @@ export default function VocabularyLearning({
                 onClick={() => navigate('premium')}
                 className="flex-1 rounded-2xl bg-gradient-to-r from-primary to-secondary px-6 py-4 font-bold text-white shadow-lg"
               >
-                Get Unlimited Hearts 💖
+                Get Unlimited Batteries
               </button>
               <button
                 onClick={() => {

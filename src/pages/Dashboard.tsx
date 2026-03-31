@@ -405,7 +405,7 @@ export default function Dashboard({ navigate, appState }: DashboardProps) {
                       variant="primary"
                       fullWidth
                     >
-                      Get Unlimited Hearts 🚀
+                      Get Unlimited Batteries 
                     </Button>
                   </div>
                 </Card>
