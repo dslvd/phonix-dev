@@ -24,6 +24,8 @@ interface ScanApiResponse {
   confidence?: string;
 }
 
+const cleanOCRText = (text: string) => text.replace(/\s+/g, ' ').trim();
+
 export default function ScanMode({ navigate, appState, updateState }: ScanModeProps) {
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraLoading, setCameraLoading] = useState(false);
@@ -215,25 +217,94 @@ Text: ${text}
   throw lastError instanceof Error ? lastError : new Error('Gemini translation failed');
 };
 
-const scanTextWithVision = async (image: string, targetLanguage: string) => {
-  const response = await fetch('/api/scan-translate', {
+const detectTextWithVisionBrowser = async (image: string) => {
+  const apiKey = import.meta.env.VITE_GOOGLE_VISION_API_KEY;
+
+  if (!apiKey) {
+    throw new Error('Missing Google Vision API key for local scan fallback.');
+  }
+
+  const base64Image = image.replace(/^data:image\/[a-zA-Z0-9.+-]+;base64,/, '').trim();
+
+  const response = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      image,
-      targetLanguage,
+      requests: [
+        {
+          image: {
+            content: base64Image,
+          },
+          features: [{ type: 'TEXT_DETECTION' }],
+          imageContext: {
+            languageHints: ['en'],
+          },
+        },
+      ],
     }),
   });
 
-  const data = (await response.json()) as ScanApiResponse & { error?: string };
+  const data = await response.json().catch(() => null);
 
   if (!response.ok) {
-    throw new Error(data.error || 'Vision scan failed');
+    throw new Error(data?.error?.message || 'Google Vision OCR failed');
   }
 
-  return data;
+  const rawText =
+    data?.responses?.[0]?.fullTextAnnotation?.text ||
+    data?.responses?.[0]?.textAnnotations?.[0]?.description ||
+    '';
+
+  const detectedText = cleanOCRText(rawText);
+
+  if (!detectedText) {
+    throw new Error('No readable text found');
+  }
+
+  return detectedText;
+};
+
+const scanTextWithVisionBrowserFallback = async (image: string, targetLanguage: string) => {
+  const detectedText = await detectTextWithVisionBrowser(image);
+  const translatedText = await translateTextWithGemini(detectedText, targetLanguage);
+
+  return {
+    detectedText,
+    translatedText,
+    confidence: 'vision',
+  } satisfies ScanApiResponse;
+};
+
+const scanTextWithVision = async (image: string, targetLanguage: string) => {
+  try {
+    const response = await fetch('/api/scan-translate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        image,
+        targetLanguage,
+      }),
+    });
+
+    const data = (await response.json().catch(() => null)) as (ScanApiResponse & { error?: string }) | null;
+
+    if (!response.ok) {
+      throw new Error(data?.error || `Vision scan failed (${response.status})`);
+    }
+
+    if (!data?.detectedText || !data?.translatedText) {
+      throw new Error('Vision scan returned incomplete data');
+    }
+
+    return data;
+  } catch (error) {
+    console.warn('Server scan route unavailable, trying browser Vision fallback.', error);
+    return scanTextWithVisionBrowserFallback(image, targetLanguage);
+  }
 };
 
 const captureAndAnalyze = async () => {
@@ -823,11 +894,11 @@ const translateManualText = async () => {
                   </motion.div>
 
                   <h2 className="font-baloo text-3xl font-bold mb-4">
-                    Need More Hearts?
+                    Need More Batteries?
                   </h2>
 
                   <p className="text-lg mb-6 opacity-90">
-                    Free learners get 5 batteries, and every lesson mistake removes 1. Upgrade to <strong>Unlimited Hearts</strong> for stress-free practice!
+                    Free learners get 5 batteries, and every lesson mistake removes 1. Upgrade to <strong>Unlimited Batteries</strong> for stress-free practice!
                   </p>
 
                   <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-6">
@@ -839,7 +910,7 @@ const translateManualText = async () => {
                     <ul className="text-left space-y-2 text-sm">
                       <li className="flex items-center gap-2">
                         <span className="text-xl leading-none flex items-center justify-center">∞</span>
-                        <span>Unlimited hearts forever</span>
+                        <span>Unlimited batteries forever</span>
                       </li>
                       <li className="flex items-center gap-2">
                         <span className="text-xl leading-none flex items-center justify-center">📄</span>
@@ -864,8 +935,8 @@ const translateManualText = async () => {
                     >
                       <span className="flex items-center justify-center gap-2 text-lg">
                         <span>🚀</span>
-                        Unlock Unlimited Hearts
-                        <span>💖</span>
+                        Unlock Unlimited Batteries
+                        <span>🔋</span>
                       </span>
                     </motion.button>
 

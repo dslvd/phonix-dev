@@ -39,10 +39,10 @@ export default function EnergyBar({ current, max, isPremium, onUpgrade }: Energy
             transition={{ duration: 0.5, repeat: isLow && !isPremium ? Infinity : 0 }}
             className="text-2xl leading-none flex items-center justify-center"
           >
-            {isPremium ? '💖' : isCritical ? '🪫' : isLow ? '🔋' : '🔋'}
+            {isPremium ? '🔋' : isCritical ? '🪫' : isLow ? '🔋' : '🔋'}
           </motion.span>
           <span className="font-bold text-gray-800">
-            {isPremium ? 'Unlimited Hearts' : 'Batteries'}
+            {isPremium ? 'Unlimited Batteries' : 'Batteries'}
           </span>
         </div>
         
@@ -96,7 +96,7 @@ export default function EnergyBar({ current, max, isPremium, onUpgrade }: Energy
         {/* Text Overlay */}
         <div className="absolute inset-0 flex items-center justify-center">
           <span className="font-bold text-sm text-gray-800 drop-shadow-[0_1px_2px_rgba(255,255,255,0.8)]">
-            {isPremium ? '∞ Hearts' : `${current} / ${max} batteries`}
+            {isPremium ? '∞ Batteries' : `${current} / ${max} batteries`}
           </span>
         </div>
 
@@ -122,7 +122,7 @@ export default function EnergyBar({ current, max, isPremium, onUpgrade }: Energy
               animate={{ opacity: 1, y: 0 }}
               className="text-xs text-red-600 font-bold mt-2 text-center"
             >
-              ⚠️ Critical! Only {current} batteries left. Upgrade for unlimited hearts!
+              ⚠️ Critical! Only {current} batteries left. Upgrade for unlimited batteries!
             </motion.p>
           )}
           {isLow && !isCritical && (
@@ -131,7 +131,7 @@ export default function EnergyBar({ current, max, isPremium, onUpgrade }: Energy
               animate={{ opacity: 1, y: 0 }}
               className="text-xs text-orange-600 font-semibold mt-2 text-center"
             >
-              Running low. Consider upgrading to Unlimited Hearts 💖
+              Running low. Consider upgrading to Unlimited Batteries 🔋
             </motion.p>
           )}
           {current === 0 && (

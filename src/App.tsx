@@ -236,7 +236,7 @@ function App() {
               <div className="rounded-2xl border border-primary/20 bg-[rgba(255,145,38,0.08)] p-4">
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary-dark">Batteries</p>
                 <p className="mt-2 font-baloo text-2xl font-bold text-primary">
-                  {appState.isPremium ? '∞ Unlimited Hearts' : `${appState.heartsRemaining} / 5 batteries`}
+                  {appState.isPremium ? '∞ Unlimited Batteries' : `${appState.heartsRemaining} / 5 batteries`}
                 </p>
               </div>
               <div className="rounded-2xl border border-warning/50 bg-yellow-50 p-4">
