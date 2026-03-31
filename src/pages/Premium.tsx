@@ -23,15 +23,15 @@ export default function Premium({ navigate, appState, updateState }: PremiumProp
     localStorage.setItem('isPremium', 'true');
     
     // Show success and navigate back
-    alert('🎉 Unlimited Hearts Unlocked! You now have infinite hearts and premium features!');
+    alert('🎉 Unlimited Batteries Unlocked! You now have infinite batteries and premium features!');
     navigate('scan');
   };
 
   const features = [
     {
-      icon: '💖',
-      title: 'Unlimited Hearts',
-      description: 'Make mistakes while learning without ever running out of lives!',
+      icon: '🔋',
+      title: 'Unlimited Batteries',
+      description: 'Make mistakes while learning without ever running out of batteries!',
       gradient: 'from-purple-400 to-pink-500'
     },
     {
@@ -39,12 +39,6 @@ export default function Premium({ navigate, appState, updateState }: PremiumProp
       title: 'Document Translation',
       description: 'Translate entire documents and text passages',
       gradient: 'from-blue-400 to-cyan-500'
-    },
-    {
-      icon: '🔌',
-      title: 'Offline Mode',
-      description: 'Learn without an internet connection',
-      gradient: 'from-green-400 to-emerald-500'
     },
     {
       icon: '🎯',
@@ -119,7 +113,7 @@ export default function Premium({ navigate, appState, updateState }: PremiumProp
           </motion.div>
           
           <h1 className="font-baloo text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-pink-300 to-purple-300 mb-4">
-            Unlimited Hearts
+            Unlimited Batteries
           </h1>
           
           <p className="text-2xl text-purple-200 font-semibold mb-2">
@@ -144,7 +138,7 @@ export default function Premium({ navigate, appState, updateState }: PremiumProp
                   ⚠️ You have {appState.heartsRemaining} out of 5 batteries left
                 </p>
                 <p className="text-purple-200 text-sm">
-                  Upgrade now to learn with unlimited hearts!
+                  Upgrade now to learn with unlimited batteries!
                 </p>
               </div>
             </motion.div>
@@ -176,9 +170,9 @@ export default function Premium({ navigate, appState, updateState }: PremiumProp
                   className="bg-white text-purple-600 px-12 py-4 rounded-2xl font-bold text-xl shadow-2xl hover:bg-yellow-50 transition-colors"
                 >
                   <span className="flex items-center gap-3">
-                    <span>💖</span>
-                    Unlock Unlimited Hearts
-                    <span>💖</span>
+                    <span>🔋</span>
+                    Unlock Unlimited Batteries
+                    <span>🔋</span>
                   </span>
                 </motion.button>
               </div>
@@ -197,25 +191,28 @@ export default function Premium({ navigate, appState, updateState }: PremiumProp
             Premium Features
           </h2>
           
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="flex flex-wrap justify-center gap-6">
             {features.map((feature, index) => (
               <motion.div
                 key={feature.title}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 + index * 0.1 }}
+                className="w-full md:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)]"
               >
                 <Card 
                   hover 
                   className="bg-white/10 backdrop-blur-xl border-2 border-white/20 h-full"
                 >
                   <div className="text-center">
-                    <motion.div
-                      whileHover={{ scale: 1.2, rotate: 10 }}
-                      className={`text-6xl mb-4 inline-block leading-none flex items-center justify-center`}
-                    >
-                      {feature.icon}
-                    </motion.div>
+                    {feature.icon ? (
+                      <motion.div
+                        whileHover={{ scale: 1.2, rotate: 10 }}
+                        className="text-6xl mb-4 inline-block leading-none flex items-center justify-center"
+                      >
+                        {feature.icon}
+                      </motion.div>
+                    ) : null}
                     <h3 className={`font-baloo text-2xl font-bold mb-3 bg-gradient-to-r ${feature.gradient} bg-clip-text text-transparent`}>
                       {feature.title}
                     </h3>
@@ -244,7 +241,7 @@ export default function Premium({ navigate, appState, updateState }: PremiumProp
             {[
               {
                 name: 'Maria Santos',
-                quote: 'The unlimited hearts changed everything! I stay confident even when I make mistakes.',
+                quote: 'The unlimited batteries changed everything! I stay confident even when I make mistakes.',
                 avatar: '👩',
                 stars: 5
               },

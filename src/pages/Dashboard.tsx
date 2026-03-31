@@ -367,15 +367,15 @@ export default function Dashboard({ navigate, appState }: DashboardProps) {
               {appState.isPremium ? (
                 <Card className="bg-gradient-to-br from-yellow-100 via-amber-100 to-orange-100 border-2 border-yellow-400">
                   <div className="text-center">
-                    <div className="text-5xl mb-2 leading-none flex items-center justify-center">💖</div>
+                    <div className="text-5xl mb-2 leading-none flex items-center justify-center">🔋</div>
                     <h4 className="font-baloo text-lg font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent mb-2">
                       Premium Member
                     </h4>
                     <p className="text-xs text-gray-700 mb-2 font-semibold">
-                      Unlimited Hearts Active
+                      Unlimited Batteries Active
                     </p>
                     <div className="bg-white/50 rounded-lg p-2 text-xs space-y-1">
-                      <p className="font-bold text-gray-700">∞ Unlimited Hearts</p>
+                      <p className="font-bold text-gray-700">∞ Unlimited Batteries</p>
                       <p className="font-bold text-gray-700">📄 Document Translation</p>
                       <p className="font-bold text-gray-700">🔌 Offline Mode</p>
                     </div>

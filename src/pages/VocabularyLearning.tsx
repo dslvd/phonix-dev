@@ -415,7 +415,7 @@ export default function VocabularyLearning({
             <div className="mb-4 flex items-center justify-center text-7xl leading-none">🪫</div>
             <h3 className="font-baloo text-3xl font-bold text-gray-800">Out of Batteries!</h3>
             <p className="mt-3 text-gray-600 font-semibold">
-              Every mistake costs 1 battery. Upgrade to premium for unlimited hearts, or come back later and keep practicing.
+              Every mistake costs 1 battery. Upgrade to premium for unlimited batteries, or come back later and keep practicing.
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <button

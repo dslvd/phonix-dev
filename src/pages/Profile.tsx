@@ -283,7 +283,7 @@ export default function Profile({ navigate, appState }: ProfileProps) {
                   {appState.isPremium ? (
                     <>
                       <p className="font-baloo text-xl font-bold bg-gradient-to-r from-yellow-600 to-amber-600 bg-clip-text text-transparent mb-1">
-                        Unlimited Hearts
+                        Unlimited Batteries
                       </p>
                       <p className="text-sm text-gray-600">Premium Member</p>
                     </>
@@ -325,14 +325,14 @@ export default function Profile({ navigate, appState }: ProfileProps) {
                   ✨
                 </motion.div>
                 <h3 className="font-baloo text-4xl font-bold mb-3">
-                  Unlock Unlimited Hearts!
+                  Unlock Unlimited Batteries!
                 </h3>
                 <p className="text-xl mb-4 opacity-90">
-                  Get unlimited hearts + premium features
+                  Get unlimited batteries + premium features
                 </p>
                 <div className="flex flex-wrap justify-center gap-4 mb-6">
                   <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-bold">
-                    ∞ Unlimited Hearts
+                    ∞ Unlimited Batteries
                   </div>
                   <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-bold">
                     📄 Document Translation
