@@ -199,8 +199,17 @@ export default function SentenceLearning({
 
       {/* Mascot */}
       <Mascot
-        message="You're doing amazing! Keep it up! 💪"
+        message={
+          appState.nativeLanguage === 'Filipino'
+            ? 'Kailangan mo ba ng tulong sa pangungusap na ito?'
+            : 'Need help with this sentence?'
+        }
         animation="wiggle"
+        responseLanguage={appState.nativeLanguage || 'English'}
+        pageContext={`You are on the Sentence Practice page.
+Current sentence in ${appState.targetLanguage}: ${currentSentence.nativeSentence}.
+Current translation in ${appState.nativeLanguage}: ${currentSentence.englishSentence}.
+If the user asks for help on this page, explain that they can listen, go previous, or go next to continue sentence practice.`}
       />
     </div>
   );

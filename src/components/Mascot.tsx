@@ -6,6 +6,8 @@ interface MascotProps {
   message?: string;
   position?: 'bottom' | 'center';
   animation?: 'bounce' | 'float' | 'wiggle';
+  pageContext?: string;
+  responseLanguage?: string;
 }
 
 interface ChatMessage {
@@ -24,7 +26,10 @@ export default function Mascot({
   message = "Beep! Boop! Beep! Hello friends! Let's learn!",
   position = 'bottom',
   animation = 'float',
+  pageContext = '',
+  responseLanguage = 'English',
 }: MascotProps) {
+  const isFilipino = responseLanguage.trim().toLowerCase() === 'filipino';
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
@@ -46,6 +51,13 @@ export default function Mascot({
     bounce: 'animate-bounce-slow',
     float: 'animate-float',
     wiggle: 'animate-wiggle',
+  };
+  const uiText = {
+    title: isFilipino ? 'AI Assistant' : 'AI Assistant',
+    subtitle: isFilipino ? 'Magtanong ng tungkol sa lesson' : 'Ask a quick question about the lesson',
+    placeholder: isFilipino ? 'Magtanong tungkol sa salita o aralin' : 'Ask about a word or lesson...',
+    send: isFilipino ? 'Ipadala' : 'Send',
+    thinking: isFilipino ? 'Nag-iisip...' : 'Thinking...',
   };
 
   const panelClasses = useMemo(
@@ -78,7 +90,7 @@ export default function Mascot({
 
     try {
       const answer =
-        (await askCloudAI(trimmedQuery, 'Hiligaynon', history)) ||
+        (await askCloudAI(trimmedQuery, 'Hiligaynon', history, pageContext, responseLanguage)) ||
         'I can help with Hiligaynon questions.';
 
       setMessages((prev) => [
@@ -90,7 +102,7 @@ export default function Mascot({
         },
       ]);
     } catch (err) {
-      const fallbackAnswer = generateFallbackAIAnswer(trimmedQuery, 'Hiligaynon');
+      const fallbackAnswer = generateFallbackAIAnswer(trimmedQuery, 'Hiligaynon', responseLanguage);
 
       setMessages((prev) => [
         ...prev,
@@ -128,7 +140,7 @@ export default function Mascot({
               <div className="flex items-center justify-between bg-gradient-to-r from-cyan-400 via-sky-400 to-yellow-200 px-4 py-3">
                 <div>
                   <p className="font-baloo text-lg font-bold text-slate-900">AI Assistant</p>
-                  <p className="text-xs font-semibold text-slate-700">Ask a quick language question</p>
+                  <p className="text-xs font-semibold text-slate-700">{uiText.subtitle}</p>
                 </div>
                 <button
                   type="button"
@@ -161,7 +173,7 @@ export default function Mascot({
                 {loading && (
                   <div className="flex justify-start">
                     <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-500 shadow-sm">
-                      Thinking...
+                      {uiText.thinking}
                     </div>
                   </div>
                 )}
@@ -185,7 +197,7 @@ export default function Mascot({
                       }
                     }}
                     rows={1}
-                    placeholder="Ask about a word or phrase..."
+                    placeholder={uiText.placeholder}
                     className="max-h-28 min-h-[44px] flex-1 resize-none rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-sky-400"
                   />
                   <button
@@ -194,7 +206,7 @@ export default function Mascot({
                     disabled={loading || !query.trim()}
                     className="rounded-2xl bg-gradient-to-r from-sky-500 to-cyan-500 px-4 py-3 text-sm font-bold text-white shadow-lg transition disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    Send
+                    {uiText.send}
                   </button>
                 </div>
               </div>
@@ -213,9 +225,9 @@ export default function Mascot({
               exit={{ opacity: 0, y: 10 }}
               transition={{ delay: 0.2 }}
               onClick={() => setIsOpen(true)}
-              className="absolute bottom-20 right-3 max-w-[14rem] rounded-2xl bg-white px-4 py-3 text-left text-sm font-bold text-slate-700 shadow-lg"
+              className="absolute bottom-full right-0 mb-3 w-[11rem] rounded-2xl bg-white px-4 py-3 text-left text-sm font-bold leading-snug text-slate-700 shadow-lg md:w-[13rem]"
             >
-              <span className="block truncate">{cleanAssistantText(message)}</span>
+              <span className="block whitespace-normal break-words">{cleanAssistantText(message)}</span>
             </motion.button>
           )}
         </AnimatePresence>

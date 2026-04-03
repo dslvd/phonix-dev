@@ -37,30 +37,44 @@ export default function VocabularyLearning({
   
   const currentLevelWords = getCurrentDifficultyWords();
   const currentItem = vocabularyData[appState.currentVocabIndex];
+  const currentItemLearned = appState.learnedWords.includes(currentItem.id);
+  const nextIndex = appState.currentVocabIndex + 1;
+  const nextItem = nextIndex < vocabularyData.length ? vocabularyData[nextIndex] : null;
+  const nextItemLearned = nextItem ? appState.learnedWords.includes(nextItem.id) : false;
 
   // Check if we should show quiz
   useEffect(() => {
     // Show quiz every 3-4 words (randomly between 3-4)
-    if (consecutiveWords >= wordsBeforeQuiz && !isQuizMode) {
+    if (consecutiveWords >= wordsBeforeQuiz && !isQuizMode && !currentItemLearned) {
       setIsQuizMode(true);
     }
-  }, [consecutiveWords, wordsBeforeQuiz, isQuizMode]);
+  }, [consecutiveWords, wordsBeforeQuiz, isQuizMode, currentItemLearned]);
 
   const handleNext = () => {
+    const isNewDiscovery = !appState.learnedWords.includes(currentItem.id);
+    const tryingToAdvanceIntoNewContent =
+      !appState.isPremium &&
+      appState.heartsRemaining === 0 &&
+      (!currentItemLearned || (!!nextItem && !nextItemLearned));
+
+    if (tryingToAdvanceIntoNewContent) {
+      setShowOutOfHeartsModal(true);
+      return;
+    }
+
     // Add to learned words if not already learned
-    if (!appState.learnedWords.includes(currentItem.id)) {
+    if (isNewDiscovery) {
       updateState({
         learnedWords: [...appState.learnedWords, currentItem.id],
         totalXP: appState.totalXP + 10,
       });
+      setConsecutiveWords((prev) => prev + 1);
     } else {
       updateState({
         totalXP: appState.totalXP + 2,
       });
+      setConsecutiveWords(0);
     }
-
-    // Increment consecutive words counter
-    setConsecutiveWords(prev => prev + 1);
 
     // Move to next or go to sentence page
     if (appState.currentVocabIndex < vocabularyData.length - 1) {
@@ -102,6 +116,9 @@ export default function VocabularyLearning({
   };
 
   const handlePrevious = () => {
+    setConsecutiveWords(0);
+    setIsQuizMode(false);
+
     if (appState.currentVocabIndex > 0) {
       updateState({
         currentVocabIndex: appState.currentVocabIndex - 1,
@@ -405,8 +422,23 @@ export default function VocabularyLearning({
 
       {/* Mascot */}
       <Mascot
-        message={isQuizMode ? "Show me what you've learned! 🎯" : `Great job learning "${currentItem.englishWord}"! 🎉`}
+        message={
+          appState.nativeLanguage === 'Filipino'
+            ? isQuizMode
+              ? 'Handa ka na ba sa mabilis na quiz?'
+              : `Kailangan mo ba ng tulong sa salitang "${currentItem.englishWord}"?`
+            : isQuizMode
+            ? 'Ready for a quick quiz?'
+            : `Need help with the word "${currentItem.englishWord}"?`
+        }
         animation="bounce"
+        responseLanguage={appState.nativeLanguage || 'English'}
+        pageContext={`You are on the Vocabulary Learning page.
+Current word: ${currentItem.englishWord} -> ${currentItem.nativeWord}.
+Batteries left: ${appState.heartsRemaining} out of 5.
+${appState.isPremium ? 'This learner has premium and unlimited batteries.' : 'Free learners lose 1 battery for quiz mistakes and can upgrade on the premium page.'}
+${appState.heartsRemaining === 0 ? 'When batteries are 0, the learner can review previous words but cannot move forward into new content until they wait or upgrade.' : 'The learner can keep practicing and move forward.'}
+If asked what to do next, explain the available actions on this page in a short helpful way.`}
       />
 
       {showOutOfHeartsModal && (

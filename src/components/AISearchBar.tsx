@@ -6,14 +6,23 @@ import { AIRequestError, askCloudAI, generateFallbackAIAnswer } from '../lib/aiF
 
 interface AISearchBarProps {
   onSearch?: (query: string, result: string) => void;
+  responseLanguage?: string;
+  targetLanguage?: string;
+  pageContext?: string;
 }
 
-export default function AISearchBar({ onSearch }: AISearchBarProps) {
+export default function AISearchBar({
+  onSearch,
+  responseLanguage = 'English',
+  targetLanguage = 'Hiligaynon',
+  pageContext = '',
+}: AISearchBarProps) {
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState('');
   const [error, setError] = useState('');
   const [usingFallback, setUsingFallback] = useState(false);
+  const isFilipino = responseLanguage.trim().toLowerCase() === 'filipino';
 
   const handleSearch = async () => {
     if (!query.trim()) return;
@@ -25,23 +34,38 @@ export default function AISearchBar({ onSearch }: AISearchBarProps) {
 
     try {
       const aiResult =
-        (await askCloudAI(query, 'Hiligaynon')) || 'I am ready to help you practice more words!';
+        (await askCloudAI(query, targetLanguage, [], pageContext, responseLanguage)) ||
+        (isFilipino
+          ? 'Handa akong tumulong sa iyong pag-aaral.'
+          : 'I am ready to help you practice more words!');
 
       setResult(aiResult);
       if (onSearch) {
         onSearch(query, aiResult);
       }
     } catch (err) {
-      const fallbackResult = generateFallbackAIAnswer(query, 'Hiligaynon');
+      const fallbackResult = generateFallbackAIAnswer(query, targetLanguage, responseLanguage);
       setUsingFallback(true);
       setResult(fallbackResult);
 
       if (err instanceof AIRequestError && err.code === 'rate_limited') {
-        setError('Gemini hit a rate limit or quota limit. Smart Helper Mode is answering locally for now.');
+        setError(
+          isFilipino
+            ? 'Naabot ng Gemini ang rate o quota limit. Lokal muna ang sagot ng Smart Helper Mode.'
+            : 'Gemini hit a rate limit or quota limit. Smart Helper Mode is answering locally for now.'
+        );
       } else if (err instanceof AIRequestError && err.code === 'missing_api_key') {
-        setError('Gemini API key is missing. Smart Helper Mode is answering locally.');
+        setError(
+          isFilipino
+            ? 'Wala ang Gemini API key. Lokal muna ang sagot ng Smart Helper Mode.'
+            : 'Gemini API key is missing. Smart Helper Mode is answering locally.'
+        );
       } else {
-        setError('Cloud AI is unavailable right now. Smart Helper Mode is answering locally.');
+        setError(
+          isFilipino
+            ? 'Hindi available ang Cloud AI ngayon. Lokal muna ang sagot ng Smart Helper Mode.'
+            : 'Cloud AI is unavailable right now. Smart Helper Mode is answering locally.'
+        );
       }
 
       console.error('AI Search Error:', err);
@@ -69,14 +93,20 @@ export default function AISearchBar({ onSearch }: AISearchBarProps) {
             <h3 className="font-baloo text-xl font-bold text-gray-800">
               AI Learning Assistant
             </h3>
-            <p className="text-sm text-gray-600">Ask me anything about Filipino language!</p>
+            <p className="text-sm text-gray-600">
+              {isFilipino
+                ? `Magtanong tungkol sa ${targetLanguage} at sa app.`
+                : `Ask me anything about ${targetLanguage} and the app!`}
+            </p>
           </div>
         </div>
 
         {usingFallback && (
           <div className="rounded-2xl border-2 border-yellow-300 bg-yellow-50 px-4 py-3">
             <p className="text-sm font-bold text-yellow-700">
-              ✨ Smart Helper Mode is active so the website AI still works right away.
+              {isFilipino
+                ? 'Smart Helper Mode ay aktibo kaya may sagot agad ang website AI.'
+                : 'Smart Helper Mode is active so the website AI still works right away.'}
             </p>
           </div>
         )}
@@ -87,7 +117,11 @@ export default function AISearchBar({ onSearch }: AISearchBarProps) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyPress}
-            placeholder="e.g., How do I say 'hello' in Hiligaynon?"
+            placeholder={
+              isFilipino
+                ? `Paano sabihin ang "hello" sa ${targetLanguage}?`
+                : `e.g., How do I say 'hello' in ${targetLanguage}?`
+            }
             className="flex-1 px-4 py-3 rounded-2xl border-2 border-purple-300 focus:border-primary outline-none text-base font-semibold transition-all"
             disabled={loading}
           />
@@ -97,7 +131,7 @@ export default function AISearchBar({ onSearch }: AISearchBarProps) {
             disabled={loading || !query.trim()}
             icon={loading ? '⏳' : '🔍'}
           >
-            {loading ? 'Thinking...' : 'Ask'}
+            {loading ? (isFilipino ? 'Nag-iisip...' : 'Thinking...') : isFilipino ? 'Magtanong' : 'Ask'}
           </Button>
         </div>
 
@@ -114,7 +148,9 @@ export default function AISearchBar({ onSearch }: AISearchBarProps) {
             >
               🤖
             </motion.div>
-            <p className="text-sm text-gray-600 mt-2">AI is thinking...</p>
+            <p className="text-sm text-gray-600 mt-2">
+              {isFilipino ? 'Nag-iisip ang AI...' : 'AI is thinking...'}
+            </p>
           </motion.div>
         )}
 
@@ -141,7 +177,9 @@ export default function AISearchBar({ onSearch }: AISearchBarProps) {
             >
               <div className="flex items-start gap-2 mb-2">
                 <span className="text-2xl">💡</span>
-                <p className="font-bold text-sm text-purple-600">AI Answer:</p>
+                <p className="font-bold text-sm text-purple-600">
+                  {isFilipino ? 'Sagot ng AI:' : 'AI Answer:'}
+                </p>
               </div>
               <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">
                 {result}
@@ -153,7 +191,7 @@ export default function AISearchBar({ onSearch }: AISearchBarProps) {
                 }}
                 className="mt-3 text-xs text-purple-600 hover:text-purple-800 font-bold"
               >
-                ✨ Ask another question
+                {isFilipino ? 'Magtanong ulit' : 'Ask another question'}
               </button>
             </motion.div>
           )}
@@ -161,14 +199,25 @@ export default function AISearchBar({ onSearch }: AISearchBarProps) {
 
         {!result && !loading && (
           <div className="pt-2">
-            <p className="text-xs text-gray-500 mb-2 font-semibold">💡 Try asking:</p>
+            <p className="text-xs text-gray-500 mb-2 font-semibold">
+              {isFilipino ? 'Subukan mong itanong:' : 'Try asking:'}
+            </p>
             <div className="flex flex-wrap gap-2">
-              {[
-                'How do I count to 10?',
-                'Teach me greetings',
-                'What are common phrases?',
-                'Tell me about animals',
-              ].map((suggestion) => (
+              {(
+                isFilipino
+                  ? [
+                      'Paano magbilang hanggang 10?',
+                      'Turuan mo ako ng mga bati',
+                      'Ano ang gamit ng XP?',
+                      'Paano magka-battery ulit?',
+                    ]
+                  : [
+                      'How do I count to 10?',
+                      'Teach me greetings',
+                      'What does XP do?',
+                      'How do I get batteries again?',
+                    ]
+              ).map((suggestion) => (
                 <button
                   key={suggestion}
                   onClick={() => setQuery(suggestion)}

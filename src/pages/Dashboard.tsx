@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Button from '../components/Button';
 import Card from '../components/Card';
@@ -12,6 +13,7 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ navigate, appState }: DashboardProps) {
+  const [showNoBatteryModal, setShowNoBatteryModal] = useState(false);
   // Get word counts by difficulty
   const beginnerWords = getBeginnerWords();
   const intermediateWords = getIntermediateWords();
@@ -154,7 +156,18 @@ export default function Dashboard({ navigate, appState }: DashboardProps) {
           transition={{ delay: 0.2 }}
           className="mb-8"
         >
-          <AISearchBar />
+          <AISearchBar
+            responseLanguage={appState.nativeLanguage || 'English'}
+            targetLanguage={appState.targetLanguage || 'Hiligaynon'}
+            pageContext={`You are on the Dashboard page.
+Target language: ${appState.targetLanguage || 'Hiligaynon'}.
+Response language: ${appState.nativeLanguage || 'English'}.
+Batteries left: ${appState.heartsRemaining} out of 5.
+Stars: ${appState.stars}.
+XP: ${appState.totalXP}.
+${appState.isPremium ? 'This learner already has premium and unlimited batteries.' : 'If batteries are low or empty, the learner can open the Premium page to get unlimited batteries.'}
+If the user asks how to get more batteries, tell them to buy or open premium. If batteries are empty, say premium is the way to continue without limits.`}
+          />
         </motion.div>
 
         <div className="grid lg:grid-cols-3 gap-6">
@@ -440,6 +453,32 @@ export default function Dashboard({ navigate, appState }: DashboardProps) {
           </div>
         </div>
       </div>
+
+      {showNoBatteryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl border-4 border-primary bg-white p-8 text-center shadow-2xl">
+            <div className="mb-4 flex items-center justify-center text-7xl leading-none">🔋</div>
+            <h3 className="font-baloo text-3xl font-bold text-gray-800">0 Batteries Left</h3>
+            <p className="mt-3 font-semibold text-gray-600">
+              You can still review your learned words and quiz history, but new learning is locked until you recharge or upgrade to premium.
+            </p>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <button
+                onClick={() => navigate('premium')}
+                className="flex-1 rounded-2xl bg-gradient-to-r from-primary to-secondary px-6 py-4 font-bold text-white shadow-lg"
+              >
+                Upgrade to Premium
+              </button>
+              <button
+                onClick={() => setShowNoBatteryModal(false)}
+                className="flex-1 rounded-2xl bg-gray-100 px-6 py-4 font-bold text-gray-700"
+              >
+                Keep Reviewing
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
