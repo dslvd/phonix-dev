@@ -167,6 +167,8 @@ function App() {
     setAppState(defaultState);
   };
 
+  const sidebarState = currentPage === 'landing' ? createDefaultAppState(getTodayKey) : appState;
+
   const renderPage = () => {
     switch (currentPage) {
       case 'landing':
@@ -201,52 +203,52 @@ function App() {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(47,192,225,0.22),_transparent_30%),radial-gradient(circle_at_bottom_right,_rgba(255,145,38,0.2),_transparent_32%),linear-gradient(135deg,_#EBEBEB,_#f6f6f6,_#FFFEA7)] p-6">
       <div className="mx-auto grid max-w-7xl grid-cols-[320px,minmax(0,1fr)] gap-6">
-        <aside className="sticky top-6 flex h-[calc(100vh-3rem)] flex-col justify-between overflow-hidden rounded-[32px] border border-white/80 bg-[rgba(235,235,235,0.88)] p-6 shadow-[0_30px_80px_rgba(47,192,225,0.16)] backdrop-blur-2xl">
-          <div>
-            <div className="mb-8">
+        <aside className="sticky top-6 flex h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-[32px] border border-white/80 bg-[rgba(235,235,235,0.88)] p-4 shadow-[0_30px_80px_rgba(47,192,225,0.16)] backdrop-blur-2xl">
+          <div className="flex-1">
+            <div className="mb-4">
               <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-secondary text-3xl text-white shadow-lg">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-secondary text-2xl text-white shadow-lg">
                   ✨
                 </div>
                 <div>
-                  <p className="font-baloo text-3xl font-bold text-gray-900">Phonix</p>
+                  <p className="font-baloo text-[2rem] leading-none font-bold text-gray-900">Phonix</p>
                   <p className="text-sm font-semibold text-gray-500">Desktop learning hub</p>
                 </div>
               </div>
-              <div className="rounded-3xl bg-gradient-to-br from-primary via-secondary to-sky-400 p-5 text-white shadow-xl">
-                <p className="text-sm font-bold uppercase tracking-[0.2em] text-white/80">Now learning</p>
-                <h2 className="mt-2 font-baloo text-3xl font-bold">
-                  {appState.targetLanguage || 'Choose a language'}
+              <div className="rounded-3xl bg-gradient-to-br from-primary via-secondary to-sky-400 p-4 text-white shadow-xl">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/80">Now learning</p>
+                <h2 className="mt-2 font-baloo text-[2.15rem] leading-none font-bold">
+                  {sidebarState.targetLanguage || 'Choose a language'}
                 </h2>
                 <p className="mt-2 text-sm font-semibold text-white/85">
-                  {appState.nativeLanguage ? `From ${appState.nativeLanguage}` : 'Set up your first lesson to begin'}
+                  {sidebarState.targetLanguage ? 'Ready to practice' : 'Set up your first lesson to begin'}
                 </p>
               </div>
             </div>
 
-            <div className="space-y-4">
-              <div className="rounded-2xl border border-secondary/20 bg-sky-100 p-4">
+            <div className="space-y-2.5">
+              <div className="rounded-2xl border border-secondary/20 bg-sky-100 p-3.5">
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-secondary">Words learned</p>
-                <p className="mt-2 font-baloo text-4xl font-bold text-secondary-dark">{appState.learnedWords.length}</p>
+                <p className="mt-1.5 font-baloo text-4xl leading-none font-bold text-secondary-dark">{sidebarState.learnedWords.length}</p>
               </div>
-              <div className="rounded-2xl border border-warning/40 bg-yellow-100 p-4">
+              <div className="rounded-2xl border border-warning/40 bg-yellow-100 p-3.5">
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary-dark">Stars earned</p>
-                <p className="mt-2 font-baloo text-4xl font-bold text-primary">{appState.stars}</p>
+                <p className="mt-1.5 font-baloo text-4xl leading-none font-bold text-primary">{sidebarState.stars}</p>
               </div>
-              <div className="rounded-2xl border border-primary/20 bg-[rgba(255,145,38,0.08)] p-4">
+              <div className="rounded-2xl border border-primary/20 bg-[rgba(255,145,38,0.08)] p-3.5">
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary-dark">Batteries</p>
-                <p className="mt-2 font-baloo text-2xl font-bold text-primary">
-                  {appState.isPremium ? '∞ Unlimited Batteries' : `${appState.heartsRemaining} / 5 batteries`}
+                <p className="mt-1.5 font-baloo text-[1.75rem] leading-none font-bold text-primary">
+                  {sidebarState.isPremium ? '∞ Unlimited Batteries' : `${sidebarState.heartsRemaining} / 5 batteries`}
                 </p>
               </div>
-              <div className="rounded-2xl border border-warning/50 bg-yellow-50 p-4">
+              <div className="rounded-2xl border border-warning/50 bg-yellow-50 p-3.5">
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary-dark">Streak</p>
-                <p className="mt-2 font-baloo text-2xl font-bold text-primary">🔥 {appState.currentStreak} days</p>
-                <p className="mt-1 text-xs font-semibold text-gray-500">Best: {appState.longestStreak} days</p>
+                <p className="mt-1.5 font-baloo text-[1.75rem] leading-none font-bold text-primary">🔥 {sidebarState.currentStreak} {sidebarState.currentStreak === 1 ? 'day' : 'days'}</p>
+                <p className="mt-1 text-xs font-semibold text-gray-500">Best: {sidebarState.longestStreak} {sidebarState.longestStreak === 1 ? 'day' : 'days'}</p>
               </div>
-              <div className="rounded-2xl border border-secondary/20 bg-white/70 p-4">
+              <div className="rounded-2xl border border-secondary/20 bg-white/70 p-3.5">
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-secondary-dark">XP</p>
-                <p className="mt-2 font-baloo text-4xl font-bold text-secondary-dark">{appState.totalXP}</p>
+                <p className="mt-1.5 font-baloo text-4xl leading-none font-bold text-secondary-dark">{sidebarState.totalXP}</p>
               </div>
             </div>
           </div>

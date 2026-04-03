@@ -13,6 +13,8 @@ interface LanguageSetupProps {
 export default function LanguageSetup({ navigate, updateState }: LanguageSetupProps) {
   const [nativeLanguage, setNativeLanguage] = useState('');
   const [targetLanguage, setTargetLanguage] = useState('');
+  const nativeLanguageOptions = ['English', 'Filipino'];
+  const targetLanguageOptions = ['Hiligaynon'];
 
   const handleSubmit = () => {
     if (nativeLanguage && targetLanguage) {
@@ -53,13 +55,20 @@ export default function LanguageSetup({ navigate, updateState }: LanguageSetupPr
               I speak...
             </span>
           </label>
-          <input
-            type="text"
+          <select
             value={nativeLanguage}
             onChange={(e) => setNativeLanguage(e.target.value)}
-            placeholder="e.g., English, Tagalog"
-            className="w-full px-6 py-4 rounded-2xl border-4 border-gray-200 focus:border-primary outline-none text-lg font-semibold transition-all"
-          />
+            className="w-full px-6 py-4 rounded-2xl border-4 border-gray-200 focus:border-primary outline-none text-lg font-semibold transition-all bg-white text-gray-800"
+          >
+            <option value="" disabled>
+              Select a language
+            </option>
+            {nativeLanguageOptions.map((language) => (
+              <option key={language} value={language}>
+                {language}
+              </option>
+            ))}
+          </select>
         </motion.div>
 
         {/* Target Language Input */}
@@ -75,13 +84,20 @@ export default function LanguageSetup({ navigate, updateState }: LanguageSetupPr
               I want to learn...
             </span>
           </label>
-          <input
-            type="text"
+          <select
             value={targetLanguage}
             onChange={(e) => setTargetLanguage(e.target.value)}
-            placeholder="e.g., Hiligaynon, Bisaya"
-            className="w-full px-6 py-4 rounded-2xl border-4 border-gray-200 focus:border-secondary outline-none text-lg font-semibold transition-all"
-          />
+            className="w-full px-6 py-4 rounded-2xl border-4 border-gray-200 focus:border-secondary outline-none text-lg font-semibold transition-all bg-white text-gray-800"
+          >
+            <option value="" disabled>
+              Select a language
+            </option>
+            {targetLanguageOptions.map((language) => (
+              <option key={language} value={language}>
+                {language}
+              </option>
+            ))}
+          </select>
         </motion.div>
 
         {/* Submit Button */}
