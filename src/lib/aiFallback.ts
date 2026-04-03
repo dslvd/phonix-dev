@@ -6,6 +6,11 @@ export interface FallbackScanResult {
   confidence: 'smart-assist' | 'match';
 }
 
+export interface AIChatTurn {
+  role: 'user' | 'assistant';
+  text: string;
+}
+
 export class AIRequestError extends Error {
   code: string;
   status?: number;
@@ -19,6 +24,11 @@ export class AIRequestError extends Error {
 }
 
 const normalize = (value: string) => value.toLowerCase().trim();
+const stripEmoji = (value: string) =>
+  value
+    .replace(/\p{Extended_Pictographic}/gu, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
 
 async function postJson<T>(url: string, body: unknown): Promise<T> {
   const response = await fetch(url, {
@@ -117,15 +127,23 @@ async function callGeminiWithBackup(prompt: string, apiKeys: string[]) {
     : new AIRequestError('all_ai_paths_failed', 'All Gemini browser keys failed.');
 }
 
-function buildAssistantPrompt(query: string, targetLanguage: string) {
+function buildAssistantPrompt(query: string, targetLanguage: string, history: AIChatTurn[] = []) {
+  const conversation = history
+    .slice(-6)
+    .map((turn) => `${turn.role === 'user' ? 'User' : 'Assistant'}: ${turn.text}`)
+    .join('\n');
+
   return [
-    'You are a Filipino language translation assistant.',
+    'You are a concise Filipino language tutor.',
     `The target language is ${targetLanguage}.`,
-    'Answer directly and briefly.',
-    'If the user asks for the translation of a word, respond in this style:',
-    `"The ${targetLanguage} of door is pwerta."`,
-    'Do not add flowery intros, extra encouragement, or long explanations unless the user asks for more detail.',
-    'If the user asks a broader language question, still answer briefly and clearly.',
+    'Answer naturally, briefly, and clearly.',
+    'Do not use emojis.',
+    'Be conversational when the user is chatting casually.',
+    'When the user asks for a translation, translate it clearly and briefly.',
+    'For translation questions, prefer short natural replies such as "You can say pwerta." or "\"Ano ini?\" means \"What is this?\""',
+    'Keep explanations short unless the user asks for more detail.',
+    'If there is recent conversation, use it to stay on topic.',
+    conversation ? `Recent conversation:\n${conversation}` : '',
     `User question: ${query}`,
   ].join('\n');
 }
@@ -150,20 +168,36 @@ export function findVocabularyMatch(query: string) {
   });
 }
 
-export function generateFallbackAIAnswer(query: string, targetLanguage: string) {
+export function generateFallbackAIAnswer(query: string, _targetLanguage: string) {
   const normalizedQuery = normalize(query);
   const directMatch = findVocabularyMatch(query);
 
   if (directMatch) {
-    return `The ${targetLanguage} of ${directMatch.englishWord} is ${directMatch.nativeWord}.`;
+    return `You can say "${directMatch.nativeWord}".`;
+  }
+
+  if (normalizedQuery === 'hello' || normalizedQuery === 'hi' || normalizedQuery === 'hey') {
+    return 'Hello. In Hiligaynon, you can say "Kumusta."';
+  }
+
+  if (normalizedQuery.includes('how are you')) {
+    return 'You can say "Kumusta ka?"';
+  }
+
+  if (normalizedQuery.includes('thank you')) {
+    return 'You can say "Salamat."';
+  }
+
+  if (normalizedQuery.includes('what is this')) {
+    return '"Ano ini?" is a natural way to ask that.';
   }
 
   if (normalizedQuery.includes('hello') || normalizedQuery.includes('greeting')) {
-    return `A common greeting in ${targetLanguage} is Kumusta.`;
+    return 'A common greeting is "Kumusta."';
   }
 
   if (normalizedQuery.includes('count') || normalizedQuery.includes('number')) {
-    return `In ${targetLanguage}, you can start counting with isa, duha, tatlo, apat, lima.`;
+    return 'Start with isa, duha, tatlo, apat, lima.';
   }
 
   if (normalizedQuery.includes('animal')) {
@@ -173,7 +207,7 @@ export function generateFallbackAIAnswer(query: string, targetLanguage: string) 
       .map((item) => `${item.englishWord} = ${item.nativeWord}`)
       .join('\n');
 
-    return `Here are some animal words in ${targetLanguage}:\n${animals}`;
+    return `Here are a few animal words:\n${animals}`;
   }
 
   if (normalizedQuery.includes('food')) {
@@ -183,7 +217,7 @@ export function generateFallbackAIAnswer(query: string, targetLanguage: string) 
       .map((item) => `${item.englishWord} = ${item.nativeWord}`)
       .join('\n');
 
-    return `Here are some food words in ${targetLanguage}:\n${foods}`;
+    return `Here are a few food words:\n${foods}`;
   }
 
   const suggestions = vocabularyData
@@ -191,7 +225,7 @@ export function generateFallbackAIAnswer(query: string, targetLanguage: string) 
     .map((item) => `${item.englishWord} -> ${item.nativeWord}`)
     .join('\n');
 
-  return `Ask for a direct translation, like "What is the ${targetLanguage} of door?"\n\nExamples:\n${suggestions}`;
+  return `Ask about a word, phrase, greeting, or counting.\n\nExamples:\n${suggestions}`;
 }
 
 export function getFallbackScanResult(label: string, targetLanguage: string): FallbackScanResult | null {
@@ -217,8 +251,12 @@ export function getFallbackScanResult(label: string, targetLanguage: string): Fa
   };
 }
 
-export async function askCloudAI(query: string, targetLanguage = 'Hiligaynon') {
-  const prompt = buildAssistantPrompt(query, targetLanguage);
+export async function askCloudAI(
+  query: string,
+  targetLanguage = 'Hiligaynon',
+  history: AIChatTurn[] = []
+) {
+  const prompt = buildAssistantPrompt(query, targetLanguage, history);
   const browserApiKeys = [
     import.meta.env.VITE_GEMINI_API_KEY,
     import.meta.env.VITE_GEMINI_API_KEY_BACKUP,
@@ -229,7 +267,7 @@ export async function askCloudAI(query: string, targetLanguage = 'Hiligaynon') {
 
   if (browserApiKeys.length > 0) {
     try {
-      return await callGeminiWithBackup(prompt, browserApiKeys);
+      return stripEmoji(await callGeminiWithBackup(prompt, browserApiKeys));
     } catch (error) {
       if (error instanceof AIRequestError && error.code === 'rate_limited' && isLocalDev) {
         throw error;
@@ -243,7 +281,7 @@ export async function askCloudAI(query: string, targetLanguage = 'Hiligaynon') {
     try {
       const apiResponse = await postJson<{ text?: string }>('/api/ai', { prompt });
       if (apiResponse.text) {
-        return apiResponse.text.replace(/\*\*/g, '');
+        return stripEmoji(apiResponse.text.replace(/\*\*/g, ''));
       }
     } catch (error) {
       console.warn('Server AI route unavailable.', error);

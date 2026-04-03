@@ -1,4 +1,6 @@
-import { motion } from 'framer-motion';
+import { useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { AIChatTurn, AIRequestError, askCloudAI, generateFallbackAIAnswer } from '../lib/aiFallback';
 
 interface MascotProps {
   message?: string;
@@ -6,13 +8,37 @@ interface MascotProps {
   animation?: 'bounce' | 'float' | 'wiggle';
 }
 
+interface ChatMessage {
+  id: string;
+  role: 'assistant' | 'user';
+  text: string;
+}
+
+const cleanAssistantText = (value: string) =>
+  value
+    .replace(/\p{Extended_Pictographic}/gu, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+
 export default function Mascot({
   message = "Beep! Boop! Beep! Hello friends! Let's learn!",
   position = 'bottom',
   animation = 'float',
 }: MascotProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: 'welcome',
+      role: 'assistant',
+      text: cleanAssistantText(message),
+    },
+  ]);
+
   const positionClasses = {
-    bottom: 'fixed bottom-4 right-4 md:bottom-8 md:right-8',
+    bottom: 'fixed bottom-4 right-4 md:bottom-6 md:right-6',
     center: 'mx-auto',
   };
 
@@ -22,32 +48,190 @@ export default function Mascot({
     wiggle: 'animate-wiggle',
   };
 
+  const panelClasses = useMemo(
+    () =>
+      position === 'bottom'
+        ? 'fixed bottom-24 right-4 z-50 w-[min(22rem,calc(100vw-1.5rem))] md:bottom-28 md:right-6'
+        : 'mx-auto mt-4 w-full max-w-sm',
+    [position]
+  );
+
+  const handleAsk = async () => {
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery || loading) return;
+
+    const history: AIChatTurn[] = messages.map((entry) => ({
+      role: entry.role,
+      text: entry.text,
+    }));
+
+    const userMessage: ChatMessage = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      text: trimmedQuery,
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setQuery('');
+    setLoading(true);
+    setError('');
+
+    try {
+      const answer =
+        (await askCloudAI(trimmedQuery, 'Hiligaynon', history)) ||
+        'I can help with Hiligaynon questions.';
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `assistant-${Date.now()}`,
+          role: 'assistant',
+          text: cleanAssistantText(answer),
+        },
+      ]);
+    } catch (err) {
+      const fallbackAnswer = generateFallbackAIAnswer(trimmedQuery, 'Hiligaynon');
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `assistant-${Date.now()}`,
+          role: 'assistant',
+          text: cleanAssistantText(fallbackAnswer),
+        },
+      ]);
+
+      if (err instanceof AIRequestError && err.code === 'rate_limited') {
+        setError('Gemini is busy right now. Smart Helper Mode answered locally.');
+      } else if (err instanceof AIRequestError && err.code === 'missing_api_key') {
+        setError('Gemini key is missing. Smart Helper Mode answered locally.');
+      } else {
+        setError('Cloud AI is unavailable right now. Smart Helper Mode answered locally.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className={`${positionClasses[position]} z-50 pointer-events-none select-none`}>
-      <motion.div
-        initial={{ scale: 0, rotate: -180 }}
-        animate={{ scale: 1, rotate: 0 }}
-        transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-        className="relative"
-      >
-        {message && (
+    <>
+      <AnimatePresence>
+        {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="absolute -top-20 left-1/2 transform -translate-x-1/2 bg-white rounded-2xl px-4 py-3 shadow-lg whitespace-nowrap text-sm font-bold mb-2"
+            initial={{ opacity: 0, y: 16, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 12, scale: 0.96 }}
+            transition={{ duration: 0.18 }}
+            className={panelClasses}
           >
-            <div className="relative">
-              {message}
-              <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-white"></div>
+            <div className="overflow-hidden rounded-3xl border border-white/70 bg-white/95 shadow-2xl backdrop-blur-xl">
+              <div className="flex items-center justify-between bg-gradient-to-r from-cyan-400 via-sky-400 to-yellow-200 px-4 py-3">
+                <div>
+                  <p className="font-baloo text-lg font-bold text-slate-900">AI Assistant</p>
+                  <p className="text-xs font-semibold text-slate-700">Ask a quick language question</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-lg font-bold text-slate-700 transition hover:bg-white"
+                  aria-label="Close AI assistant"
+                >
+                  x
+                </button>
+              </div>
+
+              <div className="max-h-80 space-y-3 overflow-y-auto px-4 py-4">
+                {messages.map((chatMessage) => (
+                  <div
+                    key={chatMessage.id}
+                    className={`flex ${chatMessage.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm font-semibold leading-relaxed shadow-sm ${
+                        chatMessage.role === 'user'
+                          ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-white'
+                          : 'bg-slate-50 text-slate-700'
+                      }`}
+                    >
+                      {chatMessage.text}
+                    </div>
+                  </div>
+                ))}
+
+                {loading && (
+                  <div className="flex justify-start">
+                    <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-500 shadow-sm">
+                      Thinking...
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {error && (
+                <div className="border-t border-amber-100 bg-amber-50 px-4 py-2 text-xs font-semibold text-amber-700">
+                  {error}
+                </div>
+              )}
+
+              <div className="border-t border-slate-100 px-4 py-3">
+                <div className="flex items-end gap-2">
+                  <textarea
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleAsk();
+                      }
+                    }}
+                    rows={1}
+                    placeholder="Ask about a word or phrase..."
+                    className="max-h-28 min-h-[44px] flex-1 resize-none rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-sky-400"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAsk}
+                    disabled={loading || !query.trim()}
+                    className="rounded-2xl bg-gradient-to-r from-sky-500 to-cyan-500 px-4 py-3 text-sm font-bold text-white shadow-lg transition disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Send
+                  </button>
+                </div>
+              </div>
             </div>
           </motion.div>
         )}
-        
-        <div className={`${animationClasses[animation]} text-6xl md:text-8xl`}>
-          🤖
-        </div>
-      </motion.div>
-    </div>
+      </AnimatePresence>
+
+      <div className={`${positionClasses[position]} z-50 select-none`}>
+        <AnimatePresence>
+          {!isOpen && message && position === 'bottom' && (
+            <motion.button
+              type="button"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ delay: 0.2 }}
+              onClick={() => setIsOpen(true)}
+              className="absolute bottom-20 right-3 max-w-[14rem] rounded-2xl bg-white px-4 py-3 text-left text-sm font-bold text-slate-700 shadow-lg"
+            >
+              <span className="block truncate">{cleanAssistantText(message)}</span>
+            </motion.button>
+          )}
+        </AnimatePresence>
+
+        <motion.button
+          type="button"
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+          onClick={() => setIsOpen((prev) => !prev)}
+          className="relative flex items-center justify-center rounded-full border border-white/60 bg-white/90 p-2 shadow-2xl backdrop-blur-md"
+          aria-label={isOpen ? 'Hide AI assistant' : 'Open AI assistant'}
+        >
+          <span className={`${animationClasses[animation]} text-5xl leading-none md:text-6xl`}>🤖</span>
+        </motion.button>
+      </div>
+    </>
   );
 }
