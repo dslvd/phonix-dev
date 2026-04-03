@@ -127,7 +127,13 @@ async function callGeminiWithBackup(prompt: string, apiKeys: string[]) {
     : new AIRequestError('all_ai_paths_failed', 'All Gemini browser keys failed.');
 }
 
-function buildAssistantPrompt(query: string, targetLanguage: string, history: AIChatTurn[] = []) {
+function buildAssistantPrompt(
+  query: string,
+  targetLanguage: string,
+  history: AIChatTurn[] = [],
+  pageContext = '',
+  responseLanguage = 'English'
+) {
   const conversation = history
     .slice(-6)
     .map((turn) => `${turn.role === 'user' ? 'User' : 'Assistant'}: ${turn.text}`)
@@ -136,13 +142,18 @@ function buildAssistantPrompt(query: string, targetLanguage: string, history: AI
   return [
     'You are a concise Filipino language tutor.',
     `The target language is ${targetLanguage}.`,
+    `The learner's preferred response language is ${responseLanguage}.`,
     'Answer naturally, briefly, and clearly.',
     'Do not use emojis.',
+    `For normal conversation and app guidance, respond in ${responseLanguage}.`,
+    'If the user asks about what to do in the app, answer using the current page context.',
     'Be conversational when the user is chatting casually.',
-    'When the user asks for a translation, translate it clearly and briefly.',
+    `When the user asks for a translation, translate it clearly and briefly, but keep the explanation in ${responseLanguage}.`,
     'For translation questions, prefer short natural replies such as "You can say pwerta." or "\"Ano ini?\" means \"What is this?\""',
+    `Do not switch away from ${responseLanguage} unless the user explicitly asks for another language or asks for a translation example.`,
     'Keep explanations short unless the user asks for more detail.',
     'If there is recent conversation, use it to stay on topic.',
+    pageContext ? `Current app context:\n${pageContext}` : '',
     conversation ? `Recent conversation:\n${conversation}` : '',
     `User question: ${query}`,
   ].join('\n');
@@ -168,36 +179,65 @@ export function findVocabularyMatch(query: string) {
   });
 }
 
-export function generateFallbackAIAnswer(query: string, _targetLanguage: string) {
+export function generateFallbackAIAnswer(
+  query: string,
+  _targetLanguage: string,
+  responseLanguage = 'English'
+) {
   const normalizedQuery = normalize(query);
   const directMatch = findVocabularyMatch(query);
+  const isFilipino = normalize(responseLanguage) === 'filipino';
+  const reply = (english: string, filipino: string) => (isFilipino ? filipino : english);
 
   if (directMatch) {
-    return `You can say "${directMatch.nativeWord}".`;
+    return reply(`You can say "${directMatch.nativeWord}".`, `Pwede mo sabihin ang "${directMatch.nativeWord}".`);
   }
 
   if (normalizedQuery === 'hello' || normalizedQuery === 'hi' || normalizedQuery === 'hey') {
-    return 'Hello. In Hiligaynon, you can say "Kumusta."';
+    return reply('Hello. In Hiligaynon, you can say "Kumusta."', 'Hello. Sa Hiligaynon, puwede mong sabihin ang "Kumusta."');
   }
 
   if (normalizedQuery.includes('how are you')) {
-    return 'You can say "Kumusta ka?"';
+    return reply('You can say "Kumusta ka?"', 'Puwede mong sabihin ang "Kumusta ka?"');
   }
 
   if (normalizedQuery.includes('thank you')) {
-    return 'You can say "Salamat."';
+    return reply('You can say "Salamat."', 'Puwede mong sabihin ang "Salamat."');
+  }
+
+  if (
+    normalizedQuery.includes('buy battery') ||
+    normalizedQuery.includes('get battery') ||
+    normalizedQuery.includes('more battery') ||
+    normalizedQuery.includes('battery ulit') ||
+    normalizedQuery.includes('magka-battery') ||
+    normalizedQuery.includes('paano magka-battery') ||
+    normalizedQuery.includes('ubos ang battery') ||
+    normalizedQuery.includes('walang battery')
+  ) {
+    return reply(
+      'Open the Premium page if you want more batteries right away. Premium gives you unlimited batteries.',
+      'Buksan ang Premium page kung gusto mo ng battery agad. Ang premium ay may unlimited batteries.'
+    );
+  }
+
+  if (normalizedQuery.includes('xp')) {
+    return reply(
+      'XP shows your learning progress in the app.',
+      'Ang XP ay nagpapakita ng progreso mo sa app.'
+    );
   }
 
   if (normalizedQuery.includes('what is this')) {
-    return '"Ano ini?" is a natural way to ask that.';
+    return reply('"Ano ini?" is a natural way to ask that.', '"Ano ini?" ang natural na paraan para itanong iyan.');
   }
 
   if (normalizedQuery.includes('hello') || normalizedQuery.includes('greeting')) {
-    return 'A common greeting is "Kumusta."';
+    return reply('A common greeting is "Kumusta."', 'Karaniwang bati ang "Kumusta."');
   }
 
   if (normalizedQuery.includes('count') || normalizedQuery.includes('number')) {
-    return 'Start with isa, duha, tatlo, apat, lima.';
+    return reply('Start with isa, duha, tatlo, apat, lima.', 'Magsimula sa isa, duha, tatlo, apat, lima.');
   }
 
   if (normalizedQuery.includes('animal')) {
@@ -207,7 +247,7 @@ export function generateFallbackAIAnswer(query: string, _targetLanguage: string)
       .map((item) => `${item.englishWord} = ${item.nativeWord}`)
       .join('\n');
 
-    return `Here are a few animal words:\n${animals}`;
+    return reply(`Here are a few animal words:\n${animals}`, `Narito ang ilang salitang hayop:\n${animals}`);
   }
 
   if (normalizedQuery.includes('food')) {
@@ -217,7 +257,7 @@ export function generateFallbackAIAnswer(query: string, _targetLanguage: string)
       .map((item) => `${item.englishWord} = ${item.nativeWord}`)
       .join('\n');
 
-    return `Here are a few food words:\n${foods}`;
+    return reply(`Here are a few food words:\n${foods}`, `Narito ang ilang salitang pagkain:\n${foods}`);
   }
 
   const suggestions = vocabularyData
@@ -225,7 +265,10 @@ export function generateFallbackAIAnswer(query: string, _targetLanguage: string)
     .map((item) => `${item.englishWord} -> ${item.nativeWord}`)
     .join('\n');
 
-  return `Ask about a word, phrase, greeting, or counting.\n\nExamples:\n${suggestions}`;
+  return reply(
+    `Ask about a word, phrase, greeting, or counting.\n\nExamples:\n${suggestions}`,
+    `Magtanong tungkol sa salita, parirala, bati, o pagbibilang.\n\nExamples:\n${suggestions}`
+  );
 }
 
 export function getFallbackScanResult(label: string, targetLanguage: string): FallbackScanResult | null {
@@ -254,9 +297,11 @@ export function getFallbackScanResult(label: string, targetLanguage: string): Fa
 export async function askCloudAI(
   query: string,
   targetLanguage = 'Hiligaynon',
-  history: AIChatTurn[] = []
+  history: AIChatTurn[] = [],
+  pageContext = '',
+  responseLanguage = 'English'
 ) {
-  const prompt = buildAssistantPrompt(query, targetLanguage, history);
+  const prompt = buildAssistantPrompt(query, targetLanguage, history, pageContext, responseLanguage);
   const browserApiKeys = [
     import.meta.env.VITE_GEMINI_API_KEY,
     import.meta.env.VITE_GEMINI_API_KEY_BACKUP,
