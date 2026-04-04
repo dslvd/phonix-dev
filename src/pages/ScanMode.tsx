@@ -693,7 +693,7 @@ const translateManualText = async () => {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.8, y: -20 }}
                 >
-                  <Card className="bg-gradient-to-br from-green-100 to-emerald-200 border-4 border-green-400">
+                  <Card className="bg-gradient-to-br from-[#FF9126] to-[#FF9126] border-4 border-[#FF9126]">
                     <div className="text-center">
                       <div className="text-5xl mb-3 leading-none flex items-center justify-center">✨</div>
                       <h3 className="font-baloo text-2xl font-bold text-gray-800 mb-2">

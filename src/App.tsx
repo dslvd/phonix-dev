@@ -9,6 +9,7 @@ import SentenceLearning from './pages/SentenceLearning';
 import VocabularyCollection from './pages/VocabularyCollection';
 import Profile from './pages/Profile';
 import Premium from './pages/Premium';
+import Mascot from './components/Mascot';
 
 export type Page = 
   | 'landing'
@@ -56,6 +57,29 @@ function createDefaultAppState(getTodayKey: () => string): AppState {
   };
 }
 
+function getStoredUser() {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const rawUser = window.localStorage.getItem('user');
+  if (!rawUser) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(rawUser) as { name?: string; email?: string };
+  } catch {
+    return null;
+  }
+}
+
+function getUserKey() {
+  const user = getStoredUser();
+  const email = (user?.email || '').trim().toLowerCase();
+  return email || null;
+}
+
 function App() {
   const getTodayKey = () => new Date().toISOString().split('T')[0];
   const getYesterdayKey = () => {
@@ -72,6 +96,7 @@ function App() {
     return window.innerWidth < 1024;
   });
   const [currentPage, setCurrentPage] = useState<Page>('landing');
+  const [hasHydratedFromCloud, setHasHydratedFromCloud] = useState(false);
   const [appState, setAppState] = useState<AppState>(() => {
     const defaultState = createDefaultAppState(getTodayKey);
 
@@ -167,7 +192,106 @@ function App() {
     setAppState(defaultState);
   };
 
-  const sidebarState = currentPage === 'landing' ? createDefaultAppState(getTodayKey) : appState;
+  const isGuestMode = (() => {
+    const user = getStoredUser();
+    if (!user) {
+      return false;
+    }
+
+    const name = (user.name || '').trim().toLowerCase();
+    const email = (user.email || '').trim();
+    return name === 'guest' || email.length === 0;
+  })();
+  const userKey = getUserKey();
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    setHasHydratedFromCloud(false);
+
+    if (!userKey || isGuestMode) {
+      setHasHydratedFromCloud(true);
+      return;
+    }
+
+    let cancelled = false;
+
+    const hydrateFromCloud = async () => {
+      try {
+        const response = await fetch(`/api/user-state?userKey=${encodeURIComponent(userKey)}`);
+        if (!response.ok) {
+          return;
+        }
+
+        const data = await response.json();
+        if (!cancelled && data?.state) {
+          setAppState((prev) => ({ ...prev, ...data.state }));
+        }
+      } catch (error) {
+        console.error('Failed to load state from D1:', error);
+      } finally {
+        if (!cancelled) {
+          setHasHydratedFromCloud(true);
+        }
+      }
+    };
+
+    hydrateFromCloud();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userKey, isGuestMode]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    if (!userKey || isGuestMode || !hasHydratedFromCloud) {
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => {
+      fetch('/api/user-state', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userKey,
+          state: appState,
+        }),
+        signal: controller.signal,
+      }).catch((error) => {
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        console.error('Failed to save state to D1:', error);
+      });
+    }, 500);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timeoutId);
+    };
+  }, [appState, userKey, isGuestMode, hasHydratedFromCloud]);
+
+  const showDesktopSidebar = currentPage === 'dashboard';
+  const desktopNavItems: Array<{ label: string; icon: string; page: Page }> = [
+    { label: 'Learn', icon: '🏠', page: 'dashboard' },
+    { label: 'Words', icon: '🔤', page: 'vocabulary' },
+    { label: 'Collection', icon: '🎒', page: 'collection' },
+    { label: 'Scan', icon: '📸', page: 'scan' },
+    { label: 'Premium', icon: '⭐', page: 'premium' },
+  ];
+  if (!isGuestMode) {
+    desktopNavItems.splice(4, 0, { label: 'Profile', icon: '👤', page: 'profile' });
+  }
 
   const renderPage = () => {
     switch (currentPage) {
@@ -188,7 +312,9 @@ function App() {
       case 'collection':
         return <VocabularyCollection navigate={navigate} appState={appState} />;
       case 'profile':
-        return <Profile navigate={navigate} appState={appState} />;
+        return isGuestMode
+          ? <Landing navigate={navigate} resetAppState={resetAppState} />
+          : <Profile navigate={navigate} appState={appState} />;
       case 'premium':
         return <Premium navigate={navigate} appState={appState} updateState={updateState} />;
       default:
@@ -197,67 +323,77 @@ function App() {
   };
 
   if (isMobile) {
-    return <div className="min-h-screen bg-white">{renderPage()}</div>;
+    return (
+      <div className="min-h-screen bg-[#0f1b24]">
+        {renderPage()}
+        <Mascot
+          message="AI Learning Assistant"
+          animation="float"
+          responseLanguage={appState.nativeLanguage || 'English'}
+          pageContext={`Current page: ${currentPage}. Help the learner with quick, actionable guidance for this screen.`}
+        />
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(47,192,225,0.22),_transparent_30%),radial-gradient(circle_at_bottom_right,_rgba(255,145,38,0.2),_transparent_32%),linear-gradient(135deg,_#EBEBEB,_#f6f6f6,_#FFFEA7)] p-6">
-      <div className="mx-auto grid max-w-7xl grid-cols-[320px,minmax(0,1fr)] gap-6">
-        <aside className="sticky top-6 flex h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-[32px] border border-white/80 bg-[rgba(235,235,235,0.88)] p-4 shadow-[0_30px_80px_rgba(47,192,225,0.16)] backdrop-blur-2xl">
-          <div className="flex-1">
-            <div className="mb-4">
-              <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-secondary text-2xl text-white shadow-lg">
-                  ✨
-                </div>
-                <div>
-                  <p className="font-baloo text-[2rem] leading-none font-bold text-gray-900">Phonix</p>
-                  <p className="text-sm font-semibold text-gray-500">Desktop learning hub</p>
-                </div>
-              </div>
-              <div className="rounded-3xl bg-gradient-to-br from-primary via-secondary to-sky-400 p-4 text-white shadow-xl">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/80">Now learning</p>
-                <h2 className="mt-2 font-baloo text-[2.15rem] leading-none font-bold">
-                  {sidebarState.targetLanguage || 'Choose a language'}
-                </h2>
-                <p className="mt-2 text-sm font-semibold text-white/85">
-                  {sidebarState.targetLanguage ? 'Ready to practice' : 'Set up your first lesson to begin'}
-                </p>
-              </div>
+    <div className={`${showDesktopSidebar ? 'bg-[#08131b] p-4' : 'bg-[radial-gradient(circle_at_20%_0%,rgba(72,187,255,0.08),transparent_30%),#0f1b24] p-6'} min-h-screen`}>
+      <div className={`mx-auto ${showDesktopSidebar ? 'max-w-[1400px] grid grid-cols-[240px,minmax(0,1fr)] gap-4' : 'max-w-7xl'}`}>
+        {showDesktopSidebar && (
+          <aside className="sticky top-4 flex h-[calc(100vh-2rem)] flex-col overflow-hidden rounded-[28px] border border-[#1f3544] bg-[#0b1f2b] p-4 shadow-[0_24px_50px_rgba(0,0,0,0.45)]">
+            <div>
+              <h1 className="font-baloo text-4xl font-bold text-[#FF9126]">phonix</h1>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#88a8bb]">learning app</p>
             </div>
 
-            <div className="space-y-2.5">
-              <div className="rounded-2xl border border-secondary/20 bg-sky-100 p-3.5">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-secondary">Words learned</p>
-                <p className="mt-1.5 font-baloo text-4xl leading-none font-bold text-secondary-dark">{sidebarState.learnedWords.length}</p>
-              </div>
-              <div className="rounded-2xl border border-warning/40 bg-yellow-100 p-3.5">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary-dark">Stars earned</p>
-                <p className="mt-1.5 font-baloo text-4xl leading-none font-bold text-primary">{sidebarState.stars}</p>
-              </div>
-              <div className="rounded-2xl border border-primary/20 bg-[rgba(255,145,38,0.08)] p-3.5">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary-dark">Batteries</p>
-                <p className="mt-1.5 font-baloo text-[1.75rem] leading-none font-bold text-primary">
-                  {sidebarState.isPremium ? '∞ Unlimited Batteries' : `${sidebarState.heartsRemaining} / 5 batteries`}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-warning/50 bg-yellow-50 p-3.5">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary-dark">Streak</p>
-                <p className="mt-1.5 font-baloo text-[1.75rem] leading-none font-bold text-primary">🔥 {sidebarState.currentStreak} {sidebarState.currentStreak === 1 ? 'day' : 'days'}</p>
-                <p className="mt-1 text-xs font-semibold text-gray-500">Best: {sidebarState.longestStreak} {sidebarState.longestStreak === 1 ? 'day' : 'days'}</p>
-              </div>
-              <div className="rounded-2xl border border-secondary/20 bg-white/70 p-3.5">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-secondary-dark">XP</p>
-                <p className="mt-1.5 font-baloo text-4xl leading-none font-bold text-secondary-dark">{sidebarState.totalXP}</p>
-              </div>
-            </div>
-          </div>
-        </aside>
+            <nav className="mt-6 space-y-2">
+              {desktopNavItems.map((item) => {
+                const isActive = currentPage === item.page;
+                return (
+                  <button
+                    key={item.page}
+                    onClick={() => navigate(item.page)}
+                    className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm font-bold transition ${
+                      isActive
+                        ? 'border-[#2f9de4] bg-[#173346] text-[#d4efff]'
+                        : 'border-transparent bg-transparent text-[#c5d8e5] hover:border-[#274154] hover:bg-[#112b3a]'
+                    }`}
+                  >
+                    <span className="text-lg leading-none">{item.icon}</span>
+                    <span className="uppercase tracking-[0.08em]">{item.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
 
-        <main className="min-w-0 overflow-hidden rounded-[36px] border border-white/80 bg-[rgba(255,255,255,0.96)] shadow-[0_30px_80px_rgba(255,145,38,0.12)]">
+            <div className="mt-auto space-y-3">
+              <button
+                onClick={() => navigate('landing')}
+                className="w-full rounded-xl border border-[#1f3544] bg-[#112b3a] px-4 py-3 text-sm font-bold uppercase tracking-[0.08em] text-[#cbe4f6] transition hover:bg-[#16384b]"
+              >
+                Log Out
+              </button>
+            </div>
+          </aside>
+        )}
+
+        <main
+          className={`min-w-0 overflow-hidden rounded-[28px] ${
+            showDesktopSidebar
+              ? 'border border-[#1f3544] bg-[#0f1b24] shadow-[0_20px_40px_rgba(0,0,0,0.4)]'
+              : 'border border-[#1f3544] bg-[#0f1b24] shadow-[0_20px_40px_rgba(0,0,0,0.4)]'
+          } ${showDesktopSidebar ? '' : 'w-full'}`}
+        >
           {renderPage()}
         </main>
       </div>
+
+      <Mascot
+        message="AI Learning Assistant"
+        animation="float"
+        responseLanguage={appState.nativeLanguage || 'English'}
+        pageContext={`Current page: ${currentPage}. Help the learner with quick, actionable guidance for this screen.`}
+      />
     </div>
   );
 }

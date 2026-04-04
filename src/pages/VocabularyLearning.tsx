@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import Mascot from '../components/Mascot';
 import NavigationHeader from '../components/NavigationHeader';
 import Quiz from '../components/Quiz';
 import EnergyBar from '../components/EnergyBar';
@@ -189,7 +188,7 @@ export default function VocabularyLearning({
   return (
     <div className="min-h-screen relative overflow-hidden flex flex-col">
       {/* Premium animated background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 -z-10" />
+      <div className="fixed inset-0 bg-gradient-to-br from-[#FF9126] via-[#FF9126] to-[#FF9126] -z-10" />
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(52,211,153,0.15),transparent_50%)] -z-10" />
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_80%_70%,rgba(56,189,248,0.15),transparent_50%)] -z-10" />
       <NavigationHeader
@@ -243,7 +242,7 @@ export default function VocabularyLearning({
                   opacity: [0.5, 0.8, 0.5]
                 }}
                 transition={{ duration: 3, repeat: Infinity }}
-                className="absolute -inset-1 bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 rounded-3xl blur-2xl opacity-50"
+                className="absolute -inset-1 bg-gradient-to-r from-[#FF9126] via-[#FF9126] to-cyan-400 rounded-3xl blur-2xl opacity-50"
               />
               
               <div className="relative bg-white/80 backdrop-blur-2xl rounded-3xl p-8 border border-white/50 shadow-2xl">
@@ -296,7 +295,7 @@ export default function VocabularyLearning({
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: 0.3, type: 'spring' }}
-                      className="font-baloo text-6xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent"
+                      className="font-baloo text-6xl font-bold bg-gradient-to-r from-[#FF9126] to-[#FF9126] bg-clip-text text-transparent"
                     >
                       {currentItem.nativeWord}
                     </motion.h2>
@@ -306,8 +305,8 @@ export default function VocabularyLearning({
                       onClick={(e) => playAudio(e)}
                       className="relative group/btn flex-shrink-0"
                     >
-                      <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full blur-lg opacity-50 group-hover/btn:opacity-100 transition-opacity" />
-                      <div className="relative bg-gradient-to-r from-emerald-500 to-teal-500 text-white p-4 rounded-full shadow-lg flex items-center justify-center">
+                      <div className="absolute inset-0 bg-gradient-to-r from-[#FF9126] to-[#FF9126] rounded-full blur-lg opacity-50 group-hover/btn:opacity-100 transition-opacity" />
+                      <div className="relative bg-gradient-to-r from-[#FF9126]0 to-[#FF9126] text-white p-4 rounded-full shadow-lg flex items-center justify-center">
                         <span className="text-2xl leading-none">🔊</span>
                       </div>
                     </motion.button>
@@ -337,9 +336,9 @@ export default function VocabularyLearning({
                     initial={{ opacity: 0, scale: 0 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.5, type: 'spring' }}
-                    className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-100 to-teal-100 px-4 py-2 rounded-full border border-emerald-200"
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-[#FF9126] to-teal-100 px-4 py-2 rounded-full border border-[#FF9126]"
                   >
-                    <span className="text-xs font-bold text-emerald-700 uppercase tracking-wide">
+                    <span className="text-xs font-bold text-[#FF9126] uppercase tracking-wide">
                       {currentItem.category}
                     </span>
                   </motion.div>
@@ -366,7 +365,7 @@ export default function VocabularyLearning({
                 className={`w-full py-4 px-6 rounded-2xl font-bold text-lg transition-all ${
                   appState.currentVocabIndex === 0
                     ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-white/80 backdrop-blur-lg border-2 border-gray-300 text-gray-700 hover:border-emerald-400 hover:shadow-lg'
+                    : 'bg-white/80 backdrop-blur-lg border-2 border-gray-300 text-gray-700 hover:border-[#FF9126] hover:shadow-lg'
                 }`}
               >
                 ← Previous
@@ -379,9 +378,9 @@ export default function VocabularyLearning({
             >
               <button
                 onClick={handleNext}
-                className="w-full py-4 px-6 rounded-2xl font-bold text-lg bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg hover:shadow-2xl transition-all relative overflow-hidden group"
+                className="w-full py-4 px-6 rounded-2xl font-bold text-lg bg-gradient-to-r from-[#FF9126]0 to-[#FF9126] text-white shadow-lg hover:shadow-2xl transition-all relative overflow-hidden group"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-teal-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#FF9126] to-[#FF9126] opacity-0 group-hover:opacity-100 transition-opacity" />
                 <span className="relative z-10">Next →</span>
               </button>
             </motion.div>
@@ -402,9 +401,9 @@ export default function VocabularyLearning({
                 transition={{ delay: 0.7 + index * 0.05 }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   index === appState.currentVocabIndex
-                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 w-8 shadow-lg'
+                    ? 'bg-gradient-to-r from-[#FF9126]0 to-[#FF9126] w-8 shadow-lg'
                     : appState.learnedWords.includes(item.id)
-                    ? 'bg-gradient-to-r from-green-400 to-emerald-400 w-2'
+                    ? 'bg-gradient-to-r from-[#FF9126] to-orange-400 w-2'
                     : 'bg-gray-300 w-2'
                 }`}
               />
@@ -419,27 +418,6 @@ export default function VocabularyLearning({
           )}
         </div>
       </div>
-
-      {/* Mascot */}
-      <Mascot
-        message={
-          appState.nativeLanguage === 'Filipino'
-            ? isQuizMode
-              ? 'Handa ka na ba sa mabilis na quiz?'
-              : `Kailangan mo ba ng tulong sa salitang "${currentItem.englishWord}"?`
-            : isQuizMode
-            ? 'Ready for a quick quiz?'
-            : `Need help with the word "${currentItem.englishWord}"?`
-        }
-        animation="bounce"
-        responseLanguage={appState.nativeLanguage || 'English'}
-        pageContext={`You are on the Vocabulary Learning page.
-Current word: ${currentItem.englishWord} -> ${currentItem.nativeWord}.
-Batteries left: ${appState.heartsRemaining} out of 5.
-${appState.isPremium ? 'This learner has premium and unlimited batteries.' : 'Free learners lose 1 battery for quiz mistakes and can upgrade on the premium page.'}
-${appState.heartsRemaining === 0 ? 'When batteries are 0, the learner can review previous words but cannot move forward into new content until they wait or upgrade.' : 'The learner can keep practicing and move forward.'}
-If asked what to do next, explain the available actions on this page in a short helpful way.`}
-      />
 
       {showOutOfHeartsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">

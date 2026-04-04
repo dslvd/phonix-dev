@@ -47,7 +47,7 @@ export default function Quiz({ currentWord, allWords, onAnswer }: QuizProps) {
     }
     
     if (word.id === currentWord.id) {
-      return 'bg-green-100 border-2 border-green-500 shadow-lg shadow-green-500/50';
+      return 'bg-orange-100 border-2 border-[#FF9126] shadow-lg shadow-orange-500/50';
     }
     
     if (word.id === selectedAnswer && word.id !== currentWord.id) {
@@ -149,9 +149,9 @@ export default function Quiz({ currentWord, allWords, onAnswer }: QuizProps) {
             className="text-center"
           >
             {selectedAnswer === currentWord.id ? (
-              <Card className="bg-gradient-to-r from-green-100 to-emerald-100 border-2 border-green-400 py-6">
+              <Card className="bg-gradient-to-r from-[#FF9126] to-[#FF9126] border-2 border-[#FF9126] py-6">
                 <div className="text-6xl mb-2 leading-none flex items-center justify-center">🎉</div>
-                <p className="font-baloo text-2xl font-bold text-green-700">
+                <p className="font-baloo text-2xl font-bold text-[#FF9126]">
                   Correct! Great job!
                 </p>
               </Card>

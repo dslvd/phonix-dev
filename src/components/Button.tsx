@@ -25,11 +25,11 @@ export default function Button({
   const baseClasses = 'font-bold rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg';
   
   const variantClasses = {
-    primary: 'bg-gradient-to-r from-primary to-primary-dark text-white hover:shadow-xl hover:scale-105',
-    secondary: 'bg-gradient-to-r from-secondary to-secondary-dark text-white hover:shadow-xl hover:scale-105',
-    outline: 'bg-white border-3 border-primary text-primary hover:bg-primary hover:text-white',
-    success: 'bg-success text-white hover:shadow-xl hover:scale-105',
-    danger: 'bg-danger text-white hover:shadow-xl hover:scale-105',
+    primary: 'bg-[#FF9126] border-b-4 border-[#FF9126] text-[#184a00] hover:brightness-105 hover:scale-105',
+    secondary: 'bg-[#56b8e8] border border-[#2a4151] text-[#0a344a] hover:brightness-105 hover:scale-105',
+    outline: 'bg-[#122733] border border-[#304656] text-[#dff1ff] hover:border-[#56b8e8] hover:text-[#dff1ff]',
+    success: 'bg-[#FF9126] border-b-4 border-[#FF9126] text-[#184a00] hover:brightness-105 hover:scale-105',
+    danger: 'bg-[#1a3242] border border-[#2a4151] text-[#cbe4f6] hover:bg-[#223d4f] hover:scale-105',
   };
 
   const sizeClasses = {
