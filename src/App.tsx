@@ -11,6 +11,7 @@ import Profile from './pages/Profile';
 import Premium from './pages/Premium';
 import Mascot from './components/Mascot';
 import { usePremium } from './lib/usePremium';
+import { clearPremiumStatus } from './lib/premiumService';
 
 export type Page = 
   | 'landing'
@@ -78,7 +79,7 @@ function getUserKey() {
 }
 
 function App() {
-  const premium = usePremium()
+  const premium = usePremium();
 
   const getTodayKey = () => new Date().toISOString().split('T')[0];
   const getYesterdayKey = () => {
@@ -144,8 +145,10 @@ function App() {
 
     const defaultState = createDefaultAppState(getTodayKey);
     window.localStorage.removeItem('phonix-app-state');
+    clearPremiumStatus();
     setAppState(defaultState);
-  }, [currentPage]);
+    void premium.refresh();
+  }, [currentPage, premium.refresh]);
 
   useEffect(() => {
     const today = getTodayKey();
@@ -185,9 +188,16 @@ function App() {
   const resetAppState = () => {
     const defaultState = createDefaultAppState(getTodayKey);
     if (typeof window !== 'undefined') {
+      const storedUser = getStoredUser();
+      const hasLoggedInUser = !!(storedUser?.email || '').trim();
       window.localStorage.removeItem('phonix-app-state');
+
+      if (!hasLoggedInUser) {
+        clearPremiumStatus();
+      }
     }
     setAppState(defaultState);
+    void premium.refresh();
   };
 
   const isGuestMode = (() => {
