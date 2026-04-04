@@ -29,7 +29,7 @@ Premium state is managed ONLY by:
 
 ### ❌ DO NOT:
 - store premium in `appState`
-- duplicate hearts/scans premium logic in UI
+- duplicate batteries premium logic in UI
 - manually sync localStorage in components
 
 Premium is now fully decoupled from app state.

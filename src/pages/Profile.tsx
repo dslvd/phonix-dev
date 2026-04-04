@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import NavigationHeader from '../components/NavigationHeader';
 import { Page, AppState } from '../App';
+import { usePremium } from '../lib/usePremium';
 
 interface ProfileProps {
   navigate: (page: Page) => void;
   appState: AppState;
+  premium: ReturnType<typeof usePremium>;
 }
 
 interface UserData {
@@ -14,7 +16,7 @@ interface UserData {
   picture?: string;
 }
 
-export default function Profile({ navigate, appState }: ProfileProps) {
+export default function Profile({ navigate, appState, premium }: ProfileProps) {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState('');
@@ -170,7 +172,7 @@ export default function Profile({ navigate, appState }: ProfileProps) {
               <div className="rounded-xl border border-[#304656] bg-[#122733] p-3">
                 <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#8bb1c7]">Batteries</p>
                 <p className="mt-1 font-baloo text-[1.85rem] leading-none font-bold text-[#ffb86b]">
-                  {appState.isPremium ? '∞ Unlimited Batteries' : `${appState.heartsRemaining} / 5 batteries`}
+                  {premium.isPremium ? '∞ Unlimited Batteries' : `${appState.batteriesRemaining} / 5 batteries`}
                 </p>
               </div>
 
@@ -197,7 +199,7 @@ export default function Profile({ navigate, appState }: ProfileProps) {
           </motion.div>
         </div>
 
-        {!appState.isPremium && (
+        {!premium.isPremium && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}

@@ -10,6 +10,7 @@ import VocabularyCollection from './pages/VocabularyCollection';
 import Profile from './pages/Profile';
 import Premium from './pages/Premium';
 import Mascot from './components/Mascot';
+import { usePremium } from './lib/usePremium';
 
 export type Page = 
   | 'landing'
@@ -34,9 +35,7 @@ export interface AppState {
   longestStreak: number;
   totalXP: number;
   lastActiveDate: string;
-  heartsRemaining: number;
-  isPremium: boolean;
-  scansRemaining: number;
+  batteriesRemaining: number;
 }
 
 function createDefaultAppState(getTodayKey: () => string): AppState {
@@ -51,9 +50,7 @@ function createDefaultAppState(getTodayKey: () => string): AppState {
     longestStreak: 1,
     totalXP: 0,
     lastActiveDate: getTodayKey(),
-    heartsRemaining: 5,
-    isPremium: false,
-    scansRemaining: 20,
+    batteriesRemaining: 5,
   };
 }
 
@@ -81,6 +78,8 @@ function getUserKey() {
 }
 
 function App() {
+  const premium = usePremium()
+
   const getTodayKey = () => new Date().toISOString().split('T')[0];
   const getYesterdayKey = () => {
     const yesterday = new Date();
@@ -187,7 +186,6 @@ function App() {
     const defaultState = createDefaultAppState(getTodayKey);
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem('phonix-app-state');
-      window.localStorage.removeItem('isPremium');
     }
     setAppState(defaultState);
   };
@@ -302,11 +300,11 @@ function App() {
       case 'mode':
         return <ModeSelection navigate={navigate} updateState={updateState} />;
       case 'dashboard':
-        return <Dashboard navigate={navigate} appState={appState} />;
+        return <Dashboard navigate={navigate} appState={appState} premium={premium}/>;
       case 'scan':
-        return <ScanMode navigate={navigate} appState={appState} updateState={updateState} />;
+        return <ScanMode navigate={navigate} appState={appState} updateState={updateState} premium={premium}/>;
       case 'vocabulary':
-        return <VocabularyLearning navigate={navigate} appState={appState} updateState={updateState} />;
+        return <VocabularyLearning navigate={navigate} appState={appState} updateState={updateState} premium={premium}/>;
       case 'sentence':
         return <SentenceLearning navigate={navigate} appState={appState} updateState={updateState} />;
       case 'collection':
@@ -314,9 +312,9 @@ function App() {
       case 'profile':
         return isGuestMode
           ? <Landing navigate={navigate} resetAppState={resetAppState} />
-          : <Profile navigate={navigate} appState={appState} />;
+          : <Profile navigate={navigate} appState={appState} premium={premium}/>;
       case 'premium':
-        return <Premium navigate={navigate} appState={appState} updateState={updateState} />;
+        return <Premium navigate={navigate} premium={premium} />;
       default:
         return <Landing navigate={navigate} resetAppState={resetAppState} />;
     }

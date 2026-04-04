@@ -5,22 +5,25 @@ import Quiz from '../components/Quiz';
 import EnergyBar from '../components/EnergyBar';
 import { Page, AppState } from '../App';
 import { vocabularyData, getBeginnerWords, getIntermediateWords, getAdvancedWords } from '../data/vocabulary';
+import { usePremium } from '../lib/usePremium';
 
 interface VocabularyLearningProps {
   navigate: (page: Page) => void;
   appState: AppState;
   updateState: (updates: Partial<AppState>) => void;
+  premium: ReturnType<typeof usePremium>;
 }
 
 export default function VocabularyLearning({
   navigate,
   appState,
   updateState,
+  premium,
 }: VocabularyLearningProps) {
   const [isQuizMode, setIsQuizMode] = useState(false);
   const [wordsBeforeQuiz, setWordsBeforeQuiz] = useState(3); // Quiz every 3 words
   const [consecutiveWords, setConsecutiveWords] = useState(0);
-  const [showOutOfHeartsModal, setShowOutOfHeartsModal] = useState(false);
+  const [showOutOfBatteriesModal, setShowOutOfBatteriesModal] = useState(false);
   
   // Get current difficulty level based on learned words
   const getCurrentDifficultyWords = () => {
@@ -52,12 +55,12 @@ export default function VocabularyLearning({
   const handleNext = () => {
     const isNewDiscovery = !appState.learnedWords.includes(currentItem.id);
     const tryingToAdvanceIntoNewContent =
-      !appState.isPremium &&
-      appState.heartsRemaining === 0 &&
+      !premium.isPremium &&
+      appState.batteriesRemaining === 0 &&
       (!currentItemLearned || (!!nextItem && !nextItemLearned));
 
     if (tryingToAdvanceIntoNewContent) {
-      setShowOutOfHeartsModal(true);
+      setShowOutOfBatteriesModal(true);
       return;
     }
 
@@ -91,18 +94,18 @@ export default function VocabularyLearning({
       updateState({
         stars: appState.stars + 1,
       });
-    } else if (!appState.isPremium) {
-      const nextHearts = Math.max(0, appState.heartsRemaining - 1);
-      updateState({ heartsRemaining: nextHearts });
+    } else if (!premium.isPremium) {
+      const nextBatteries = Math.max(0, appState.batteriesRemaining - 1);
+      updateState({ batteriesRemaining: nextBatteries });
 
-      if (nextHearts === 0) {
+      if (nextBatteries === 0) {
         setIsQuizMode(false);
         setConsecutiveWords(0);
-        setShowOutOfHeartsModal(true);
+        setShowOutOfBatteriesModal(true);
         return;
       }
     } else {
-      // Premium users keep learning without losing hearts.
+      // Premium users keep learning without losing batteries.
     }
     
     // Reset quiz mode and counter
@@ -209,9 +212,9 @@ export default function VocabularyLearning({
             className="mb-6"
           >
             <EnergyBar
-              current={appState.heartsRemaining}
+              current={appState.batteriesRemaining}
               max={5}
-              isPremium={appState.isPremium}
+              isPremium={premium.isPremium}
               onUpgrade={() => navigate('premium')}
             />
           </motion.div>
@@ -419,7 +422,7 @@ export default function VocabularyLearning({
         </div>
       </div>
 
-      {showOutOfHeartsModal && (
+      {showOutOfBatteriesModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
           <div className="max-w-md w-full rounded-3xl border-4 border-primary bg-white p-8 text-center shadow-2xl">
             <div className="mb-4 flex items-center justify-center text-7xl leading-none">🪫</div>
@@ -436,7 +439,7 @@ export default function VocabularyLearning({
               </button>
               <button
                 onClick={() => {
-                  setShowOutOfHeartsModal(false);
+                  setShowOutOfBatteriesModal(false);
                   navigate('dashboard');
                 }}
                 className="flex-1 rounded-2xl bg-gray-100 px-6 py-4 font-bold text-gray-700"

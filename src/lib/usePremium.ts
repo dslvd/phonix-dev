@@ -34,7 +34,6 @@ export function usePremium(): UsePremiumReturn {
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
-
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
@@ -53,7 +52,7 @@ export function usePremium(): UsePremiumReturn {
     refresh();
   }, [refresh]);
 
-  const purchase = useCallback(async (): Promise<boolean> => {
+  const purchase = useCallback(async () => {
     setPurchasing(true);
     setError(null);
 
@@ -72,7 +71,7 @@ export function usePremium(): UsePremiumReturn {
     }
   }, []);
 
-  const restore = useCallback(async (): Promise<boolean> => {
+  const restore = useCallback(async () => {
     setRestoring(true);
     setError(null);
 
@@ -94,13 +93,10 @@ export function usePremium(): UsePremiumReturn {
   return {
     status,
     isPremium: status.isPremium,
-
     loading,
     purchasing,
     restoring,
-
     error,
-
     purchase,
     restore,
     refresh,

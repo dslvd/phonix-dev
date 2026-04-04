@@ -7,10 +7,11 @@ import { usePremium } from "../lib/usePremium";
 
 interface PremiumProps {
   navigate: (page: Page) => void;
+  premium: ReturnType<typeof usePremium>;
 }
 
-export default function Premium({ navigate }: PremiumProps) {
-  const { purchase, loading, restore, purchasing, restoring, error, isPremium } = usePremium();
+export default function Premium({ navigate, premium }: PremiumProps) {
+  const { purchase, loading, restore, purchasing, restoring, error, isPremium } = premium;
   const [restoreSuccess, setRestoreSuccess] = useState(false);
 
   const handleUnlockPremium = async () => {
