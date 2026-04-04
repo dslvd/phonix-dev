@@ -13,6 +13,27 @@ export default function Quiz({ currentWord, allWords, onAnswer }: QuizProps) {
   const [options, setOptions] = useState<VocabularyItem[]>([]);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
+  const challengeLines = [
+    'What is this in Hiligaynon?',
+    'Which Hiligaynon word matches this?',
+    'Pick the correct Hiligaynon answer.',
+    'Can you identify the right word?',
+  ];
+  const correctLines = [
+    'Correct! Great job!',
+    'Nice one! You got it right.',
+    'Well done! That is correct.',
+    'Great answer! Keep going.',
+  ];
+  const incorrectLines = [
+    'Not quite! Keep practicing!',
+    'Almost. Try the next one.',
+    'Good try. Let us keep practicing.',
+    'Close. You will get the next one.',
+  ];
+  const challengeText = challengeLines[currentWord.englishWord.length % challengeLines.length];
+  const correctText = correctLines[currentWord.nativeWord.length % correctLines.length];
+  const incorrectText = incorrectLines[currentWord.id.length % incorrectLines.length];
 
   useEffect(() => {
     // Generate 4 multiple choice options (1 correct + 3 wrong)
@@ -72,7 +93,7 @@ export default function Quiz({ currentWord, allWords, onAnswer }: QuizProps) {
           </span>
         </div>
         <h3 className="font-baloo text-2xl font-bold text-gray-800 mb-2">
-          What is this in Hiligaynon?
+          {challengeText}
         </h3>
       </motion.div>
 
@@ -152,14 +173,14 @@ export default function Quiz({ currentWord, allWords, onAnswer }: QuizProps) {
               <Card className="bg-gradient-to-r from-[#FF9126] to-[#FF9126] border-2 border-[#FF9126] py-6">
                 <div className="text-6xl mb-2 leading-none flex items-center justify-center">🎉</div>
                 <p className="font-baloo text-2xl font-bold text-[#FF9126]">
-                  Correct! Great job!
+                  {correctText}
                 </p>
               </Card>
             ) : (
               <Card className="bg-gradient-to-r from-red-100 to-pink-100 border-2 border-red-400 py-6">
                 <div className="text-6xl mb-2 leading-none flex items-center justify-center">💪</div>
                 <p className="font-baloo text-2xl font-bold text-red-700">
-                  Not quite! Keep practicing!
+                  {incorrectText}
                 </p>
               </Card>
             )}

@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
+import Mascot from '../components/Mascot';
 import NavigationHeader from '../components/NavigationHeader';
 import Quiz from '../components/Quiz';
 import EnergyBar from '../components/EnergyBar';
@@ -421,6 +422,28 @@ export default function VocabularyLearning({
           )}
         </div>
       </div>
+
+      <Mascot
+        message={
+          appState.nativeLanguage === 'Filipino'
+            ? isQuizMode
+              ? 'Subukan mo ito. Piliin ang tamang sagot.'
+              : `Pwede kitang tulungan sa salitang "${currentItem.englishWord}".`
+            : isQuizMode
+            ? 'Give this one a try. Pick the best answer.'
+            : `I can help with the word "${currentItem.englishWord}".`
+        }
+        animation={isQuizMode ? 'bounce' : 'float'}
+        responseLanguage={appState.nativeLanguage || 'English'}
+        pageContext={`You are on the Vocabulary Learning page.
+${isQuizMode ? 'The learner is currently in quiz mode.' : 'The learner is reviewing a vocabulary card.'}
+Current word: ${currentItem.englishWord} -> ${currentItem.nativeWord}.
+Category: ${currentItem.category}.
+Batteries left: ${appState.batteriesRemaining} out of 5.
+${premium.isPremium ? 'The learner has premium and unlimited batteries.' : 'Free learners lose 1 battery on quiz mistakes.'}
+${appState.batteriesRemaining === 0 ? 'The learner can review, but cannot move forward into new content unless they upgrade.' : 'The learner can continue practicing and move forward.'}
+If the learner asks about the quiz, explain what they should answer or what to do next on this screen.`}
+      />
 
       {showOutOfBatteriesModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
