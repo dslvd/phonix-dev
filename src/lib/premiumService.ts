@@ -30,6 +30,10 @@ function saveStatus(status: PremiumStatus): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(status));
 }
 
+export function clearPremiumStatus(): void {
+  localStorage.removeItem(STORAGE_KEY);
+}
+
 function loadStatus(): PremiumStatus | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
