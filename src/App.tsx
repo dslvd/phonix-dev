@@ -280,6 +280,59 @@ function App() {
   }, [appState, userKey, isGuestMode, hasHydratedFromCloud]);
 
   const showDesktopSidebar = currentPage === 'dashboard';
+  const shouldShowGlobalMascot = currentPage === 'scan';
+  const globalMascotMessage = (() => {
+    const isFilipino = (appState.nativeLanguage || '').trim().toLowerCase() === 'filipino';
+    const vocabularyMessages = isFilipino
+      ? [
+          'Kailangan mo ba ng tulong sa word na ito?',
+          'Pwede kitang tulungan sa kahulugan o bigkas nito.',
+          'Gusto mo bang i-review natin ang salitang ito?',
+          'Sabihin mo lang kung gusto mo ng mas madaling paliwanag.',
+        ]
+      : [
+          'Need help with this word?',
+          'I can help with the meaning or pronunciation.',
+          'Want to review this word together?',
+          'Ask me if you want a simpler explanation.',
+        ];
+    const sentenceMessages = isFilipino
+      ? [
+          'Gusto mo bang ipaliwanag ko ang sentence na ito?',
+          'Pwede kitang tulungan sa kahulugan ng pangungusap na ito.',
+          'Sabihin mo lang kung gusto mong himayin natin ito.',
+        ]
+      : [
+          'Want me to explain this sentence?',
+          'I can help break down what this sentence means.',
+          'Ask me if you want to go through this sentence step by step.',
+        ];
+    const scanMessages = isFilipino
+      ? [
+          'Pwede kitang tulungan sa scan o translation.',
+          'Kung gusto mo, ipapaliwanag ko ang result ng scan.',
+          'Magtanong ka kung gusto mo ng mas malinaw na translation.',
+        ]
+      : [
+          'I can help with scanning or translation.',
+          'If you want, I can explain the scan result.',
+          'Ask me if you want a clearer translation.',
+        ];
+
+    if (currentPage === 'vocabulary') {
+      return vocabularyMessages[appState.currentVocabIndex % vocabularyMessages.length];
+    }
+
+    if (currentPage === 'sentence') {
+      return sentenceMessages[appState.learnedWords.length % sentenceMessages.length];
+    }
+
+    if (currentPage === 'scan') {
+      return scanMessages[appState.stars % scanMessages.length];
+    }
+
+    return isFilipino ? 'Magtanong ka lang kung may kailangan ka.' : 'Ask me if you need help.';
+  })();
   const desktopNavItems: Array<{ label: string; icon: string; page: Page }> = [
     { label: 'Learn', icon: '🏠', page: 'dashboard' },
     { label: 'Words', icon: '🔤', page: 'vocabulary' },
@@ -324,12 +377,14 @@ function App() {
     return (
       <div className="min-h-screen bg-[#0f1b24]">
         {renderPage()}
-        <Mascot
-          message="AI Learning Assistant"
-          animation="float"
-          responseLanguage={appState.nativeLanguage || 'English'}
-          pageContext={`Current page: ${currentPage}. Help the learner with quick, actionable guidance for this screen.`}
-        />
+        {shouldShowGlobalMascot && (
+          <Mascot
+            message={globalMascotMessage}
+            animation="float"
+            responseLanguage={appState.nativeLanguage || 'English'}
+            pageContext={`Current page: ${currentPage}. Help the learner with quick, actionable guidance for this screen.`}
+          />
+        )}
       </div>
     );
   }
@@ -386,12 +441,14 @@ function App() {
         </main>
       </div>
 
-      <Mascot
-        message="AI Learning Assistant"
-        animation="float"
-        responseLanguage={appState.nativeLanguage || 'English'}
-        pageContext={`Current page: ${currentPage}. Help the learner with quick, actionable guidance for this screen.`}
-      />
+      {shouldShowGlobalMascot && (
+        <Mascot
+          message={globalMascotMessage}
+          animation="float"
+          responseLanguage={appState.nativeLanguage || 'English'}
+          pageContext={`Current page: ${currentPage}. Help the learner with quick, actionable guidance for this screen.`}
+        />
+      )}
     </div>
   );
 }

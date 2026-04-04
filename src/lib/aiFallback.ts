@@ -151,6 +151,8 @@ function buildAssistantPrompt(
     `When the user asks for a translation, translate it clearly and briefly, but keep the explanation in ${responseLanguage}.`,
     'For translation questions, prefer short natural replies such as "You can say pwerta." or "\"Ano ini?\" means \"What is this?\""',
     `Do not switch away from ${responseLanguage} unless the user explicitly asks for another language or asks for a translation example.`,
+    'If the current app context says the learner is in quiz mode, never reveal the exact quiz answer or the correct choice.',
+    'In quiz mode, only give clues, nudges, elimination hints, pronunciation hints, or category-based hints.',
     'Keep explanations short unless the user asks for more detail.',
     'If there is recent conversation, use it to stay on topic.',
     pageContext ? `Current app context:\n${pageContext}` : '',
@@ -182,12 +184,21 @@ export function findVocabularyMatch(query: string) {
 export function generateFallbackAIAnswer(
   query: string,
   _targetLanguage: string,
-  responseLanguage = 'English'
+  responseLanguage = 'English',
+  pageContext = ''
 ) {
   const normalizedQuery = normalize(query);
   const directMatch = findVocabularyMatch(query);
   const isFilipino = normalize(responseLanguage) === 'filipino';
+  const inQuizMode = normalize(pageContext).includes('quiz mode');
   const reply = (english: string, filipino: string) => (isFilipino ? filipino : english);
+
+  if (inQuizMode) {
+    return reply(
+      'I will only give a clue: look at the picture, compare the choices, and rule out the words that do not match the object or category.',
+      'Clue lang ibibigay ko: tingnan ang larawan, ihambing ang mga pagpipilian, at alisin ang mga salitang hindi tugma sa bagay o kategorya.'
+    );
+  }
 
   if (directMatch) {
     return reply(`You can say "${directMatch.nativeWord}".`, `Pwede mo sabihin ang "${directMatch.nativeWord}".`);

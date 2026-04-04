@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AIChatTurn, AIRequestError, askCloudAI, generateFallbackAIAnswer } from '../lib/aiFallback';
 
@@ -68,6 +68,21 @@ export default function Mascot({
     [position]
   );
 
+  useEffect(() => {
+    setMessages((prev) => {
+      if (prev.length === 0) {
+        return [{ id: 'welcome', role: 'assistant', text: cleanAssistantText(message) }];
+      }
+
+      const [first, ...rest] = prev;
+      if (first.role !== 'assistant') {
+        return prev;
+      }
+
+      return [{ ...first, text: cleanAssistantText(message) }, ...rest];
+    });
+  }, [message]);
+
   const handleAsk = async () => {
     const trimmedQuery = query.trim();
     if (!trimmedQuery || loading) return;
@@ -102,7 +117,12 @@ export default function Mascot({
         },
       ]);
     } catch (err) {
-      const fallbackAnswer = generateFallbackAIAnswer(trimmedQuery, 'Hiligaynon', responseLanguage);
+      const fallbackAnswer = generateFallbackAIAnswer(
+        trimmedQuery,
+        'Hiligaynon',
+        responseLanguage,
+        pageContext
+      );
 
       setMessages((prev) => [
         ...prev,
@@ -220,14 +240,15 @@ export default function Mascot({
           {!isOpen && message && position === 'bottom' && (
             <motion.button
               type="button"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 10, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.96 }}
               transition={{ delay: 0.2 }}
               onClick={() => setIsOpen(true)}
-              className="absolute bottom-full right-0 mb-3 w-[11rem] rounded-2xl bg-white px-4 py-3 text-left text-sm font-bold leading-snug text-slate-700 shadow-lg md:w-[13rem]"
+              className="absolute bottom-full right-0 mb-4 w-[12rem] rounded-[22px] bg-white px-4 py-3 text-left text-sm font-bold leading-snug text-slate-700 shadow-[0_18px_35px_rgba(15,27,36,0.18)] md:w-[14rem]"
             >
               <span className="block whitespace-normal break-words">{cleanAssistantText(message)}</span>
+              <span className="absolute -bottom-3 right-8 h-0 w-0 border-l-[12px] border-r-[12px] border-t-[14px] border-l-transparent border-r-transparent border-t-white" />
             </motion.button>
           )}
         </AnimatePresence>
@@ -238,7 +259,7 @@ export default function Mascot({
           animate={{ scale: 1, rotate: 0 }}
           transition={{ type: 'spring', stiffness: 260, damping: 20 }}
           onClick={() => setIsOpen((prev) => !prev)}
-          className="relative flex items-center justify-center rounded-full border border-white/60 bg-white/90 p-2 shadow-2xl backdrop-blur-md"
+          className="relative flex items-center justify-center rounded-full border border-white/70 bg-white/95 p-2 shadow-[0_24px_40px_rgba(15,27,36,0.24)] backdrop-blur-md"
           aria-label={isOpen ? 'Hide AI assistant' : 'Open AI assistant'}
         >
           <span className={`${animationClasses[animation]} text-5xl leading-none md:text-6xl`}>🤖</span>
