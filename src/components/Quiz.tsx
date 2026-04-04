@@ -46,7 +46,7 @@ export default function Quiz({ currentWord, allWords, onAnswer }: QuizProps) {
     setOptions(allOptions);
     setSelectedAnswer(null);
     setShowResult(false);
-  }, [currentWord, allWords]);
+  }, [currentWord.id]);
 
   const handleSelect = (wordId: string) => {
     if (showResult) return; // Prevent multiple selections
@@ -64,18 +64,18 @@ export default function Quiz({ currentWord, allWords, onAnswer }: QuizProps) {
 
   const getButtonStyle = (word: VocabularyItem) => {
     if (!showResult) {
-      return 'bg-white/90 hover:bg-purple-100 border-2 border-purple-200 hover:border-purple-400';
+      return 'theme-surface-soft border-2 border-[color:var(--theme-border)] hover:border-[#FF9126] hover:shadow-lg';
     }
     
     if (word.id === currentWord.id) {
-      return 'bg-orange-100 border-2 border-[#FF9126] shadow-lg shadow-orange-500/50';
+      return 'theme-quiz-correct border-2';
     }
     
     if (word.id === selectedAnswer && word.id !== currentWord.id) {
-      return 'bg-red-100 border-2 border-red-500 shadow-lg shadow-red-500/50';
+      return 'border-2 border-red-500 bg-gradient-to-r from-red-100 to-rose-100 shadow-lg shadow-red-500/30';
     }
     
-    return 'bg-white/50 border-2 border-gray-300 opacity-60';
+    return 'theme-surface-soft border-2 border-[color:var(--theme-border)] opacity-60';
   };
 
   return (
@@ -92,13 +92,13 @@ export default function Quiz({ currentWord, allWords, onAnswer }: QuizProps) {
             Quiz Challenge!
           </span>
         </div>
-        <h3 className="font-baloo text-2xl font-bold text-gray-800 mb-2">
+        <h3 className="theme-title mb-2 font-baloo text-2xl font-bold">
           {challengeText}
         </h3>
       </motion.div>
 
       {/* Word Display */}
-      <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-300 text-center py-12">
+      <Card className="theme-surface-soft border-2 border-[color:var(--theme-border)] text-center py-12">
         <motion.div
           animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
           transition={{ duration: 2, repeat: Infinity }}
@@ -106,7 +106,7 @@ export default function Quiz({ currentWord, allWords, onAnswer }: QuizProps) {
         >
           {currentWord.emoji}
         </motion.div>
-        <h2 className="font-baloo text-4xl font-bold text-gray-800">
+        <h2 className="theme-title font-baloo text-4xl font-bold">
           {currentWord.englishWord}
         </h2>
       </Card>
@@ -129,10 +129,10 @@ export default function Quiz({ currentWord, allWords, onAnswer }: QuizProps) {
                   {word.emoji}
                 </div>
                 <div className="text-left flex-1">
-                  <p className="font-baloo text-2xl font-bold text-gray-800">
+                  <p className="theme-title font-baloo text-2xl font-bold">
                     {word.nativeWord}
                   </p>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="theme-muted mt-1 text-sm">
                     {word.englishWord}
                   </p>
                 </div>
@@ -170,14 +170,14 @@ export default function Quiz({ currentWord, allWords, onAnswer }: QuizProps) {
             className="text-center"
           >
             {selectedAnswer === currentWord.id ? (
-              <Card className="bg-gradient-to-r from-[#FF9126] to-[#FF9126] border-2 border-[#FF9126] py-6">
+              <Card className="theme-quiz-correct border-2 py-6">
                 <div className="text-6xl mb-2 leading-none flex items-center justify-center">🎉</div>
-                <p className="font-baloo text-2xl font-bold text-[#FF9126]">
+                <p className="font-baloo text-2xl font-bold">
                   {correctText}
                 </p>
               </Card>
             ) : (
-              <Card className="bg-gradient-to-r from-red-100 to-pink-100 border-2 border-red-400 py-6">
+              <Card className="border-2 border-red-400 bg-gradient-to-r from-red-100 to-rose-100 py-6">
                 <div className="text-6xl mb-2 leading-none flex items-center justify-center">💪</div>
                 <p className="font-baloo text-2xl font-bold text-red-700">
                   {incorrectText}

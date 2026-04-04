@@ -65,7 +65,7 @@ export default function Premium({ navigate, premium }: PremiumProps) {
   ];
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="theme-page min-h-screen relative overflow-hidden">
       {/* BACKGROUND */}
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(72,187,255,0.08),transparent_30%),#0f1b24] -z-10" />
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(251,191,36,0.15),transparent_50%)] -z-10" />
@@ -107,7 +107,7 @@ export default function Premium({ navigate, premium }: PremiumProps) {
             Unlimited Batteries
           </h1>
 
-          <p className="text-2xl font-semibold text-[#dff1ff] mb-6">
+          <p className="theme-title mb-6 text-2xl font-semibold">
             Unlock Your Full Learning Potential
           </p>
 
@@ -118,15 +118,15 @@ export default function Premium({ navigate, premium }: PremiumProps) {
           )}
 
           {/* PRICING CARD */}
-          <Card className="border border-[#2a4151] bg-[#0f202a] shadow-2xl">
+          <Card className="theme-surface-strong shadow-2xl">
             <div className="p-8 text-center">
               <div className="text-6xl mb-3">🎁</div>
 
-              <p className="text-lg font-bold text-[#8bb1c7] mb-2">LIMITED TIME OFFER</p>
+              <p className="theme-muted mb-2 text-lg font-bold">LIMITED TIME OFFER</p>
 
               <div className="flex justify-center items-end gap-2 mb-4">
-                <span className="line-through text-[#7fa2b8] opacity-70 text-2xl">₱299.99</span>
-                <span className="font-baloo text-6xl font-bold text-[#dff1ff]">FREE</span>
+                <span className="theme-muted text-2xl opacity-70 line-through">₱299.99</span>
+                <span className="theme-title font-baloo text-6xl font-bold">FREE</span>
               </div>
 
               <div className="mt-2 flex flex-col items-center gap-3">
@@ -149,7 +149,7 @@ export default function Premium({ navigate, premium }: PremiumProps) {
                   whileTap={{ scale: 0.98 }}
                   onClick={handleRestore}
                   disabled={loading || restoring || isPremium}
-                  className="mt-4 text-sm text-purple-200 underline opacity-80 hover:opacity-100 disabled:opacity-40"
+                  className="mt-4 text-sm text-[#8a55c6] underline opacity-80 hover:opacity-100 disabled:opacity-40"
                 >
                   {restoring ? "Restoring..." : isPremium ? "Already Premium" : "Restore Purchase"}
                 </motion.button>
@@ -162,7 +162,7 @@ export default function Premium({ navigate, premium }: PremiumProps) {
 
         {/* FEATURES */}
         <motion.div className="mb-12">
-          <h2 className="text-center text-4xl font-bold text-white mb-8">Premium Features</h2>
+          <h2 className="theme-title mb-8 text-center text-4xl font-bold">Premium Features</h2>
 
           <div className="flex flex-wrap justify-center gap-6">
             {features.map((feature) => (
@@ -180,7 +180,7 @@ export default function Premium({ navigate, premium }: PremiumProps) {
                     {feature.title}
                   </h3>
 
-                  <p className="text-[#8bb1c7]">{feature.description}</p>
+                  <p className="theme-muted">{feature.description}</p>
                 </div>
               </Card>
             ))}
@@ -189,7 +189,7 @@ export default function Premium({ navigate, premium }: PremiumProps) {
 
         {/* TESTIMONIALS (UNCHANGED) */}
         <motion.div className="mb-12">
-          <h2 className="font-baloo text-4xl font-bold text-white text-center mb-8">
+          <h2 className="theme-title mb-8 text-center font-baloo text-4xl font-bold">
             What Learners Say
           </h2>
 
@@ -222,9 +222,9 @@ export default function Premium({ navigate, premium }: PremiumProps) {
                       ))}
                     </div>
 
-                    <p className="text-white italic mb-2">"{testimonial.quote}"</p>
+                    <p className="theme-title mb-2 italic">"{testimonial.quote}"</p>
 
-                    <p className="text-sm text-[#8bb1c7] font-bold">- {testimonial.name}</p>
+                    <p className="theme-muted text-sm font-bold">- {testimonial.name}</p>
                   </div>
                 </div>
               </Card>
@@ -234,7 +234,7 @@ export default function Premium({ navigate, premium }: PremiumProps) {
 
         {/* FAQ (UNCHANGED) */}
         <motion.div>
-          <h2 className="font-baloo text-4xl font-bold text-white text-center mb-8">
+          <h2 className="theme-title mb-8 text-center font-baloo text-4xl font-bold">
             Frequently Asked Questions
           </h2>
 
@@ -255,7 +255,7 @@ export default function Premium({ navigate, premium }: PremiumProps) {
             ].map((faq, index) => (
               <Card key={index} className="bg-white/10 border border-white/20">
                 <h3 className="text-yellow-300 font-bold mb-2">{faq.q}</h3>
-                <p className="text-[#8bb1c7]">{faq.a}</p>
+                <p className="theme-muted">{faq.a}</p>
               </Card>
             ))}
           </div>

@@ -46,7 +46,7 @@ export default function Profile({ navigate, appState, premium }: ProfileProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_20%_0%,rgba(72,187,255,0.08),transparent_30%),#0f1b24] px-4 py-5 text-slate-100 lg:px-6">
+    <div className="theme-page min-h-screen px-4 py-5 text-slate-100 lg:px-6">
       <NavigationHeader
         onBack={() => navigate('dashboard')}
         onLogout={handleLogout}

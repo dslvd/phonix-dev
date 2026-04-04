@@ -27,9 +27,9 @@ export default function Button({
   const variantClasses = {
     primary: 'bg-[#FF9126] border-b-4 border-[#FF9126] text-[#184a00] hover:brightness-105 hover:scale-105',
     secondary: 'bg-[#56b8e8] border border-[#2a4151] text-[#0a344a] hover:brightness-105 hover:scale-105',
-    outline: 'bg-[#122733] border border-[#304656] text-[#dff1ff] hover:border-[#56b8e8] hover:text-[#dff1ff]',
+    outline: 'theme-nav-button border hover:border-[#56b8e8] hover:text-inherit',
     success: 'bg-[#FF9126] border-b-4 border-[#FF9126] text-[#184a00] hover:brightness-105 hover:scale-105',
-    danger: 'bg-[#1a3242] border border-[#2a4151] text-[#cbe4f6] hover:bg-[#223d4f] hover:scale-105',
+    danger: 'theme-nav-button border hover:brightness-105 hover:scale-105',
   };
 
   const sizeClasses = {

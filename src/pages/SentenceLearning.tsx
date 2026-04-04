@@ -90,7 +90,7 @@ export default function SentenceLearning({
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_20%_0%,rgba(72,187,255,0.08),transparent_30%),#0f1b24] flex flex-col text-slate-100">
+    <div className="theme-page min-h-screen flex flex-col text-slate-100">
       <NavigationHeader
         onBack={() => navigate('vocabulary')}
         onLogout={() => navigate('landing')}

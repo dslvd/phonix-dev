@@ -13,6 +13,8 @@ import Mascot from './components/Mascot';
 import { usePremium } from './lib/usePremium';
 import { clearPremiumStatus } from './lib/premiumService';
 
+type ThemeMode = 'dark' | 'light';
+
 export type Page = 
   | 'landing'
   | 'setup'
@@ -78,6 +80,15 @@ function getUserKey() {
   return email || null;
 }
 
+function getStoredTheme(): ThemeMode {
+  if (typeof window === 'undefined') {
+    return 'dark';
+  }
+
+  const stored = window.localStorage.getItem('phonix-theme');
+  return stored === 'light' ? 'light' : 'dark';
+}
+
 function App() {
   const premium = usePremium();
 
@@ -97,6 +108,7 @@ function App() {
   });
   const [currentPage, setCurrentPage] = useState<Page>('landing');
   const [hasHydratedFromCloud, setHasHydratedFromCloud] = useState(false);
+  const [theme, setTheme] = useState<ThemeMode>(getStoredTheme);
   const [appState, setAppState] = useState<AppState>(() => {
     const defaultState = createDefaultAppState(getTodayKey);
 
@@ -132,6 +144,15 @@ function App() {
 
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    window.localStorage.setItem('phonix-theme', theme);
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -180,6 +201,29 @@ function App() {
   const navigate = (page: Page) => {
     setCurrentPage(page);
   };
+
+  const themeToggle = (
+    <div className="theme-toggle inline-flex items-center gap-2 rounded-full p-2" aria-label="Theme mode switch">
+      <button
+        onClick={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
+        className="theme-toggle-option flex h-12 w-12 items-center justify-center rounded-full text-2xl font-bold"
+        data-active={theme === 'light'}
+        aria-label="Toggle theme"
+        title="Toggle theme"
+      >
+        ☀
+      </button>
+      <button
+        onClick={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
+        className="theme-toggle-option flex h-12 w-12 items-center justify-center rounded-full text-2xl font-bold"
+        data-active={theme === 'dark'}
+        aria-label="Toggle theme"
+        title="Toggle theme"
+      >
+        ☾
+      </button>
+    </div>
+  );
 
   const updateState = (updates: Partial<AppState>) => {
     setAppState((prev) => ({ ...prev, ...updates }));
@@ -346,7 +390,7 @@ function App() {
   const desktopNavItems: Array<{ label: string; icon: string; page: Page }> = [
     { label: 'Learn', icon: '🏠', page: 'dashboard' },
     { label: 'Words', icon: '🔤', page: 'vocabulary' },
-    { label: 'Collection', icon: '🎒', page: 'collection' },
+    { label: 'Backpack', icon: '🎒', page: 'collection' },
     { label: 'Scan', icon: '📸', page: 'scan' },
     { label: 'Premium', icon: '⭐', page: 'premium' },
   ];
@@ -385,8 +429,11 @@ function App() {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-[#0f1b24]">
+      <div className="theme-page min-h-screen">
         {renderPage()}
+        <div className="fixed right-4 top-4 z-[70]">
+          {themeToggle}
+        </div>
         {shouldShowGlobalMascot && (
           <Mascot
             message={globalMascotMessage}
@@ -400,13 +447,18 @@ function App() {
   }
 
   return (
-    <div className={`${showDesktopSidebar ? 'bg-[#08131b] p-4' : 'bg-[radial-gradient(circle_at_20%_0%,rgba(72,187,255,0.08),transparent_30%),#0f1b24] p-6'} min-h-screen`}>
+    <div className={`${showDesktopSidebar ? 'theme-shell p-4' : 'theme-page p-6'} min-h-screen`}>
+      {!showDesktopSidebar && (
+        <div className="fixed right-6 top-6 z-[70]">
+          {themeToggle}
+        </div>
+      )}
       <div className={`mx-auto ${showDesktopSidebar ? 'max-w-[1400px] grid grid-cols-[240px,minmax(0,1fr)] gap-4' : 'max-w-7xl'}`}>
         {showDesktopSidebar && (
-          <aside className="sticky top-4 flex h-[calc(100vh-2rem)] flex-col overflow-hidden rounded-[28px] border border-[#1f3544] bg-[#0b1f2b] p-4 shadow-[0_24px_50px_rgba(0,0,0,0.45)]">
+          <aside className="theme-surface-strong sticky top-4 flex h-[calc(100vh-2rem)] flex-col overflow-hidden rounded-[28px] border p-4">
             <div>
               <h1 className="font-baloo text-4xl font-bold text-[#FF9126]">phonix</h1>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#88a8bb]">learning app</p>
+              <p className="theme-muted text-xs font-bold uppercase tracking-[0.16em]">learning app</p>
             </div>
 
             <nav className="mt-6 space-y-2">
@@ -418,8 +470,8 @@ function App() {
                     onClick={() => navigate(item.page)}
                     className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm font-bold transition ${
                       isActive
-                        ? 'border-[#2f9de4] bg-[#173346] text-[#d4efff]'
-                        : 'border-transparent bg-transparent text-[#c5d8e5] hover:border-[#274154] hover:bg-[#112b3a]'
+                        ? 'theme-nav-active'
+                        : 'theme-text-soft border-transparent bg-transparent hover:border-[#274154] hover:bg-[color:var(--theme-surface-soft)]'
                     }`}
                   >
                     <span className="text-lg leading-none">{item.icon}</span>
@@ -430,9 +482,12 @@ function App() {
             </nav>
 
             <div className="mt-auto space-y-3">
+              <div className="flex justify-center">
+                {themeToggle}
+              </div>
               <button
                 onClick={() => navigate('landing')}
-                className="w-full rounded-xl border border-[#1f3544] bg-[#112b3a] px-4 py-3 text-sm font-bold uppercase tracking-[0.08em] text-[#cbe4f6] transition hover:bg-[#16384b]"
+                className="theme-nav-button w-full rounded-xl border px-4 py-3 text-sm font-bold uppercase tracking-[0.08em] transition"
               >
                 Log Out
               </button>
@@ -443,8 +498,8 @@ function App() {
         <main
           className={`min-w-0 overflow-hidden rounded-[28px] ${
             showDesktopSidebar
-              ? 'border border-[#1f3544] bg-[#0f1b24] shadow-[0_20px_40px_rgba(0,0,0,0.4)]'
-              : 'border border-[#1f3544] bg-[#0f1b24] shadow-[0_20px_40px_rgba(0,0,0,0.4)]'
+              ? 'theme-surface-strong border'
+              : 'theme-surface-strong border'
           } ${showDesktopSidebar ? '' : 'w-full'}`}
         >
           {renderPage()}

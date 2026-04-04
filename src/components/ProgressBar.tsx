@@ -27,15 +27,15 @@ export default function ProgressBar({
     <div className="w-full">
       {(label || showNumbers) && (
         <div className="flex justify-between items-center mb-2">
-          {label && <span className="text-sm font-bold text-gray-700">{label}</span>}
+          {label && <span className="theme-title text-sm font-bold">{label}</span>}
           {showNumbers && (
-            <span className="text-sm font-bold text-gray-600">
+            <span className="theme-title text-sm font-bold">
               {current}/{total}
             </span>
           )}
         </div>
       )}
-      <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
+      <div className="h-4 w-full overflow-hidden rounded-full bg-[color:var(--theme-border)]">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${percentage}%` }}
