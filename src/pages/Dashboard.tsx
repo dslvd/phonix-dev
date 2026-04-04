@@ -1,13 +1,15 @@
 import { motion } from 'framer-motion';
 import { Page, AppState } from '../App';
 import { getBeginnerWords, getIntermediateWords, getAdvancedWords } from '../data/vocabulary';
+import { usePremium } from '../lib/usePremium';
 
 interface DashboardProps {
   navigate: (page: Page) => void;
   appState: AppState;
+  premium: ReturnType<typeof usePremium>;
 }
 
-export default function Dashboard({ navigate, appState }: DashboardProps) {
+export default function Dashboard({ navigate, appState, premium }: DashboardProps) {
   const isGuestMode = (() => {
     if (typeof window === 'undefined') {
       return false;
@@ -179,7 +181,7 @@ export default function Dashboard({ navigate, appState }: DashboardProps) {
                   <div className="rounded-xl border border-[#304656] bg-[#122733] p-3">
                     <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#8bb1c7]">Batteries</p>
                     <p className="mt-1 font-baloo text-[1.85rem] leading-none font-bold text-[#ffb86b]">
-                      {appState.isPremium ? '∞ Unlimited Batteries' : `${appState.heartsRemaining} / 5 batteries`}
+                      {premium.isPremium ? '∞ Unlimited Batteries' : `${appState.batteriesRemaining} / 5 batteries`}
                     </p>
                   </div>
 
@@ -213,10 +215,10 @@ export default function Dashboard({ navigate, appState }: DashboardProps) {
                     Create Profile
                   </button>
                   <button
-                    onClick={() => navigate(appState.isPremium ? 'scan' : 'premium')}
+                    onClick={() => navigate(premium.isPremium ? 'scan' : 'premium')}
                     className="w-full rounded-xl border border-[#2a4151] bg-[#56b8e8] px-4 py-3 text-sm font-bold uppercase tracking-[0.08em] text-[#0a344a]"
                   >
-                    {appState.isPremium ? 'Open Scan Mode' : 'Get Unlimited Batteries'}
+                    {premium.isPremium ? 'Open Scan Mode' : 'Get Unlimited Batteries'}
                   </button>
                 </div>
               </div>

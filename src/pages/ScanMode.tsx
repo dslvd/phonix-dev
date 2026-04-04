@@ -5,11 +5,13 @@ import Card from '../components/Card';
 import NavigationHeader from '../components/NavigationHeader';
 import EnergyBar from '../components/EnergyBar';
 import { Page, AppState } from '../App';
+import { usePremium } from '../lib/usePremium';
 
 interface ScanModeProps {
   navigate: (page: Page) => void;
   appState: AppState;
   updateState: (updates: Partial<AppState>) => void;
+  premium: ReturnType<typeof usePremium>;
 }
 
 interface ScanResult {
@@ -26,7 +28,7 @@ interface ScanApiResponse {
 
 const cleanOCRText = (text: string) => text.replace(/\s+/g, ' ').trim();
 
-export default function ScanMode({ navigate, appState, updateState }: ScanModeProps) {
+export default function ScanMode({ navigate, appState, updateState, premium }: ScanModeProps) {
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraLoading, setCameraLoading] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
@@ -538,9 +540,9 @@ const translateManualText = async () => {
         >
           <Card className="bg-white/90 backdrop-blur-xl border-2 border-purple-300">
             <EnergyBar
-              current={appState.heartsRemaining}
+              current={appState.batteriesRemaining}
               max={5}
-              isPremium={appState.isPremium}
+              isPremium={premium.isPremium}
               onUpgrade={() => setShowUpgradeModal(true)}
             />
           </Card>
