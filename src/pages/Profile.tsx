@@ -218,7 +218,7 @@ export default function Profile({ navigate, appState, premium }: ProfileProps) {
                 >
                   ✨
                 </motion.div>
-                <h3 className="font-baloo text-3xl font-bold text-white">
+                <h3 className="theme-title font-baloo text-3xl font-bold">
                   Unlock Unlimited Batteries!
                 </h3>
                 <p className="theme-muted mt-2 text-sm font-semibold">
@@ -242,7 +242,7 @@ export default function Profile({ navigate, appState, premium }: ProfileProps) {
           >
             <div>
               <div className="mb-2 text-4xl leading-none">🎒</div>
-              <h3 className="font-baloo text-xl font-bold text-white">My Vocabulary</h3>
+              <h3 className="theme-title font-baloo text-xl font-bold">My Vocabulary</h3>
               <p className="theme-muted mt-1 text-sm font-semibold">View all learned words</p>
             </div>
           </button>
@@ -253,7 +253,7 @@ export default function Profile({ navigate, appState, premium }: ProfileProps) {
           >
             <div>
               <div className="mb-2 text-4xl leading-none">⚙️</div>
-              <h3 className="font-baloo text-xl font-bold text-white">Change Language</h3>
+              <h3 className="theme-title font-baloo text-xl font-bold">Change Language</h3>
               <p className="theme-muted mt-1 text-sm font-semibold">Update your learning preferences</p>
             </div>
           </button>
