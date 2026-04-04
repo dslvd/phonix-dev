@@ -42,7 +42,7 @@ export default function VocabularyCollection({
   );
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_20%_0%,rgba(72,187,255,0.08),transparent_30%),#0f1b24] pb-20 text-slate-100">
+    <div className="theme-page min-h-screen pb-20 text-slate-100">
       <NavigationHeader
         onBack={() => navigate('dashboard')}
         onLogout={() => navigate('landing')}
@@ -52,22 +52,34 @@ export default function VocabularyCollection({
 
       <div className="mx-auto mt-6 max-w-6xl p-4">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-          <Card className="mb-8 border-b-4 border-[#FF9126] bg-gradient-to-b from-[#FF9126] to-[#FF9126]">
+          <Card className="theme-summary-card mb-8 border-b-4">
             <div className="grid gap-6 md:grid-cols-2">
               <div>
-                <h3 className="mb-3 text-lg font-bold text-white">Words Learned</h3>
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="theme-summary-label text-lg font-bold">Words Learned</h3>
+                  <span className="theme-summary-value text-lg font-bold">
+                    {learnedVocabulary.length}/{vocabularyData.length}
+                  </span>
+                </div>
                 <ProgressBar
                   current={learnedVocabulary.length}
                   total={vocabularyData.length}
                   color="success"
+                  showNumbers={false}
                 />
               </div>
               <div>
-                <h3 className="mb-3 text-lg font-bold text-white">Quiz Stars</h3>
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="theme-summary-label text-lg font-bold">Quiz Stars</h3>
+                  <span className="theme-summary-value text-lg font-bold">
+                    {appState.stars}/{vocabularyData.length}
+                  </span>
+                </div>
                 <ProgressBar
                   current={appState.stars}
                   total={vocabularyData.length}
-                  color="primary"
+                  color="success"
+                  showNumbers={false}
                 />
               </div>
             </div>
@@ -76,9 +88,9 @@ export default function VocabularyCollection({
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.5, type: 'spring' }}
-              className="mt-6 rounded-2xl border border-[#2a4151] bg-[#122733] p-4 text-center"
+              className="theme-summary-banner mt-6 rounded-2xl border p-4 text-center shadow-[0_12px_28px_rgba(255,145,38,0.16)]"
             >
-              <p className="font-baloo text-2xl font-bold text-[#dff1ff]">
+              <p className="font-baloo text-2xl font-bold">
                 {learnedVocabulary.length === 0 && 'Start learning to fill your backpack.'}
                 {learnedVocabulary.length > 0 &&
                   learnedVocabulary.length < 10 &&
@@ -102,8 +114,8 @@ export default function VocabularyCollection({
             className="py-20 text-center"
           >
             <div className="mb-6 flex items-center justify-center text-8xl leading-none">🔐</div>
-            <h2 className="mb-4 font-baloo text-3xl font-bold text-[#dff1ff]">Log in to save progress</h2>
-            <p className="mb-8 font-semibold text-[#8bb1c7]">
+            <h2 className="theme-title mb-4 font-baloo text-3xl font-bold">Log in to save progress</h2>
+            <p className="theme-muted mb-8 font-semibold">
               Your collection and learning progress are only saved for logged-in accounts.
             </p>
             <Button variant="primary" onClick={() => navigate('landing')} icon="👤">
@@ -112,7 +124,7 @@ export default function VocabularyCollection({
           </motion.div>
         ) : learnedVocabulary.length > 0 ? (
           <>
-            <h2 className="mb-6 font-baloo text-3xl font-bold text-[#dff1ff]">Your Learned Words</h2>
+            <h2 className="theme-title mb-6 font-baloo text-3xl font-bold">Your Learned Words</h2>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
               {learnedVocabulary.map((item, index) => (
                 <motion.div
@@ -129,7 +141,7 @@ export default function VocabularyCollection({
                       {item.emoji}
                     </motion.div>
                     <h3 className="mb-1 font-baloo text-xl font-bold text-primary">{item.nativeWord}</h3>
-                    <p className="text-sm font-semibold text-[#8bb1c7]">{item.englishWord}</p>
+                    <p className="theme-muted text-sm font-semibold">{item.englishWord}</p>
                     <button
                       onClick={() => {
                         const utterance = new SpeechSynthesisUtterance(item.nativeWord);
@@ -151,8 +163,8 @@ export default function VocabularyCollection({
             className="py-20 text-center"
           >
             <div className="mb-6 flex items-center justify-center text-9xl leading-none">🎒</div>
-            <h2 className="mb-4 font-baloo text-3xl font-bold text-[#dff1ff]">Your backpack is empty</h2>
-            <p className="mb-8 font-semibold text-[#8bb1c7]">Complete lessons to collect words here</p>
+            <h2 className="theme-title mb-4 font-baloo text-3xl font-bold">Your backpack is empty</h2>
+            <p className="theme-muted mb-8 font-semibold">Complete lessons to collect words here</p>
             <Button variant="primary" onClick={() => navigate('dashboard')} icon="📚">
               Start Learning
             </Button>
@@ -161,7 +173,7 @@ export default function VocabularyCollection({
 
         {!isGuestMode && learnedVocabulary.length > 0 && (
           <div className="mt-12">
-            <h2 className="mb-6 font-baloo text-3xl font-bold text-[#dff1ff]">More to Learn</h2>
+            <h2 className="theme-title mb-6 font-baloo text-3xl font-bold">More to Learn</h2>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
               {vocabularyData
                 .filter((item) => !appState.learnedWords.includes(item.id))
@@ -177,8 +189,8 @@ export default function VocabularyCollection({
                         {item.emoji}
                       </div>
                       <div className="blur-sm">
-                        <h3 className="mb-1 font-baloo text-xl font-bold text-[#dff1ff]">???</h3>
-                        <p className="text-sm font-semibold text-[#8bb1c7]">{item.englishWord}</p>
+                        <h3 className="theme-title mb-1 font-baloo text-xl font-bold">???</h3>
+                        <p className="theme-muted text-sm font-semibold">{item.englishWord}</p>
                       </div>
                       <div className="mt-3 flex items-center justify-center text-2xl leading-none">🔒</div>
                     </Card>
@@ -209,8 +221,8 @@ export default function VocabularyCollection({
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
             <div className="w-full max-w-md rounded-3xl border border-[#2a4151] bg-[#122733] p-8 text-center shadow-2xl">
               <div className="mb-4 flex items-center justify-center text-7xl leading-none">🔋</div>
-              <h3 className="font-baloo text-3xl font-bold text-[#dff1ff]">0 Batteries Left</h3>
-              <p className="mt-3 font-semibold text-[#8bb1c7]">
+              <h3 className="theme-title font-baloo text-3xl font-bold">0 Batteries Left</h3>
+              <p className="theme-muted mt-3 font-semibold">
                 You can keep reviewing everything you already learned, but new words are locked until you recharge or upgrade to premium.
               </p>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">

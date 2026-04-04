@@ -522,12 +522,12 @@ const translateManualText = async () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-6"
         >
-          <h1 className="font-baloo text-4xl font-bold text-gray-800 mb-2 flex items-center justify-center gap-3">
+          <h1 className="theme-title mb-2 flex items-center justify-center gap-3 font-baloo text-4xl font-bold">
             <span>📸</span>
             Scan Mode
             <span>📄</span>
           </h1>
-          <p className="text-gray-600 font-semibold">
+          <p className="theme-muted font-semibold">
             Point your camera at text or a document to translate instantly!
           </p>
         </motion.div>
@@ -538,7 +538,7 @@ const translateManualText = async () => {
           transition={{ delay: 0.2 }}
           className="mb-6"
         >
-          <Card className="bg-white/90 backdrop-blur-xl border-2 border-purple-300">
+          <Card className="theme-surface-soft border-2 backdrop-blur-xl">
             <EnergyBar
               current={appState.batteriesRemaining}
               max={5}
@@ -579,7 +579,7 @@ const translateManualText = async () => {
                     </Button>
                     <div className="text-white text-xs px-4 text-center space-y-1 bg-gray-800/50 rounded-lg p-3">
                       <p className="font-bold">You&apos;ll be asked for camera permission</p>
-                      <p className="text-gray-300">Point at text or a document → OCR translates instantly!</p>
+                      <p className="text-gray-200">Point at text or a document → OCR translates instantly!</p>
                     </div>
                   </div>
                 ) : cameraLoading ? (
@@ -592,7 +592,7 @@ const translateManualText = async () => {
                       📹
                     </motion.div>
                     <p className="text-white font-baloo text-xl font-bold">Starting camera...</p>
-                    <p className="text-gray-400 text-sm">This may take a few seconds</p>
+                    <p className="theme-muted text-sm">This may take a few seconds</p>
                   </div>
                 ) : null}
 
@@ -695,24 +695,24 @@ const translateManualText = async () => {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.8, y: -20 }}
                 >
-                  <Card className="bg-gradient-to-br from-[#FF9126] to-[#FF9126] border-4 border-[#FF9126]">
+                  <Card className="border-4 border-[#FF9126] bg-gradient-to-br from-[#FF9126] to-[#ffb35a]">
                     <div className="text-center">
                       <div className="text-5xl mb-3 leading-none flex items-center justify-center">✨</div>
-                      <h3 className="font-baloo text-2xl font-bold text-gray-800 mb-2">
+                      <h3 className="mb-2 font-baloo text-2xl font-bold text-[#3d2410]">
                         Translation Ready!
                       </h3>
 
-                      <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-gray-500">
+                      <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-[#6b4a22]">
                         {scanResult.confidence === 'manual' ? 'Manual Input' : 'Camera OCR'}
                       </p>
 
                       <div className="bg-white rounded-lg p-4 mb-4 text-left">
-                        <p className="text-gray-600 font-semibold mb-1">Detected Text:</p>
-                        <p className="text-lg font-bold text-gray-800 mb-4 break-words whitespace-pre-wrap">
+                        <p className="mb-1 font-semibold text-[#5f7e92]">Detected Text:</p>
+                        <p className="mb-4 break-words whitespace-pre-wrap text-lg font-bold text-[#1c3342]">
                           {scanResult.detectedText}
                         </p>
 
-                        <p className="text-gray-600 font-semibold mb-1">
+                        <p className="mb-1 font-semibold text-[#5f7e92]">
                           {appState.targetLanguage}:
                         </p>
 
@@ -734,11 +734,11 @@ const translateManualText = async () => {
                           </div>
 
                           {!scanResult.translatedText && (
-                            <div className="mt-2 text-sm text-gray-500">
+                            <div className="mt-2 text-sm text-[#5f7e92]">
                               <p className="italic">
                                 Translation is not available right now.
                               </p>
-                              <p className="text-xs text-gray-400">
+                              <p className="text-xs text-[#7f96a7]">
                                 Please try again in a few seconds.
                               </p>
                             </div>
@@ -761,12 +761,12 @@ const translateManualText = async () => {
               )}
             </AnimatePresence>
 
-            <Card className="bg-gradient-to-br from-blue-100 to-cyan-100 border-2 border-blue-300">
-              <h3 className="mb-3 flex items-center gap-2 font-baloo text-xl font-bold text-gray-800">
+            <Card className="theme-surface-soft border-2">
+              <h3 className="theme-title mb-3 flex items-center gap-2 font-baloo text-xl font-bold">
                 <span>⌨️</span>
                 Manual Text Translate
               </h3>
-              <p className="mb-3 text-sm font-semibold text-gray-700">
+              <p className="theme-muted mb-3 text-sm font-semibold">
                 If camera OCR is slow or unclear, type the text manually and translate it instantly.
               </p>
 
@@ -776,7 +776,7 @@ const translateManualText = async () => {
                   onChange={(e) => setManualText(e.target.value)}
                   placeholder="Type or paste text here..."
                   rows={4}
-                  className="w-full rounded-2xl border-2 border-blue-300 px-4 py-3 font-semibold text-gray-800 outline-none transition-all focus:border-blue-500 resize-none"
+                  className="theme-surface w-full resize-none rounded-2xl border-2 px-4 py-3 font-semibold outline-none transition-all focus:border-[#56b8e8]"
                 />
 
                 <Button
@@ -790,14 +790,14 @@ const translateManualText = async () => {
             </Card>
 
             <Card>
-              <h3 className="font-baloo text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
+              <h3 className="theme-title mb-3 flex items-center gap-2 font-baloo text-xl font-bold">
                 <span>📝</span>
                 Scanned Text ({savedScans.length})
               </h3>
 
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {savedScans.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="theme-muted py-8 text-center">
                     <div className="text-4xl mb-2 leading-none flex items-center justify-center">👀</div>
                     <p className="font-semibold">No saved scans yet!</p>
                     <p className="text-sm">Scan text or documents to save translations</p>
@@ -811,7 +811,7 @@ const translateManualText = async () => {
                       transition={{ delay: index * 0.05 }}
                       className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-lg p-3"
                     >
-                      <p className="font-bold text-gray-800 text-sm mb-1 break-words whitespace-pre-wrap">
+                      <p className="theme-title mb-1 break-words whitespace-pre-wrap text-sm font-bold">
                         {item.detectedText}
                       </p>
                       <div className="flex items-start justify-between gap-2">
@@ -841,12 +841,12 @@ const translateManualText = async () => {
               )}
             </Card>
 
-            <Card className="bg-gradient-to-br from-yellow-100 to-orange-100">
-              <h4 className="font-baloo text-lg font-bold text-gray-800 mb-2 flex items-center gap-2">
+            <Card className="theme-surface-soft border">
+              <h4 className="theme-title mb-2 flex items-center gap-2 font-baloo text-lg font-bold">
                 <span>💡</span>
                 Quick Tips
               </h4>
-              <ul className="space-y-2 text-sm font-semibold text-gray-700">
+              <ul className="theme-text-soft space-y-2 text-sm font-semibold">
                 <li className="flex gap-2">
                   <span>✨</span>
                   <span>Use good lighting for documents</span>

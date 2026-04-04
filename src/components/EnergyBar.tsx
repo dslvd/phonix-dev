@@ -41,7 +41,7 @@ export default function EnergyBar({ current, max, isPremium, onUpgrade }: Energy
           >
             {isPremium ? '🔋' : isCritical ? '🪫' : isLow ? '🔋' : '🔋'}
           </motion.span>
-          <span className="font-bold text-gray-800">
+          <span className="theme-title font-bold">
             {isPremium ? 'Unlimited Batteries' : 'Batteries'}
           </span>
         </div>
@@ -49,7 +49,7 @@ export default function EnergyBar({ current, max, isPremium, onUpgrade }: Energy
         {!isPremium && (
           <button
             onClick={onUpgrade}
-            className="text-xs font-bold text-purple-600 hover:text-purple-700 underline"
+            className="text-xs font-bold text-[#FF9126] hover:text-[#ffb35a] underline"
           >
             Upgrade →
           </button>
@@ -57,7 +57,7 @@ export default function EnergyBar({ current, max, isPremium, onUpgrade }: Energy
       </div>
 
       {/* Energy Bar */}
-      <div className="relative h-8 bg-gray-200 rounded-full overflow-hidden shadow-inner">
+      <div className="relative h-8 rounded-full overflow-hidden bg-white/85 shadow-inner dark:bg-white/12">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="w-full h-full bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(0,0,0,0.1)_10px,rgba(0,0,0,0.1)_20px)]" />
@@ -95,7 +95,7 @@ export default function EnergyBar({ current, max, isPremium, onUpgrade }: Energy
 
         {/* Text Overlay */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="font-bold text-sm text-gray-800 drop-shadow-[0_1px_2px_rgba(255,255,255,0.8)]">
+          <span className="font-bold text-sm text-[#1c3342] drop-shadow-[0_1px_2px_rgba(255,255,255,0.85)]">
             {isPremium ? '∞ Batteries' : `${current} / ${max} batteries`}
           </span>
         </div>
@@ -120,7 +120,7 @@ export default function EnergyBar({ current, max, isPremium, onUpgrade }: Energy
             <motion.p
               initial={{ opacity: 0, y: -5 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-xs text-red-600 font-bold mt-2 text-center"
+              className="mt-2 text-center text-xs font-bold text-red-500"
             >
               ⚠️ Critical! Only {current} batteries left. Upgrade for unlimited batteries!
             </motion.p>
@@ -129,16 +129,16 @@ export default function EnergyBar({ current, max, isPremium, onUpgrade }: Energy
             <motion.p
               initial={{ opacity: 0, y: -5 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-xs text-orange-600 font-semibold mt-2 text-center"
+              className="mt-2 text-center text-xs font-semibold text-[#FF9126]"
             >
-              Running low. Consider upgrading to Unlimited Batteries 🔋
+              Running low. Consider upgrading to Unlimited Batteries 
             </motion.p>
           )}
           {current === 0 && (
             <motion.p
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="text-sm text-red-700 font-bold mt-2 text-center bg-red-100 p-2 rounded-lg"
+              className="mt-2 rounded-lg bg-red-100 p-2 text-center text-sm font-bold text-red-700"
             >
               🚫 No batteries remaining! Upgrade to continue without limits.
             </motion.p>

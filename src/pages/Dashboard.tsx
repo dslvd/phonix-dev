@@ -76,7 +76,7 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
   const seasonedProgress = Math.min(100, Math.round((appState.learnedWords.length / totalWords) * 100));
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_20%_0%,rgba(72,187,255,0.08),transparent_30%),#0f1b24] px-4 py-5 text-slate-100 lg:px-6">
+    <div className="theme-page min-h-screen px-4 py-5 text-slate-100 lg:px-6">
       <div className="mx-auto max-w-6xl">
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr),320px]">
           <section>
@@ -97,7 +97,7 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
               </motion.div>
             )}
 
-            <div className="mt-5 rounded-3xl border border-[#243949] bg-[#10212c] px-6 py-8">
+            <div className="theme-surface mt-5 rounded-3xl border px-6 py-8">
               <div className="mx-auto max-w-xl space-y-6">
                 {levels.map((level, index) => {
                   const completion = Math.round((level.progress / level.total) * 100);
@@ -115,24 +115,24 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
                           className={`relative flex h-20 w-20 items-center justify-center rounded-full border-b-[6px] text-3xl transition ${
                             level.unlocked
                               ? 'border-[#FF9126] bg-gradient-to-b from-[#FF9126] to-[#FF9126] text-white hover:scale-105'
-                              : 'cursor-not-allowed border-[#2d3f4b] bg-[#2a3a46] text-[#7f96a7]'
+                              : 'theme-lock-button cursor-not-allowed'
                           }`}
                         >
                           {level.unlocked ? level.icon : '🔒'}
                           {index === lessonIndex && (
-                            <span className="absolute -top-9 rounded-lg border border-[#2a404d] bg-[#122633] px-2 py-1 text-xs font-bold uppercase tracking-[0.08em] text-[#8fe9ff]">
+                            <span className="theme-surface-soft absolute -top-9 rounded-lg border px-2 py-1 text-xs font-bold uppercase tracking-[0.08em] text-[#2f9de4]">
                               Start
                             </span>
                           )}
                         </button>
 
-                        <div className="flex-1 rounded-2xl border border-[#243949] bg-[#0d1d27] p-4">
-                          <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#79a7c2]">{level.description}</p>
-                          <p className="mt-1 text-lg font-bold text-white">{level.name}</p>
-                          <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#223847]">
+                        <div className="theme-surface-soft flex-1 rounded-2xl border p-4">
+                          <p className="theme-muted text-xs font-bold uppercase tracking-[0.15em]">{level.description}</p>
+                          <p className="theme-title mt-1 text-lg font-bold">{level.name}</p>
+                          <div className="mt-3 h-2 overflow-hidden rounded-full bg-[color:var(--theme-border)]">
                             <div className="h-full rounded-full bg-gradient-to-r from-[#FF9126] to-[#FF9126]" style={{ width: `${completion}%` }} />
                           </div>
-                          <p className="mt-2 text-xs font-semibold text-[#7ba2b9]">{level.progress}/{level.total} words complete</p>
+                          <p className="theme-muted mt-2 text-xs font-semibold">{level.progress}/{level.total} words complete</p>
                         </div>
                       </div>
                     </motion.div>

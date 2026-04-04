@@ -382,10 +382,10 @@ export default function VocabularyLearning({
             >
               <button
                 onClick={handleNext}
-                className="w-full py-4 px-6 rounded-2xl font-bold text-lg bg-gradient-to-r from-[#FF9126]0 to-[#FF9126] text-white shadow-lg hover:shadow-2xl transition-all relative overflow-hidden group"
+                className="w-full py-4 px-6 rounded-2xl font-bold text-lg bg-gradient-to-r from-[#FF9126] to-[#ffb35a] shadow-lg hover:shadow-2xl transition-all relative overflow-hidden group"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-[#FF9126] to-[#FF9126] opacity-0 group-hover:opacity-100 transition-opacity" />
-                <span className="relative z-10">Next →</span>
+                <span className="relative z-10 text-white transition-colors group-hover:text-[#fff3de]">Next →</span>
               </button>
             </motion.div>
           </motion.div>

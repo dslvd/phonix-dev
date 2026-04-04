@@ -16,7 +16,7 @@ export default function Card({
   hover = true,
   gradient = false,
 }: CardProps) {
-  const baseClasses = 'rounded-3xl border border-[#2a4151] bg-[#0f202a] p-6 shadow-[0_16px_30px_rgba(0,0,0,0.35)] transition-all duration-300';
+  const baseClasses = 'theme-surface rounded-3xl border p-6 transition-all duration-300';
   const bgClass = gradient 
     ? 'bg-gradient-to-b from-[#FF9126] to-[#FF9126] border-b-4 border-[#FF9126]' 
     : '';

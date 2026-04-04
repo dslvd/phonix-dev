@@ -25,6 +25,26 @@ export default function NavigationHeader({
   streakCount = 0,
   starCount = 0,
 }: NavigationHeaderProps) {
+  const isGuestMode = (() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    const rawUser = window.localStorage.getItem('user');
+    if (!rawUser) {
+      return false;
+    }
+
+    try {
+      const user = JSON.parse(rawUser) as { name?: string; email?: string };
+      const name = (user.name || '').trim().toLowerCase();
+      const email = (user.email || '').trim();
+      return name === 'guest' || email.length === 0;
+    } catch {
+      return false;
+    }
+  })();
+
   const handleLogout = () => {
     localStorage.removeItem('user');
     if (onLogout) {
@@ -33,16 +53,16 @@ export default function NavigationHeader({
   };
 
   return (
-    <div className="sticky top-0 z-50 border-b border-[#1f3544] bg-[#0b1f2b] p-4 shadow-[0_12px_28px_rgba(0,0,0,0.35)]">
+    <div className="theme-surface-strong sticky top-0 z-50 border-b p-4">
       <div className="max-w-6xl mx-auto flex justify-between items-center">
         {/* Left: Back Button or Logo */}
         <div className="flex items-center gap-3">
           {onBack ? (
             <motion.button
-              whileHover={{ scale: 1.1 }}
+              whileHover={{ scale: 1.08, x: -2 }}
               whileTap={{ scale: 0.95 }}
               onClick={onBack}
-              className="flex h-10 w-10 items-center justify-center rounded-full text-3xl transition-colors hover:bg-[#173346]"
+              className="flex items-center justify-center text-3xl leading-none text-[#FF9126] transition-colors hover:text-[#ffb35a]"
             >
               ⬅️
             </motion.button>
@@ -51,7 +71,7 @@ export default function NavigationHeader({
           )}
           
           {title && (
-            <h2 className="hidden font-baloo text-xl font-bold text-[#d4efff] sm:block">
+            <h2 className="theme-title hidden font-baloo text-xl font-bold sm:block">
               {title}
             </h2>
           )}
@@ -59,8 +79,8 @@ export default function NavigationHeader({
 
         {/* Center: Progress (if shown) */}
         {showProgress && (
-          <div className="hidden items-center gap-2 rounded-full border border-[#2a4151] bg-[#112b3a] px-4 py-2 md:flex">
-            <span className="text-sm font-bold text-[#cbe4f6]">
+          <div className="theme-nav-button hidden items-center gap-2 rounded-full border px-4 py-2 md:flex">
+            <span className="text-sm font-bold">
               {currentProgress} / {totalProgress}
             </span>
           </div>
@@ -68,7 +88,7 @@ export default function NavigationHeader({
 
         {/* Right: Stats and Logout */}
         <div className="flex items-center gap-3">
-          {showStats && (
+          {showStats && !isGuestMode && (
             <>
               <div className="bg-yellow-200 px-3 py-1 rounded-full font-bold text-sm hidden sm:flex items-center gap-1">
                 🔥 <span>{streakCount}</span>
@@ -84,7 +104,7 @@ export default function NavigationHeader({
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
               onClick={onProfile}
-              className="flex h-10 w-10 items-center justify-center rounded-full text-3xl leading-none transition-colors hover:bg-[#173346]"
+              className="flex items-center justify-center text-3xl leading-none text-[#6d3aa8] transition-colors hover:text-[#8a55c6]"
               title="Profile"
             >
               👤
@@ -96,7 +116,7 @@ export default function NavigationHeader({
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleLogout}
-              className="rounded-full border border-[#2a4151] bg-[#112b3a] px-4 py-2 text-sm font-bold text-[#cbe4f6] transition-colors hover:bg-[#16384b]"
+              className="theme-nav-button rounded-full border px-4 py-2 text-sm font-bold transition-colors"
             >
               Logout
             </motion.button>
