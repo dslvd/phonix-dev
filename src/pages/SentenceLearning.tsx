@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Button from '../components/Button';
 import Card from '../components/Card';
-import Mascot from '../components/Mascot';
 import NavigationHeader from '../components/NavigationHeader';
 import { Page, AppState } from '../App';
 import { sentenceData } from '../data/vocabulary';
@@ -90,7 +89,7 @@ export default function SentenceLearning({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-100 via-yellow-100 to-green-100 flex flex-col">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_20%_0%,rgba(72,187,255,0.08),transparent_30%),#0f1b24] flex flex-col text-slate-100">
       <NavigationHeader
         onBack={() => navigate('vocabulary')}
         onLogout={() => navigate('landing')}
@@ -123,12 +122,12 @@ export default function SentenceLearning({
               </motion.div>
 
               {/* Native Sentence */}
-              <div className="mb-8 bg-gradient-to-r from-purple-100 to-pink-100 rounded-2xl p-6">
-                <p className="text-sm font-bold text-gray-600 mb-3">
+              <div className="mb-8 rounded-2xl border border-[#304656] bg-[#122733] p-6">
+                <p className="mb-3 text-sm font-bold text-[#8bb1c7]">
                   {appState.targetLanguage}:
                 </p>
                 <div className="flex items-center justify-center gap-4">
-                  <h2 className="font-baloo text-3xl md:text-4xl font-bold text-gray-800 leading-relaxed">
+                  <h2 className="font-baloo text-3xl md:text-4xl font-bold text-[#dff1ff] leading-relaxed">
                     {currentSentence.nativeSentence}
                   </h2>
                   <button
@@ -141,8 +140,8 @@ export default function SentenceLearning({
               </div>
 
               {/* English Translation */}
-              <div className="bg-white border-4 border-secondary rounded-2xl p-6 shadow-lg">
-                <p className="text-sm font-bold text-gray-600 mb-3">
+              <div className="rounded-2xl border border-[#304656] bg-[#0f202a] p-6 shadow-lg">
+                <p className="mb-3 text-sm font-bold text-[#8bb1c7]">
                   {appState.nativeLanguage}:
                 </p>
                 <div className="flex items-center justify-center gap-4">
@@ -197,20 +196,6 @@ export default function SentenceLearning({
         </div>
       </div>
 
-      {/* Mascot */}
-      <Mascot
-        message={
-          appState.nativeLanguage === 'Filipino'
-            ? 'Kailangan mo ba ng tulong sa pangungusap na ito?'
-            : 'Need help with this sentence?'
-        }
-        animation="wiggle"
-        responseLanguage={appState.nativeLanguage || 'English'}
-        pageContext={`You are on the Sentence Practice page.
-Current sentence in ${appState.targetLanguage}: ${currentSentence.nativeSentence}.
-Current translation in ${appState.nativeLanguage}: ${currentSentence.englishSentence}.
-If the user asks for help on this page, explain that they can listen, go previous, or go next to continue sentence practice.`}
-      />
     </div>
   );
 }

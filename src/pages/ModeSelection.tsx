@@ -20,7 +20,7 @@ export default function ModeSelection({ navigate, updateState }: ModeSelectionPr
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-200 via-green-200 to-yellow-200">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_20%_0%,rgba(72,187,255,0.08),transparent_30%),#0f1b24] text-slate-100">
       <NavigationHeader
         onBack={() => navigate('setup')}
         onLogout={() => navigate('landing')}
@@ -30,7 +30,7 @@ export default function ModeSelection({ navigate, updateState }: ModeSelectionPr
         <motion.h1
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="font-baloo text-5xl font-bold text-center text-gray-800 mb-8"
+          className="mb-8 text-center font-baloo text-5xl font-bold text-[#dff1ff]"
         >
           Mode Selection 🎮
         </motion.h1>
@@ -50,10 +50,10 @@ export default function ModeSelection({ navigate, updateState }: ModeSelectionPr
                 >
                   📚
                 </motion.div>
-                <h2 className="font-baloo text-3xl font-bold text-primary mb-3">
+                <h2 className="mb-3 font-baloo text-3xl font-bold text-[#7ed6ff]">
                   Learn Mode
                 </h2>
-                <p className="text-gray-600 font-semibold">
+                <p className="font-semibold text-[#8bb1c7]">
                   Follow structured lessons with vocabulary, sentences, and quizzes
                 </p>
                 <div className="mt-4 flex justify-center gap-2">
@@ -79,10 +79,10 @@ export default function ModeSelection({ navigate, updateState }: ModeSelectionPr
                 >
                   📸
                 </motion.div>
-                <h2 className="font-baloo text-3xl font-bold text-secondary mb-3">
+                <h2 className="mb-3 font-baloo text-3xl font-bold text-[#7ed6ff]">
                   Scan Mode
                 </h2>
-                <p className="text-gray-600 font-semibold">
+                <p className="font-semibold text-[#8bb1c7]">
                   Point your camera at objects to learn words instantly with AI
                 </p>
                 <div className="mt-4 flex justify-center gap-2">
@@ -101,7 +101,7 @@ export default function ModeSelection({ navigate, updateState }: ModeSelectionPr
           transition={{ delay: 0.6 }}
           className="text-center"
         >
-          <p className="text-gray-700 font-bold mb-4">
+          <p className="mb-4 font-bold text-[#cbe4f6]">
             Don't worry! You can switch modes anytime 😊
           </p>
         </motion.div>

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import Card from '../components/Card';
 import NavigationHeader from '../components/NavigationHeader';
 import { Page, AppState } from '../App';
 
@@ -45,99 +44,61 @@ export default function Profile({ navigate, appState }: ProfileProps) {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Premium animated background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50 -z-10" />
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(167,139,250,0.15),transparent_50%)] -z-10" />
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(217,70,239,0.15),transparent_50%)] -z-10" />
-      
+    <div className="min-h-screen bg-[radial-gradient(circle_at_20%_0%,rgba(72,187,255,0.08),transparent_30%),#0f1b24] px-4 py-5 text-slate-100 lg:px-6">
       <NavigationHeader
         onBack={() => navigate('dashboard')}
         onLogout={handleLogout}
         title="Profile"
       />
 
-      <div className="max-w-4xl mx-auto p-4 mt-6">
-        {/* Logo Section */}
+      <div className="mx-auto mt-6 max-w-6xl">
         <motion.div
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
+          className="rounded-2xl border-b-4 border-[#FF9126] bg-gradient-to-b from-[#FF9126] to-[#FF9126] px-5 py-4"
         >
-          <motion.div
-            animate={{ 
-              y: [0, -10, 0],
-              rotate: [0, 2, -2, 0]
-            }}
-            transition={{ duration: 4, repeat: Infinity }}
-            className="inline-block mb-6"
-          >
-            <img 
-              src="/assets/phonix-logo.png" 
-              alt="Phonix Logo" 
-              className="w-64 h-auto mx-auto drop-shadow-2xl"
-            />
-          </motion.div>
-          
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            <h1 className="font-baloo text-5xl font-bold bg-gradient-to-r from-purple-600 via-violet-600 to-fuchsia-600 bg-clip-text text-transparent mb-2">
-              Your Profile
-            </h1>
-            <div className="flex items-center justify-center gap-2">
-              <div className="h-px w-16 bg-gradient-to-r from-transparent to-purple-300" />
-              <p className="text-gray-600 font-semibold">Language Learning Journey</p>
-              <div className="h-px w-16 bg-gradient-to-l from-transparent to-purple-300" />
-            </div>
-          </motion.div>
+          <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#d7ffc2]">Your account</p>
+          <h1 className="mt-1 font-baloo text-4xl font-bold text-white">Profile</h1>
+          <p className="text-sm font-bold text-[#e8ffd5]">Manage your learning journey</p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* User Info Card */}
+        <div className="mt-5 grid gap-5 lg:grid-cols-2">
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
+            className="rounded-2xl border border-[#2a4151] bg-[#0f202a] p-4"
           >
-            <Card className="bg-white/90 backdrop-blur-xl border-2 border-purple-200 shadow-2xl">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="text-4xl leading-none flex items-center justify-center">👤</div>
-                <h2 className="font-baloo text-2xl font-bold text-gray-800">Account Info</h2>
-              </div>
+            <h2 className="text-xl font-bold text-[#d9e8f2]">Account Info</h2>
 
               {userData ? (
-                <div className="space-y-4">
-                  {/* Profile Picture */}
+                <div className="mt-4 space-y-4">
                   {userData.picture && (
-                    <div className="flex justify-center mb-6">
+                    <div className="flex justify-center">
                       <motion.img
                         whileHover={{ scale: 1.05 }}
                         src={userData.picture}
                         alt={userData.name}
-                        className="w-24 h-24 rounded-full border-4 border-purple-300 shadow-lg"
+                        className="h-24 w-24 rounded-full border-4 border-[#2a4151]"
                       />
                     </div>
                   )}
 
-                  {/* Name */}
                   <div>
-                    <label className="block text-sm font-bold text-gray-600 mb-2">Name</label>
+                    <label className="mb-2 block text-sm font-bold text-[#8bb1c7]">Name</label>
                     {isEditing ? (
                       <div className="flex gap-2">
                         <input
                           type="text"
                           value={editedName}
                           onChange={(e) => setEditedName(e.target.value)}
-                          className="flex-1 px-4 py-2 rounded-xl border-2 border-purple-300 focus:border-purple-500 focus:outline-none font-baloo"
+                          className="flex-1 rounded-xl border border-[#304656] bg-[#122733] px-4 py-2 font-baloo text-[#dff1ff] outline-none focus:border-[#56b8e8]"
                         />
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={handleSaveName}
-                          className="px-4 py-2 bg-gradient-to-r from-purple-500 to-violet-500 text-white rounded-xl font-bold shadow-lg"
+                          className="rounded-xl border-b-4 border-[#FF9126] bg-[#FF9126] px-4 py-2 font-bold text-[#184a00]"
                         >
                           ✓
                         </motion.button>
@@ -148,19 +109,19 @@ export default function Profile({ navigate, appState }: ProfileProps) {
                             setIsEditing(false);
                             setEditedName(userData.name);
                           }}
-                          className="px-4 py-2 bg-gray-300 text-gray-700 rounded-xl font-bold"
+                          className="rounded-xl border border-[#2a4151] bg-[#1a3242] px-4 py-2 font-bold text-[#c5d8e5]"
                         >
                           ✕
                         </motion.button>
                       </div>
                     ) : (
-                      <div className="flex items-center justify-between bg-purple-50 px-4 py-3 rounded-xl">
-                        <p className="font-baloo text-lg font-semibold text-gray-800">{userData.name}</p>
+                      <div className="flex items-center justify-between rounded-xl border border-[#304656] bg-[#122733] px-4 py-3">
+                        <p className="font-baloo text-lg font-semibold text-[#dff1ff]">{userData.name}</p>
                         <motion.button
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                           onClick={() => setIsEditing(true)}
-                          className="text-2xl leading-none flex items-center justify-center"
+                          className="text-2xl leading-none"
                         >
                           ✏️
                         </motion.button>
@@ -168,239 +129,149 @@ export default function Profile({ navigate, appState }: ProfileProps) {
                     )}
                   </div>
 
-                  {/* Email */}
                   <div>
-                    <label className="block text-sm font-bold text-gray-600 mb-2">Email</label>
-                    <div className="bg-purple-50 px-4 py-3 rounded-xl">
-                      <p className="font-semibold text-gray-700">{userData.email}</p>
+                    <label className="mb-2 block text-sm font-bold text-[#8bb1c7]">Email</label>
+                    <div className="rounded-xl border border-[#304656] bg-[#122733] px-4 py-3">
+                      <p className="font-semibold text-[#cbe4f6]">{userData.email}</p>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <div className="text-4xl mb-3 leading-none flex items-center justify-center">🔒</div>
+                <div className="py-8 text-center text-[#7fa2b8]">
+                  <div className="mb-3 text-4xl leading-none">🔒</div>
                   <p>No user data found</p>
                 </div>
               )}
-            </Card>
           </motion.div>
 
-          {/* Learning Stats Card */}
           <motion.div
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
+            className="rounded-2xl border border-[#2a4151] bg-[#0f202a] p-4"
           >
-            <Card className="bg-white/90 backdrop-blur-xl border-2 border-violet-200 shadow-2xl">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="text-4xl leading-none flex items-center justify-center">📊</div>
-                <h2 className="font-baloo text-2xl font-bold text-gray-800">Learning Stats</h2>
+            <div className="rounded-2xl border-b-4 border-[#FF9126] bg-gradient-to-b from-[#FF9126] to-[#FF9126] p-4">
+              <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#d7ffc2]">Now learning</p>
+              <h3 className="mt-1 font-baloo text-4xl font-bold text-white">{appState.targetLanguage || 'Hiligaynon'}</h3>
+              <p className="text-sm font-bold text-[#e8ffd5]">Ready to practice</p>
+            </div>
+
+            <div className="mt-3 space-y-2.5">
+              <div className="rounded-xl border border-[#304656] bg-[#122733] p-3">
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#8bb1c7]">Words learned</p>
+                <p className="mt-1 font-baloo text-4xl font-bold text-[#dff1ff]">{appState.learnedWords.length}</p>
               </div>
 
-              <div className="space-y-4">
-                {/* Words Learned */}
-                <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-4 rounded-xl border-2 border-emerald-200">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-bold text-gray-700">Words Learned</span>
-                    <span className="text-3xl leading-none flex items-center justify-center">📚</span>
-                  </div>
-                  <p className="font-baloo text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                    {appState.learnedWords.length}
-                  </p>
-                </div>
-
-                {/* Stars Earned */}
-                <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-xl border-2 border-yellow-200">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-bold text-gray-700">Stars Earned</span>
-                    <span className="text-3xl leading-none flex items-center justify-center">⭐</span>
-                  </div>
-                  <p className="font-baloo text-4xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
-                    {appState.stars}
-                  </p>
-                </div>
-
-                <div className="bg-gradient-to-r from-orange-50 to-pink-50 p-4 rounded-xl border-2 border-orange-200">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-bold text-gray-700">Current Streak</span>
-                    <span className="text-3xl leading-none flex items-center justify-center">🔥</span>
-                  </div>
-                  <p className="font-baloo text-4xl font-bold bg-gradient-to-r from-primary to-pink-500 bg-clip-text text-transparent">
-                    {appState.currentStreak}
-                  </p>
-                  <p className="text-sm text-gray-600 mt-1">Best streak: {appState.longestStreak} days</p>
-                </div>
-
-                <div className="bg-gradient-to-r from-sky-50 to-cyan-50 p-4 rounded-xl border-2 border-sky-200">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-bold text-gray-700">XP Earned</span>
-                    <span className="text-3xl leading-none flex items-center justify-center">⚡</span>
-                  </div>
-                  <p className="font-baloo text-4xl font-bold bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent">
-                    {appState.totalXP}
-                  </p>
-                </div>
-
-                {/* Languages */}
-                <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-4 rounded-xl border-2 border-blue-200">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-bold text-gray-700">Learning</span>
-                    <span className="text-3xl leading-none flex items-center justify-center">🌍</span>
-                  </div>
-                  <p className="font-baloo text-xl font-bold text-blue-700">
-                    {appState.targetLanguage || 'Not set'}
-                  </p>
-                  <p className="text-sm text-gray-600 mt-1">
-                    from {appState.nativeLanguage || 'Not set'}
-                  </p>
-                </div>
-
-                {/* Current Mode */}
-                <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-xl border-2 border-purple-200">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-bold text-gray-700">Current Mode</span>
-                    <span className="text-3xl leading-none flex items-center justify-center">
-                      {appState.mode === 'scan' ? '📸' : '📖'}
-                    </span>
-                  </div>
-                  <p className="font-baloo text-xl font-bold text-purple-700 capitalize">
-                    {appState.mode || 'Not set'}
-                  </p>
-                </div>
-
-                {/* Premium Status */}
-                <div className={`p-4 rounded-xl border-2 ${
-                  appState.isPremium 
-                    ? 'bg-gradient-to-r from-yellow-50 to-amber-50 border-yellow-300' 
-                    : 'bg-gradient-to-r from-gray-50 to-slate-50 border-gray-300'
-                }`}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-bold text-gray-700">Subscription</span>
-                    <span className="text-3xl leading-none flex items-center justify-center">
-                      {appState.isPremium ? '✨' : '🔒'}
-                    </span>
-                  </div>
-                  {appState.isPremium ? (
-                    <>
-                      <p className="font-baloo text-xl font-bold bg-gradient-to-r from-yellow-600 to-amber-600 bg-clip-text text-transparent mb-1">
-                        Unlimited Batteries
-                      </p>
-                      <p className="text-sm text-gray-600">Premium Member</p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="font-baloo text-xl font-bold text-gray-700 mb-1">
-                        Free Plan
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        {appState.heartsRemaining} / 5 batteries left
-                      </p>
-                    </>
-                  )}
-                </div>
+              <div className="rounded-xl border border-[#304656] bg-[#122733] p-3">
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#8bb1c7]">Stars earned</p>
+                <p className="mt-1 font-baloo text-4xl font-bold text-[#ffd166]">{appState.stars}</p>
               </div>
-            </Card>
+
+              <div className="rounded-xl border border-[#304656] bg-[#122733] p-3">
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#8bb1c7]">Batteries</p>
+                <p className="mt-1 font-baloo text-[1.85rem] leading-none font-bold text-[#ffb86b]">
+                  {appState.isPremium ? '∞ Unlimited Batteries' : `${appState.heartsRemaining} / 5 batteries`}
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-[#304656] bg-[#122733] p-3">
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#8bb1c7]">Streak</p>
+                <p className="mt-1 font-baloo text-[1.85rem] leading-none font-bold text-[#ff8e6d]">
+                  🔥 {appState.currentStreak} {appState.currentStreak === 1 ? 'day' : 'days'}
+                </p>
+                <p className="mt-1 text-xs font-semibold text-[#8bb1c7]">
+                  Best: {appState.longestStreak} {appState.longestStreak === 1 ? 'day' : 'days'}
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-[#304656] bg-[#122733] p-3">
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#8bb1c7]">XP</p>
+                <p className="mt-1 font-baloo text-4xl font-bold text-[#7ed6ff]">{appState.totalXP}</p>
+              </div>
+
+              <div className="rounded-xl border border-[#304656] bg-[#122733] p-3">
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#8bb1c7]">Current mode</p>
+                <p className="mt-1 font-baloo text-2xl font-bold capitalize text-[#dff1ff]">{appState.mode || 'not set'}</p>
+              </div>
+            </div>
           </motion.div>
         </div>
 
-        {/* Premium Upgrade Card - Show only for non-premium users */}
         {!appState.isPremium && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.5 }}
-            className="mt-8"
+            className="mt-5"
           >
-            <Card 
-              hover
-              className="bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500 border-4 border-yellow-300 cursor-pointer"
+            <button
               onClick={() => navigate('premium')}
+              className="w-full rounded-2xl border border-[#2a4151] bg-[#0f202a] p-5 text-left transition hover:border-[#56b8e8]"
             >
-              <div className="text-center text-white p-4">
+              <div className="text-center text-[#d9e8f2]">
                 <motion.div
                   animate={{ rotate: [0, 5, -5, 0], scale: [1, 1.1, 1] }}
                   transition={{ duration: 2, repeat: Infinity }}
-                  className="text-7xl mb-4 leading-none flex items-center justify-center"
+                  className="mb-3 text-5xl leading-none"
                 >
                   ✨
                 </motion.div>
-                <h3 className="font-baloo text-4xl font-bold mb-3">
+                <h3 className="font-baloo text-3xl font-bold text-white">
                   Unlock Unlimited Batteries!
                 </h3>
-                <p className="text-xl mb-4 opacity-90">
+                <p className="mt-2 text-sm font-semibold text-[#7fa2b8]">
                   Get unlimited batteries + premium features
                 </p>
-                <div className="flex flex-wrap justify-center gap-4 mb-6">
-                  <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-bold">
-                    ∞ Unlimited Batteries
-                  </div>
-                  <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-bold">
-                    📄 Document Translation
-                  </div>
-                  <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-bold">
-                    🔌 Offline Mode
-                  </div>
-                </div>
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="bg-white text-purple-600 px-8 py-4 rounded-2xl font-bold text-xl inline-block shadow-2xl"
-                >
-                  🚀 Upgrade Now - FREE Demo!
-                </motion.div>
+                <span className="mt-4 inline-block rounded-xl border border-[#2a4151] bg-[#56b8e8] px-5 py-2.5 text-sm font-bold uppercase tracking-[0.08em] text-[#0a344a]">Upgrade now</span>
               </div>
-            </Card>
+            </button>
           </motion.div>
         )}
 
-        {/* Action Buttons */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="mt-8 grid md:grid-cols-2 gap-4"
+          className="mt-5 grid gap-4 md:grid-cols-2"
         >
-          <Card 
-            hover 
-            className="bg-gradient-to-br from-violet-100 to-purple-200 border-2 border-violet-300 cursor-pointer"
+          <button
             onClick={() => navigate('collection')}
+            className="rounded-2xl border border-[#2a4151] bg-[#0f202a] p-5 text-center transition hover:border-[#56b8e8]"
           >
-            <div className="text-center">
-              <div className="text-5xl mb-3 leading-none flex items-center justify-center">🎒</div>
-              <h3 className="font-baloo text-xl font-bold text-gray-800 mb-2">My Vocabulary</h3>
-              <p className="text-sm text-gray-600">View all learned words</p>
+            <div>
+              <div className="mb-2 text-4xl leading-none">🎒</div>
+              <h3 className="font-baloo text-xl font-bold text-white">My Vocabulary</h3>
+              <p className="mt-1 text-sm font-semibold text-[#7fa2b8]">View all learned words</p>
             </div>
-          </Card>
+          </button>
 
-          <Card 
-            hover 
-            className="bg-gradient-to-br from-pink-100 to-rose-200 border-2 border-pink-300 cursor-pointer"
+          <button
             onClick={() => navigate('setup')}
+            className="rounded-2xl border border-[#2a4151] bg-[#0f202a] p-5 text-center transition hover:border-[#56b8e8]"
           >
-            <div className="text-center">
-              <div className="text-5xl mb-3 leading-none flex items-center justify-center">⚙️</div>
-              <h3 className="font-baloo text-xl font-bold text-gray-800 mb-2">Change Language</h3>
-              <p className="text-sm text-gray-600">Update your learning preferences</p>
+            <div>
+              <div className="mb-2 text-4xl leading-none">⚙️</div>
+              <h3 className="font-baloo text-xl font-bold text-white">Change Language</h3>
+              <p className="mt-1 text-sm font-semibold text-[#7fa2b8]">Update your learning preferences</p>
             </div>
-          </Card>
+          </button>
         </motion.div>
 
-        {/* Logout Button */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
-          className="mt-8 text-center"
+          className="mt-6 text-center"
         >
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleLogout}
-            className="px-8 py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white font-bold rounded-2xl shadow-lg hover:shadow-2xl transition-all"
+            className="rounded-xl border border-[#2a4151] bg-[#112b3a] px-8 py-3 font-bold uppercase tracking-[0.08em] text-[#cbe4f6] transition hover:bg-[#16384b]"
           >
             <span className="flex items-center gap-2">
-              <span className="text-xl leading-none flex items-center justify-center">🚪</span>
-              Logout
+              <span className="text-xl leading-none">🚪</span>
+              Log Out
             </span>
           </motion.button>
         </motion.div>

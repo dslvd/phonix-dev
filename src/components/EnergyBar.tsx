@@ -16,14 +16,14 @@ export default function EnergyBar({ current, max, isPremium, onUpgrade }: Energy
     if (isPremium) return 'from-yellow-400 to-amber-500';
     if (isCritical) return 'from-red-500 to-red-600';
     if (isLow) return 'from-orange-400 to-orange-500';
-    return 'from-emerald-400 to-teal-500';
+    return 'from-[#FF9126] to-[#FF9126]';
   };
 
   const getGlowColor = () => {
     if (isPremium) return 'shadow-yellow-500/50';
     if (isCritical) return 'shadow-red-500/50';
     if (isLow) return 'shadow-orange-500/50';
-    return 'shadow-emerald-500/50';
+    return 'shadow-orange-500/50';
   };
 
   return (

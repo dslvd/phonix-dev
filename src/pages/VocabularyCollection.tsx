@@ -17,13 +17,32 @@ export default function VocabularyCollection({
   appState,
 }: VocabularyCollectionProps) {
   const [showNoBatteryModal, setShowNoBatteryModal] = useState(false);
+  const isGuestMode = (() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    const rawUser = window.localStorage.getItem('user');
+    if (!rawUser) {
+      return false;
+    }
+
+    try {
+      const user = JSON.parse(rawUser) as { name?: string; email?: string };
+      const name = (user.name || '').trim().toLowerCase();
+      const email = (user.email || '').trim();
+      return name === 'guest' || email.length === 0;
+    } catch {
+      return false;
+    }
+  })();
 
   const learnedVocabulary = vocabularyData.filter((item) =>
     appState.learnedWords.includes(item.id)
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-100 via-green-100 to-blue-100 pb-20">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_20%_0%,rgba(72,187,255,0.08),transparent_30%),#0f1b24] pb-20 text-slate-100">
       <NavigationHeader
         onBack={() => navigate('dashboard')}
         onLogout={() => navigate('landing')}
@@ -33,7 +52,7 @@ export default function VocabularyCollection({
 
       <div className="mx-auto mt-6 max-w-6xl p-4">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-          <Card className="mb-8 bg-gradient-to-r from-primary-light to-secondary">
+          <Card className="mb-8 border-b-4 border-[#FF9126] bg-gradient-to-b from-[#FF9126] to-[#FF9126]">
             <div className="grid gap-6 md:grid-cols-2">
               <div>
                 <h3 className="mb-3 text-lg font-bold text-white">Words Learned</h3>
@@ -57,9 +76,9 @@ export default function VocabularyCollection({
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.5, type: 'spring' }}
-              className="mt-6 rounded-2xl bg-white p-4 text-center"
+              className="mt-6 rounded-2xl border border-[#2a4151] bg-[#122733] p-4 text-center"
             >
-              <p className="font-baloo text-2xl font-bold text-gray-800">
+              <p className="font-baloo text-2xl font-bold text-[#dff1ff]">
                 {learnedVocabulary.length === 0 && 'Start learning to fill your backpack.'}
                 {learnedVocabulary.length > 0 &&
                   learnedVocabulary.length < 10 &&
@@ -76,9 +95,24 @@ export default function VocabularyCollection({
           </Card>
         </motion.div>
 
-        {learnedVocabulary.length > 0 ? (
+        {isGuestMode ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="py-20 text-center"
+          >
+            <div className="mb-6 flex items-center justify-center text-8xl leading-none">🔐</div>
+            <h2 className="mb-4 font-baloo text-3xl font-bold text-[#dff1ff]">Log in to save progress</h2>
+            <p className="mb-8 font-semibold text-[#8bb1c7]">
+              Your collection and learning progress are only saved for logged-in accounts.
+            </p>
+            <Button variant="primary" onClick={() => navigate('landing')} icon="👤">
+              Go to Log In
+            </Button>
+          </motion.div>
+        ) : learnedVocabulary.length > 0 ? (
           <>
-            <h2 className="mb-6 font-baloo text-3xl font-bold text-gray-800">Your Learned Words</h2>
+            <h2 className="mb-6 font-baloo text-3xl font-bold text-[#dff1ff]">Your Learned Words</h2>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
               {learnedVocabulary.map((item, index) => (
                 <motion.div
@@ -95,7 +129,7 @@ export default function VocabularyCollection({
                       {item.emoji}
                     </motion.div>
                     <h3 className="mb-1 font-baloo text-xl font-bold text-primary">{item.nativeWord}</h3>
-                    <p className="text-sm font-semibold text-gray-600">{item.englishWord}</p>
+                    <p className="text-sm font-semibold text-[#8bb1c7]">{item.englishWord}</p>
                     <button
                       onClick={() => {
                         const utterance = new SpeechSynthesisUtterance(item.nativeWord);
@@ -117,17 +151,17 @@ export default function VocabularyCollection({
             className="py-20 text-center"
           >
             <div className="mb-6 flex items-center justify-center text-9xl leading-none">🎒</div>
-            <h2 className="mb-4 font-baloo text-3xl font-bold text-gray-800">Your backpack is empty</h2>
-            <p className="mb-8 font-semibold text-gray-600">Complete lessons to collect words here</p>
+            <h2 className="mb-4 font-baloo text-3xl font-bold text-[#dff1ff]">Your backpack is empty</h2>
+            <p className="mb-8 font-semibold text-[#8bb1c7]">Complete lessons to collect words here</p>
             <Button variant="primary" onClick={() => navigate('dashboard')} icon="📚">
               Start Learning
             </Button>
           </motion.div>
         )}
 
-        {learnedVocabulary.length > 0 && (
+        {!isGuestMode && learnedVocabulary.length > 0 && (
           <div className="mt-12">
-            <h2 className="mb-6 font-baloo text-3xl font-bold text-gray-800">More to Learn</h2>
+            <h2 className="mb-6 font-baloo text-3xl font-bold text-[#dff1ff]">More to Learn</h2>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
               {vocabularyData
                 .filter((item) => !appState.learnedWords.includes(item.id))
@@ -143,8 +177,8 @@ export default function VocabularyCollection({
                         {item.emoji}
                       </div>
                       <div className="blur-sm">
-                        <h3 className="mb-1 font-baloo text-xl font-bold text-gray-800">???</h3>
-                        <p className="text-sm font-semibold text-gray-600">{item.englishWord}</p>
+                        <h3 className="mb-1 font-baloo text-xl font-bold text-[#dff1ff]">???</h3>
+                        <p className="text-sm font-semibold text-[#8bb1c7]">{item.englishWord}</p>
                       </div>
                       <div className="mt-3 flex items-center justify-center text-2xl leading-none">🔒</div>
                     </Card>
@@ -154,7 +188,7 @@ export default function VocabularyCollection({
           </div>
         )}
 
-        {learnedVocabulary.length > 0 && learnedVocabulary.length < vocabularyData.length && (
+        {!isGuestMode && learnedVocabulary.length > 0 && learnedVocabulary.length < vocabularyData.length && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -171,24 +205,24 @@ export default function VocabularyCollection({
           </motion.div>
         )}
 
-        {showNoBatteryModal && (
+        {!isGuestMode && showNoBatteryModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-md rounded-3xl border-4 border-primary bg-white p-8 text-center shadow-2xl">
+            <div className="w-full max-w-md rounded-3xl border border-[#2a4151] bg-[#122733] p-8 text-center shadow-2xl">
               <div className="mb-4 flex items-center justify-center text-7xl leading-none">🔋</div>
-              <h3 className="font-baloo text-3xl font-bold text-gray-800">0 Batteries Left</h3>
-              <p className="mt-3 font-semibold text-gray-600">
+              <h3 className="font-baloo text-3xl font-bold text-[#dff1ff]">0 Batteries Left</h3>
+              <p className="mt-3 font-semibold text-[#8bb1c7]">
                 You can keep reviewing everything you already learned, but new words are locked until you recharge or upgrade to premium.
               </p>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                 <button
                   onClick={() => navigate('premium')}
-                  className="flex-1 rounded-2xl bg-gradient-to-r from-primary to-secondary px-6 py-4 font-bold text-white shadow-lg"
+                  className="flex-1 rounded-2xl border-b-4 border-[#FF9126] bg-[#FF9126] px-6 py-4 font-bold text-[#184a00] shadow-lg"
                 >
                   Upgrade to Premium
                 </button>
                 <button
                   onClick={() => setShowNoBatteryModal(false)}
-                  className="flex-1 rounded-2xl bg-gray-100 px-6 py-4 font-bold text-gray-700"
+                  className="flex-1 rounded-2xl border border-[#2a4151] bg-[#1a3242] px-6 py-4 font-bold text-[#cbe4f6]"
                 >
                   Stay Here
                 </button>

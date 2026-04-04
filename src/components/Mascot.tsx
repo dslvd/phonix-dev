@@ -161,7 +161,7 @@ export default function Mascot({
                     <div
                       className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm font-semibold leading-relaxed shadow-sm ${
                         chatMessage.role === 'user'
-                          ? 'bg-gradient-to-r from-sky-500 to-cyan-500 text-white'
+                          ? 'bg-gradient-to-r from-sky-500 to-[#FF9126] text-white'
                           : 'bg-slate-50 text-slate-700'
                       }`}
                     >
@@ -204,7 +204,7 @@ export default function Mascot({
                     type="button"
                     onClick={handleAsk}
                     disabled={loading || !query.trim()}
-                    className="rounded-2xl bg-gradient-to-r from-sky-500 to-cyan-500 px-4 py-3 text-sm font-bold text-white shadow-lg transition disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-2xl bg-gradient-to-r from-sky-500 to-[#FF9126] px-4 py-3 text-sm font-bold text-white shadow-lg transition disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {uiText.send}
                   </button>

@@ -1,9 +1,4 @@
-import { useState } from 'react';
 import { motion } from 'framer-motion';
-import Button from '../components/Button';
-import Card from '../components/Card';
-import NavigationHeader from '../components/NavigationHeader';
-import AISearchBar from '../components/AISearchBar';
 import { Page, AppState } from '../App';
 import { getBeginnerWords, getIntermediateWords, getAdvancedWords } from '../data/vocabulary';
 
@@ -13,472 +8,222 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ navigate, appState }: DashboardProps) {
-  const [showNoBatteryModal, setShowNoBatteryModal] = useState(false);
-  // Get word counts by difficulty
+  const isGuestMode = (() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    const rawUser = window.localStorage.getItem('user');
+    if (!rawUser) {
+      return false;
+    }
+
+    try {
+      const user = JSON.parse(rawUser) as { name?: string; email?: string };
+      const name = (user.name || '').trim().toLowerCase();
+      const email = (user.email || '').trim();
+      return name === 'guest' || email.length === 0;
+    } catch {
+      return false;
+    }
+  })();
+
+  const hasLoggedInUser = typeof window !== 'undefined' && !!window.localStorage.getItem('user');
+
   const beginnerWords = getBeginnerWords();
   const intermediateWords = getIntermediateWords();
   const advancedWords = getAdvancedWords();
-  
-  // Progressive level unlocking based on learned words
-  const beginnerTotal = beginnerWords.length; // 20 beginner words
-  const intermediateTotal = beginnerTotal + intermediateWords.length; // 40 total (20 + 20)
+
+  const beginnerTotal = beginnerWords.length;
+  const intermediateTotal = beginnerTotal + intermediateWords.length;
 
   const beginnerProgress = Math.min(appState.learnedWords.length, beginnerTotal);
   const intermediateProgress = Math.max(0, Math.min(appState.learnedWords.length - beginnerTotal, intermediateWords.length));
   const advancedProgress = Math.max(0, appState.learnedWords.length - intermediateTotal);
 
   const levels = [
-    { 
-      name: 'Beginner', 
-      icon: '🌱', 
+    {
+      name: 'Beginner',
+      icon: '⭐',
       unlocked: true,
       progress: beginnerProgress,
       total: beginnerTotal,
-      description: 'Learn your first words - animals, food, colors',
-      color: 'from-green-400 to-emerald-500',
-      bgGlow: 'shadow-green-500/50'
+      description: ' ',
     },
-    { 
-      name: 'Intermediate', 
-      icon: '🌿', 
+    {
+      name: 'Intermediate',
+      icon: '⭐',
       unlocked: appState.learnedWords.length >= beginnerTotal,
       progress: intermediateProgress,
       total: intermediateWords.length,
-      description: 'More vocabulary - body parts and more',
-      color: 'from-blue-400 to-cyan-500',
-      bgGlow: 'shadow-blue-500/50'
+      description: ' ',
     },
-    { 
-      name: 'Advanced', 
-      icon: '🌳', 
+    {
+      name: 'Advanced',
+      icon: '⭐',
       unlocked: appState.learnedWords.length >= intermediateTotal,
       progress: advancedProgress,
       total: advancedWords.length,
-      description: 'Master advanced words - family and more',
-      color: 'from-purple-400 to-pink-500',
-      bgGlow: 'shadow-purple-500/50'
+      description: ' ',
     },
   ];
 
-  const dailyTasks = [
-    { id: 1, text: 'Complete 1 lesson', completed: appState.learnedWords.length > 0 },
-    { id: 2, text: 'Review 5 words', completed: appState.learnedWords.length >= 5 },
-    { id: 3, text: 'Earn 1 star', completed: appState.stars > 0 },
-    { id: 4, text: 'Keep your streak alive', completed: appState.currentStreak > 0 },
-  ];
-
-  const totalTasksCompleted = dailyTasks.filter((task) => task.completed).length;
+  const activeLessonIndex = levels.findIndex((level) => level.unlocked && level.progress < level.total);
+  const lessonIndex = activeLessonIndex === -1 ? levels.length - 1 : activeLessonIndex;
+  const totalWords = beginnerWords.length + intermediateWords.length + advancedWords.length;
+  const seasonedProgress = Math.min(100, Math.round((appState.learnedWords.length / totalWords) * 100));
 
   return (
-    <div className="min-h-screen relative overflow-hidden pb-20">
-      {/* Animated background with gradient meshes */}
-      <div className="fixed inset-0 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 -z-10" />
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.1),transparent_50%)] -z-10" />
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(236,72,153,0.1),transparent_50%)] -z-10" />
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_90%_10%,rgba(59,130,246,0.1),transparent_50%)] -z-10" />
-      <NavigationHeader
-        onBack={() => navigate('mode')}
-        onLogout={() => navigate('landing')}
-        onProfile={() => navigate('profile')}
-        showStats={true}
-        streakCount={appState.currentStreak}
-        starCount={appState.stars}
-      />
-
-      <div className="max-w-4xl mx-auto p-4 mt-6">
-        {/* Welcome Message - Premium */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
-        >
-          <div className="relative inline-block">
-            <h2 className="font-baloo text-5xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent mb-2">
-              Welcome back, Learner! 👋
-            </h2>
-            <motion.div
-              className="absolute -inset-4 bg-gradient-to-r from-purple-400/20 via-pink-400/20 to-blue-400/20 blur-2xl -z-10"
-              animate={{ opacity: [0.5, 0.8, 0.5] }}
-              transition={{ duration: 3, repeat: Infinity }}
-            />
-          </div>
-          <div className="flex items-center justify-center gap-2 mt-3">
-            <div className="h-px w-12 bg-gradient-to-r from-transparent to-purple-300" />
-            <p className="text-gray-600 font-bold text-lg">
-              Learning {appState.targetLanguage}
-            </p>
-            <div className="h-px w-12 bg-gradient-to-l from-transparent to-purple-300" />
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="mb-8 grid gap-4 md:grid-cols-3"
-        >
-          <Card className="bg-gradient-to-br from-yellow-100 to-orange-100 border-2 border-yellow-300">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary-dark">Streak</p>
-                <p className="mt-2 font-baloo text-4xl font-bold text-primary">🔥 {appState.currentStreak}</p>
-                <p className="text-sm font-semibold text-gray-600">Best: {appState.longestStreak} days</p>
-              </div>
-              <div className="text-5xl leading-none flex items-center justify-center">🏆</div>
-            </div>
-          </Card>
-          <Card className="bg-gradient-to-br from-sky-100 to-cyan-100 border-2 border-sky-300">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-secondary-dark">XP earned</p>
-                <p className="mt-2 font-baloo text-4xl font-bold text-secondary-dark">{appState.totalXP}</p>
-                <p className="text-sm font-semibold text-gray-600">Every lesson adds progress</p>
-              </div>
-              <div className="text-5xl leading-none flex items-center justify-center">⚡</div>
-            </div>
-          </Card>
-          <Card className="bg-gradient-to-br from-pink-100 to-orange-100 border-2 border-pink-300">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-pink-500">Daily quests</p>
-                <p className="mt-2 font-baloo text-4xl font-bold text-pink-500">{totalTasksCompleted}/{dailyTasks.length}</p>
-                <p className="text-sm font-semibold text-gray-600">Quest progress today</p>
-              </div>
-              <div className="text-5xl leading-none flex items-center justify-center">🎯</div>
-            </div>
-          </Card>
-        </motion.div>
-
-        {/* AI Search Bar */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mb-8"
-        >
-          <AISearchBar
-            responseLanguage={appState.nativeLanguage || 'English'}
-            targetLanguage={appState.targetLanguage || 'Hiligaynon'}
-            pageContext={`You are on the Dashboard page.
-Target language: ${appState.targetLanguage || 'Hiligaynon'}.
-Response language: ${appState.nativeLanguage || 'English'}.
-Batteries left: ${appState.heartsRemaining} out of 5.
-Stars: ${appState.stars}.
-XP: ${appState.totalXP}.
-${appState.isPremium ? 'This learner already has premium and unlimited batteries.' : 'If batteries are low or empty, the learner can open the Premium page to get unlimited batteries.'}
-If the user asks how to get more batteries, tell them to buy or open premium. If batteries are empty, say premium is the way to continue without limits.`}
-          />
-        </motion.div>
-
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Learning Levels - Left Side */}
-          <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center gap-3 mb-6">
-              <h3 className="font-baloo text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
-                Your Learning Path
-              </h3>
-              <div className="text-3xl">🗺️</div>
-            </div>
-            {levels.map((level, index) => (
+    <div className="min-h-screen bg-[radial-gradient(circle_at_20%_0%,rgba(72,187,255,0.08),transparent_30%),#0f1b24] px-4 py-5 text-slate-100 lg:px-6">
+      <div className="mx-auto max-w-6xl">
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr),320px]">
+          <section>
+            {!isGuestMode && (
               <motion.div
-                key={level.name}
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.15 }}
-                whileHover={level.unlocked ? { scale: 1.02, y: -4 } : {}}
+                initial={{ opacity: 0, y: -14 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-2xl border-b-4 border-[#FF9126] bg-gradient-to-b from-[#FF9126] to-[#FF9126] px-5 py-4"
               >
-                <div
-                  onClick={level.unlocked ? () => navigate('vocabulary') : undefined}
-                  className={`relative group cursor-pointer transition-all duration-300 ${
-                    !level.unlocked ? 'opacity-60 cursor-not-allowed' : ''
-                  }`}
-                >
-                  {/* Glassmorphism Card */}
-                  <div className={`
-                    relative overflow-hidden rounded-2xl p-6
-                    bg-white/70 backdrop-blur-xl
-                    border border-white/50
-                    shadow-2xl ${level.unlocked ? level.bgGlow + ' shadow-xl' : 'shadow-md'}
-                    transition-all duration-300
-                  `}>
-                    {/* Gradient overlay */}
-                    <div className={`absolute inset-0 bg-gradient-to-r ${level.color} opacity-10`} />
-                    
-                    {/* Shine effect on hover */}
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                    </div>
-
-                    {/* Content */}
-                    <div className="relative z-10">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-4">
-                          {/* Icon with glow */}
-                          <div className="relative flex items-center justify-center w-20 h-20">
-                            <motion.div
-                              animate={level.unlocked ? { 
-                                scale: [1, 1.1, 1],
-                                rotate: [0, 5, -5, 0]
-                              } : {}}
-                              transition={{ duration: 3, repeat: Infinity }}
-                              className="text-6xl leading-none flex items-center justify-center"
-                            >
-                              {level.icon}
-                            </motion.div>
-                            {level.unlocked && (
-                              <motion.div
-                                className={`absolute inset-0 bg-gradient-to-r ${level.color} blur-xl opacity-50 -z-10`}
-                                animate={{ scale: [1, 1.2, 1] }}
-                                transition={{ duration: 2, repeat: Infinity }}
-                              />
-                            )}
-                          </div>
-                          
-                          <div>
-                            <h4 className="font-baloo text-3xl font-bold text-gray-800 mb-1">
-                              {level.name}
-                            </h4>
-                            <p className="text-sm text-gray-600 font-semibold">
-                              {level.unlocked ? level.description : '🔒 Complete previous level'}
-                            </p>
-                          </div>
-                        </div>
-                        
-                        {level.unlocked ? (
-                          <motion.div
-                            animate={{ x: [0, 5, 0] }}
-                            transition={{ duration: 1.5, repeat: Infinity }}
-                            className={`text-4xl leading-none flex items-center justify-center bg-gradient-to-r ${level.color} bg-clip-text text-transparent`}
-                          >
-                            ▶️
-                          </motion.div>
-                        ) : (
-                          <div className="text-4xl opacity-30 leading-none flex items-center justify-center">🔒</div>
-                        )}
-                      </div>
-                      
-                      {/* Progress Bar */}
-                      <div className="mt-4">
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-xs font-bold text-gray-600">Progress</span>
-                          <span className="text-xs font-bold text-primary">
-                            {level.progress}/{level.total} words
-                          </span>
-                        </div>
-                        <div className="h-3 bg-gray-200 rounded-full overflow-hidden shadow-inner">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${(level.progress / level.total) * 100}%` }}
-                            transition={{ duration: 1, delay: index * 0.2 }}
-                            className={`h-full bg-gradient-to-r ${level.color} rounded-full shadow-lg relative overflow-hidden`}
-                          >
-                            {/* Shimmer effect */}
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-pulse" />
-                          </motion.div>
-                        </div>
-                        
-                        {/* Completion badge */}
-                        {level.progress === level.total && level.unlocked && (
-                          <motion.div
-                            initial={{ scale: 0, rotate: -180 }}
-                            animate={{ scale: 1, rotate: 0 }}
-                            className="mt-3 inline-flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg"
-                          >
-                            ✨ Level Complete!
-                          </motion.div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#d7ffc2]">Progress</p>
+                <div className="mt-3 h-3 overflow-hidden rounded-full bg-[#FF9126]">
+                  <div
+                    className="h-full rounded-full bg-[#FAC775]"
+                    style={{ width: `${seasonedProgress}%` }}
+                  />
                 </div>
+                <p className="mt-2 text-sm font-bold text-[#e8ffd5]">{seasonedProgress}% complete ({appState.learnedWords.length}/{totalWords} words)</p>
               </motion.div>
-            ))}
-          </div>
+            )}
 
-          {/* Right Sidebar */}
-          <div className="space-y-4">
-            {/* Daily Practice */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <Card className="bg-gradient-to-br from-orange-100 to-pink-100">
-                <h3 className="font-baloo text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                  <span>📋</span>
-                  Daily Practice
-                </h3>
-                <div className="space-y-3">
-                  {dailyTasks.map((task) => (
-                    <div
-                      key={task.id}
-                      className={`flex items-center gap-3 p-2 rounded-lg ${
-                        task.completed ? 'bg-green-200' : 'bg-white'
-                      }`}
+            <div className="mt-5 rounded-3xl border border-[#243949] bg-[#10212c] px-6 py-8">
+              <div className="mx-auto max-w-xl space-y-6">
+                {levels.map((level, index) => {
+                  const completion = Math.round((level.progress / level.total) * 100);
+                  return (
+                    <motion.div
+                      key={level.name}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.12 }}
+                      className="relative"
                     >
-                      <div className="text-2xl leading-none flex items-center justify-center flex-shrink-0">
-                        {task.completed ? '✅' : '⬜'}
+                      <div className="flex items-center gap-4">
+                        <button
+                          onClick={level.unlocked ? () => navigate('vocabulary') : undefined}
+                          className={`relative flex h-20 w-20 items-center justify-center rounded-full border-b-[6px] text-3xl transition ${
+                            level.unlocked
+                              ? 'border-[#FF9126] bg-gradient-to-b from-[#FF9126] to-[#FF9126] text-white hover:scale-105'
+                              : 'cursor-not-allowed border-[#2d3f4b] bg-[#2a3a46] text-[#7f96a7]'
+                          }`}
+                        >
+                          {level.unlocked ? level.icon : '🔒'}
+                          {index === lessonIndex && (
+                            <span className="absolute -top-9 rounded-lg border border-[#2a404d] bg-[#122633] px-2 py-1 text-xs font-bold uppercase tracking-[0.08em] text-[#8fe9ff]">
+                              Start
+                            </span>
+                          )}
+                        </button>
+
+                        <div className="flex-1 rounded-2xl border border-[#243949] bg-[#0d1d27] p-4">
+                          <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#79a7c2]">{level.description}</p>
+                          <p className="mt-1 text-lg font-bold text-white">{level.name}</p>
+                          <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#223847]">
+                            <div className="h-full rounded-full bg-gradient-to-r from-[#FF9126] to-[#FF9126]" style={{ width: `${completion}%` }} />
+                          </div>
+                          <p className="mt-2 text-xs font-semibold text-[#7ba2b9]">{level.progress}/{level.total} words complete</p>
+                        </div>
                       </div>
-                      <span className={`font-semibold text-sm ${
-                        task.completed ? 'line-through text-gray-600' : 'text-gray-800'
-                      }`}>
-                        {task.text}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            </motion.div>
+                    </motion.div>
+                  );
+                })}
 
-            {/* Quiz Challenge */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              <Card className="bg-gradient-to-br from-purple-100 to-blue-100">
-                <h3 className="font-baloo text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
-                  <span>🏆</span>
-                  Quiz Challenge
-                </h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  Complete lessons to unlock quizzes!
-                </p>
-                <Button
-                  variant="secondary"
-                  fullWidth
-                  disabled={appState.learnedWords.length < 5}
-                  icon="🎯"
-                >
-                  Start Quiz
-                </Button>
-              </Card>
-            </motion.div>
-
-            {/* Collection Button */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 }}
-            >
-              <Button
-                variant="success"
-                fullWidth
-                onClick={() => navigate('collection')}
-                icon="🎒"
-              >
-                View Backpack
-              </Button>
-            </motion.div>
-
-            {/* Premium Status / Upgrade Card */}
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.55 }}
-            >
-              {appState.isPremium ? (
-                <Card className="bg-gradient-to-br from-yellow-100 via-amber-100 to-orange-100 border-2 border-yellow-400">
-                  <div className="text-center">
-                    <div className="text-5xl mb-2 leading-none flex items-center justify-center">🔋</div>
-                    <h4 className="font-baloo text-lg font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent mb-2">
-                      Premium Member
-                    </h4>
-                    <p className="text-xs text-gray-700 mb-2 font-semibold">
-                      Unlimited Batteries Active
-                    </p>
-                    <div className="bg-white/50 rounded-lg p-2 text-xs space-y-1">
-                      <p className="font-bold text-gray-700">∞ Unlimited Batteries</p>
-                      <p className="font-bold text-gray-700">📄 Document Translation</p>
-                      <p className="font-bold text-gray-700">🔌 Offline Mode</p>
-                    </div>
-                  </div>
-                </Card>
-              ) : (
-                <Card 
-                  hover
-                  className="bg-gradient-to-br from-purple-100 to-pink-200 border-2 border-purple-400 cursor-pointer"
-                  onClick={() => navigate('premium')}
-                >
-                  <div className="text-center">
-                    <div className="text-4xl mb-2 leading-none flex items-center justify-center">🔋</div>
-                    <h4 className="font-baloo text-lg font-bold text-gray-800 mb-2">
-                      Upgrade to Premium
-                    </h4>
-                    <p className="text-xs text-gray-600 mb-3">
-                      {appState.heartsRemaining}/5 batteries left
-                    </p>
-                    <div className="w-full bg-gray-200 rounded-full h-2 mb-3 overflow-hidden">
-                      <div 
-                        className="bg-gradient-to-r from-purple-500 to-pink-500 h-full rounded-full transition-all duration-500"
-                        style={{ width: `${(appState.heartsRemaining / 5) * 100}%` }}
-                      />
-                    </div>
-                    <Button
-                      variant="primary"
-                      fullWidth
-                    >
-                      Get Unlimited Batteries 
-                    </Button>
-                  </div>
-                </Card>
-              )}
-            </motion.div>
-
-            {/* Switch to Scan Mode */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.6 }}
-            >
-              <Card className="bg-gradient-to-br from-orange-100 to-pink-200 border-2 border-primary">
-                <div className="text-center">
-                  <div className="text-4xl mb-2 leading-none flex items-center justify-center">📸</div>
-                  <h4 className="font-baloo text-lg font-bold text-gray-800 mb-2">
-                    Try Scan Mode!
-                  </h4>
-                  <p className="text-xs text-gray-600 mb-3">
-                    Use your camera to learn words instantly
-                  </p>
-                  <Button
-                    variant="primary"
-                    fullWidth
+                <div className="pt-3 text-center">
+                  <button
                     onClick={() => navigate('scan')}
+                    className="rounded-xl border border-[#8457d7] bg-[#b37dff] px-5 py-2.5 text-sm font-bold uppercase tracking-[0.1em] text-[#2c0f5a] transition hover:brightness-105"
                   >
-                    Open Camera 📷
-                  </Button>
+                    Jump Here
+                  </button>
                 </div>
-              </Card>
-            </motion.div>
-          </div>
+              </div>
+            </div>
+          </section>
+
+          <aside className="space-y-4">
+            {!isGuestMode && (
+              <div className="rounded-2xl border border-[#2a4151] bg-[#0f202a] p-4">
+                <h3 className="text-xl font-bold text-[#d9e8f2]">Unlock Leaderboards</h3>
+                <p className="mt-2 text-sm font-semibold text-[#7fa2b8]">Complete 9 more lessons to start competing.</p>
+              </div>
+            )}
+
+            {!isGuestMode && (
+              <div className="rounded-2xl border border-[#2a4151] bg-[#0f202a] p-4">
+                <div className="rounded-2xl border-b-4 border-[#FF9126] bg-gradient-to-b from-[#FF9126] to-[#FF9126] p-4">
+                  <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#d7ffc2]">Now learning</p>
+                  <h3 className="mt-1 font-baloo text-4xl font-bold text-white">{appState.targetLanguage || 'Hiligaynon'}</h3>
+                  <p className="text-sm font-bold text-[#e8ffd5]">Ready to practice</p>
+                </div>
+
+                <div className="mt-3 space-y-2.5">
+                  <div className="rounded-xl border border-[#304656] bg-[#122733] p-3">
+                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#8bb1c7]">Words learned</p>
+                    <p className="mt-1 font-baloo text-4xl font-bold text-[#dff1ff]">{appState.learnedWords.length}</p>
+                  </div>
+
+                  <div className="rounded-xl border border-[#304656] bg-[#122733] p-3">
+                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#8bb1c7]">Stars earned</p>
+                    <p className="mt-1 font-baloo text-4xl font-bold text-[#ffd166]">{appState.stars}</p>
+                  </div>
+
+                  <div className="rounded-xl border border-[#304656] bg-[#122733] p-3">
+                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#8bb1c7]">Batteries</p>
+                    <p className="mt-1 font-baloo text-[1.85rem] leading-none font-bold text-[#ffb86b]">
+                      {appState.isPremium ? '∞ Unlimited Batteries' : `${appState.heartsRemaining} / 5 batteries`}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-[#304656] bg-[#122733] p-3">
+                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#8bb1c7]">Streak</p>
+                    <p className="mt-1 font-baloo text-[1.85rem] leading-none font-bold text-[#ff8e6d]">
+                      🔥 {appState.currentStreak} {appState.currentStreak === 1 ? 'day' : 'days'}
+                    </p>
+                    <p className="mt-1 text-xs font-semibold text-[#8bb1c7]">
+                      Best: {appState.longestStreak} {appState.longestStreak === 1 ? 'day' : 'days'}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-[#304656] bg-[#122733] p-3">
+                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#8bb1c7]">XP</p>
+                    <p className="mt-1 font-baloo text-4xl font-bold text-[#7ed6ff]">{appState.totalXP}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {!hasLoggedInUser && (
+              <div className="rounded-2xl border border-[#2a4151] bg-[#0f202a] p-4">
+                <h3 className="text-xl font-bold text-[#d9e8f2]">Save your progress</h3>
+                <p className="mt-2 text-sm font-semibold text-[#7fa2b8]">Keep your streak and lesson path synced.</p>
+                <div className="mt-4 space-y-2">
+                  <button
+                    onClick={() => navigate('landing')}
+                    className="w-full rounded-xl border-b-4 border-[#FF9126] bg-[#FF9126] px-4 py-3 text-sm font-bold uppercase tracking-[0.08em] text-[#1f4b00]"
+                  >
+                    Create Profile
+                  </button>
+                  <button
+                    onClick={() => navigate(appState.isPremium ? 'scan' : 'premium')}
+                    className="w-full rounded-xl border border-[#2a4151] bg-[#56b8e8] px-4 py-3 text-sm font-bold uppercase tracking-[0.08em] text-[#0a344a]"
+                  >
+                    {appState.isPremium ? 'Open Scan Mode' : 'Get Unlimited Batteries'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </aside>
         </div>
       </div>
-
-      {showNoBatteryModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-3xl border-4 border-primary bg-white p-8 text-center shadow-2xl">
-            <div className="mb-4 flex items-center justify-center text-7xl leading-none">🔋</div>
-            <h3 className="font-baloo text-3xl font-bold text-gray-800">0 Batteries Left</h3>
-            <p className="mt-3 font-semibold text-gray-600">
-              You can still review your learned words and quiz history, but new learning is locked until you recharge or upgrade to premium.
-            </p>
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <button
-                onClick={() => navigate('premium')}
-                className="flex-1 rounded-2xl bg-gradient-to-r from-primary to-secondary px-6 py-4 font-bold text-white shadow-lg"
-              >
-                Upgrade to Premium
-              </button>
-              <button
-                onClick={() => setShowNoBatteryModal(false)}
-                className="flex-1 rounded-2xl bg-gray-100 px-6 py-4 font-bold text-gray-700"
-              >
-                Keep Reviewing
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

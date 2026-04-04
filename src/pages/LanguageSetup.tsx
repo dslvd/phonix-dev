@@ -24,7 +24,7 @@ export default function LanguageSetup({ navigate, updateState }: LanguageSetupPr
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-200 via-pink-200 to-orange-200">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_20%_0%,rgba(72,187,255,0.08),transparent_30%),#0f1b24] text-slate-100">
       <NavigationHeader
         onBack={() => navigate('landing')}
         onLogout={() => navigate('landing')}
@@ -36,10 +36,10 @@ export default function LanguageSetup({ navigate, updateState }: LanguageSetupPr
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <h1 className="font-baloo text-4xl font-bold text-gray-800 mb-2">
+          <h1 className="mb-2 font-baloo text-4xl font-bold text-[#dff1ff]">
             Language Setup 🌍
           </h1>
-          <p className="text-gray-600">Tell us about your language journey!</p>
+          <p className="text-[#8bb1c7]">Tell us about your language journey!</p>
         </motion.div>
 
         {/* Native Language Input */}
@@ -50,7 +50,7 @@ export default function LanguageSetup({ navigate, updateState }: LanguageSetupPr
           className="mb-6"
         >
           <label className="block mb-3">
-            <span className="text-lg font-bold text-gray-700 flex items-center gap-2">
+            <span className="flex items-center gap-2 text-lg font-bold text-[#dff1ff]">
               <span>🗣️</span>
               I speak...
             </span>
@@ -58,7 +58,7 @@ export default function LanguageSetup({ navigate, updateState }: LanguageSetupPr
           <select
             value={nativeLanguage}
             onChange={(e) => setNativeLanguage(e.target.value)}
-            className="w-full px-6 py-4 rounded-2xl border-4 border-gray-200 focus:border-primary outline-none text-lg font-semibold transition-all bg-white text-gray-800"
+            className="w-full rounded-2xl border border-[#304656] bg-[#122733] px-6 py-4 text-lg font-semibold text-[#dff1ff] outline-none transition-all focus:border-[#56b8e8]"
           >
             <option value="" disabled>
               Select a language
@@ -79,7 +79,7 @@ export default function LanguageSetup({ navigate, updateState }: LanguageSetupPr
           className="mb-8"
         >
           <label className="block mb-3">
-            <span className="text-lg font-bold text-gray-700 flex items-center gap-2">
+            <span className="flex items-center gap-2 text-lg font-bold text-[#dff1ff]">
               <span>🎯</span>
               I want to learn...
             </span>
@@ -87,7 +87,7 @@ export default function LanguageSetup({ navigate, updateState }: LanguageSetupPr
           <select
             value={targetLanguage}
             onChange={(e) => setTargetLanguage(e.target.value)}
-            className="w-full px-6 py-4 rounded-2xl border-4 border-gray-200 focus:border-secondary outline-none text-lg font-semibold transition-all bg-white text-gray-800"
+            className="w-full rounded-2xl border border-[#304656] bg-[#122733] px-6 py-4 text-lg font-semibold text-[#dff1ff] outline-none transition-all focus:border-[#56b8e8]"
           >
             <option value="" disabled>
               Select a language

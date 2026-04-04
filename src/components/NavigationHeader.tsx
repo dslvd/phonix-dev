@@ -33,7 +33,7 @@ export default function NavigationHeader({
   };
 
   return (
-    <div className="bg-white shadow-lg p-4 sticky top-0 z-50">
+    <div className="sticky top-0 z-50 border-b border-[#1f3544] bg-[#0b1f2b] p-4 shadow-[0_12px_28px_rgba(0,0,0,0.35)]">
       <div className="max-w-6xl mx-auto flex justify-between items-center">
         {/* Left: Back Button or Logo */}
         <div className="flex items-center gap-3">
@@ -42,16 +42,16 @@ export default function NavigationHeader({
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
               onClick={onBack}
-              className="text-3xl hover:bg-gray-100 rounded-full w-10 h-10 flex items-center justify-center transition-colors"
+              className="flex h-10 w-10 items-center justify-center rounded-full text-3xl transition-colors hover:bg-[#173346]"
             >
               ⬅️
             </motion.button>
           ) : (
-            <h1 className="font-baloo text-2xl font-bold text-primary">🦜 Phonix</h1>
+            <h1 className="font-baloo text-2xl font-bold text-[#FF9126]">🦜 Phonix</h1>
           )}
           
           {title && (
-            <h2 className="font-baloo text-xl font-bold text-gray-800 hidden sm:block">
+            <h2 className="hidden font-baloo text-xl font-bold text-[#d4efff] sm:block">
               {title}
             </h2>
           )}
@@ -59,8 +59,8 @@ export default function NavigationHeader({
 
         {/* Center: Progress (if shown) */}
         {showProgress && (
-          <div className="hidden md:flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-full">
-            <span className="font-bold text-sm text-gray-700">
+          <div className="hidden items-center gap-2 rounded-full border border-[#2a4151] bg-[#112b3a] px-4 py-2 md:flex">
+            <span className="text-sm font-bold text-[#cbe4f6]">
               {currentProgress} / {totalProgress}
             </span>
           </div>
@@ -73,7 +73,7 @@ export default function NavigationHeader({
               <div className="bg-yellow-200 px-3 py-1 rounded-full font-bold text-sm hidden sm:flex items-center gap-1">
                 🔥 <span>{streakCount}</span>
               </div>
-              <div className="bg-sky-200 px-3 py-1 rounded-full font-bold text-sm hidden sm:flex items-center gap-1">
+              <div className="hidden items-center gap-1 rounded-full bg-[#1a6b8d] px-3 py-1 text-sm font-bold text-white sm:flex">
                 ⭐ <span>{starCount}</span>
               </div>
             </>
@@ -84,7 +84,7 @@ export default function NavigationHeader({
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
               onClick={onProfile}
-              className="text-3xl hover:bg-purple-100 rounded-full w-10 h-10 flex items-center justify-center transition-colors leading-none"
+              className="flex h-10 w-10 items-center justify-center rounded-full text-3xl leading-none transition-colors hover:bg-[#173346]"
               title="Profile"
             >
               👤
@@ -96,7 +96,7 @@ export default function NavigationHeader({
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleLogout}
-              className="bg-red-500 text-white px-4 py-2 rounded-full font-bold text-sm hover:bg-red-600 transition-colors"
+              className="rounded-full border border-[#2a4151] bg-[#112b3a] px-4 py-2 text-sm font-bold text-[#cbe4f6] transition-colors hover:bg-[#16384b]"
             >
               Logout
             </motion.button>
