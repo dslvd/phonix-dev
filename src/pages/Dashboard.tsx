@@ -153,14 +153,14 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
 
           <aside className="space-y-4">
             {!isGuestMode && (
-              <div className="rounded-2xl border border-[#2a4151] bg-[#0f202a] p-4">
-                <h3 className="text-xl font-bold text-[#d9e8f2]">Unlock Leaderboards</h3>
-                <p className="mt-2 text-sm font-semibold text-[#7fa2b8]">Complete 9 more lessons to start competing.</p>
+              <div className="theme-surface rounded-2xl border p-4">
+                <h3 className="theme-title text-xl font-bold">Unlock Leaderboards</h3>
+                <p className="theme-muted mt-2 text-sm font-semibold">Complete 9 more lessons to start competing.</p>
               </div>
             )}
 
             {!isGuestMode && (
-              <div className="rounded-2xl border border-[#2a4151] bg-[#0f202a] p-4">
+              <div className="theme-surface rounded-2xl border p-4">
                 <div className="rounded-2xl border-b-4 border-[#FF9126] bg-gradient-to-b from-[#FF9126] to-[#FF9126] p-4">
                   <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#d7ffc2]">Now learning</p>
                   <h3 className="mt-1 font-baloo text-4xl font-bold text-white">{appState.targetLanguage || 'Hiligaynon'}</h3>
@@ -168,35 +168,35 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
                 </div>
 
                 <div className="mt-3 space-y-2.5">
-                  <div className="rounded-xl border border-[#304656] bg-[#122733] p-3">
-                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#8bb1c7]">Words learned</p>
-                    <p className="mt-1 font-baloo text-4xl font-bold text-[#dff1ff]">{appState.learnedWords.length}</p>
+                  <div className="theme-surface-soft rounded-xl border p-3">
+                    <p className="theme-muted text-xs font-bold uppercase tracking-[0.12em]">Words learned</p>
+                    <p className="theme-title mt-1 font-baloo text-4xl font-bold">{appState.learnedWords.length}</p>
                   </div>
 
-                  <div className="rounded-xl border border-[#304656] bg-[#122733] p-3">
-                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#8bb1c7]">Stars earned</p>
+                  <div className="theme-surface-soft rounded-xl border p-3">
+                    <p className="theme-muted text-xs font-bold uppercase tracking-[0.12em]">Stars earned</p>
                     <p className="mt-1 font-baloo text-4xl font-bold text-[#ffd166]">{appState.stars}</p>
                   </div>
 
-                  <div className="rounded-xl border border-[#304656] bg-[#122733] p-3">
-                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#8bb1c7]">Batteries</p>
+                  <div className="theme-surface-soft rounded-xl border p-3">
+                    <p className="theme-muted text-xs font-bold uppercase tracking-[0.12em]">Batteries</p>
                     <p className="mt-1 font-baloo text-[1.85rem] leading-none font-bold text-[#ffb86b]">
                       {premium.isPremium ? '∞ Unlimited Batteries' : `${appState.batteriesRemaining} / 5 batteries`}
                     </p>
                   </div>
 
-                  <div className="rounded-xl border border-[#304656] bg-[#122733] p-3">
-                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#8bb1c7]">Streak</p>
+                  <div className="theme-surface-soft rounded-xl border p-3">
+                    <p className="theme-muted text-xs font-bold uppercase tracking-[0.12em]">Streak</p>
                     <p className="mt-1 font-baloo text-[1.85rem] leading-none font-bold text-[#ff8e6d]">
                       🔥 {appState.currentStreak} {appState.currentStreak === 1 ? 'day' : 'days'}
                     </p>
-                    <p className="mt-1 text-xs font-semibold text-[#8bb1c7]">
+                    <p className="theme-muted mt-1 text-xs font-semibold">
                       Best: {appState.longestStreak} {appState.longestStreak === 1 ? 'day' : 'days'}
                     </p>
                   </div>
 
-                  <div className="rounded-xl border border-[#304656] bg-[#122733] p-3">
-                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#8bb1c7]">XP</p>
+                  <div className="theme-surface-soft rounded-xl border p-3">
+                    <p className="theme-muted text-xs font-bold uppercase tracking-[0.12em]">XP</p>
                     <p className="mt-1 font-baloo text-4xl font-bold text-[#7ed6ff]">{appState.totalXP}</p>
                   </div>
                 </div>
@@ -204,9 +204,9 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
             )}
 
             {!hasLoggedInUser && (
-              <div className="rounded-2xl border border-[#2a4151] bg-[#0f202a] p-4">
-                <h3 className="text-xl font-bold text-[#d9e8f2]">Save your progress</h3>
-                <p className="mt-2 text-sm font-semibold text-[#7fa2b8]">Keep your streak and lesson path synced.</p>
+              <div className="theme-surface rounded-2xl border p-4">
+                <h3 className="theme-title text-xl font-bold">Save your progress</h3>
+                <p className="theme-muted mt-2 text-sm font-semibold">Keep your streak and lesson path synced.</p>
                 <div className="mt-4 space-y-2">
                   <button
                     onClick={() => navigate('landing')}
