@@ -40,7 +40,13 @@ async function postJson<T>(url: string, body: unknown): Promise<T> {
   });
 
   if (!response.ok) {
-    throw new Error(`request-failed:${response.status}`);
+    const errorData = await response.json().catch(() => null);
+    const message =
+      (typeof errorData?.error === 'string' && errorData.error) ||
+      (typeof errorData?.details === 'string' && errorData.details) ||
+      `request-failed:${response.status}`;
+
+    throw new AIRequestError('server_route_failed', message, response.status);
   }
 
   return response.json() as Promise<T>;
@@ -317,38 +323,56 @@ export async function askCloudAI(
     import.meta.env.VITE_GEMINI_API_KEY,
     import.meta.env.VITE_GEMINI_API_KEY_BACKUP,
   ].filter(Boolean) as string[];
-  const isLocalDev =
-    typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  let browserError: unknown = null;
+  let serverError: unknown = null;
 
   if (browserApiKeys.length > 0) {
     try {
       return stripEmoji(await callGeminiWithBackup(prompt, browserApiKeys));
     } catch (error) {
-      if (error instanceof AIRequestError && error.code === 'rate_limited' && isLocalDev) {
-        throw error;
-      }
-
+      browserError = error;
       console.warn('Gemini browser request failed, trying server AI route.', error);
     }
   }
 
-  if (!isLocalDev) {
-    try {
-      const apiResponse = await postJson<{ text?: string }>('/api/ai', { prompt });
-      if (apiResponse.text) {
-        return stripEmoji(apiResponse.text.replace(/\*\*/g, ''));
-      }
-    } catch (error) {
-      console.warn('Server AI route unavailable.', error);
+  try {
+    const apiResponse = await postJson<{ text?: string }>('/api/ai', { prompt });
+    if (apiResponse.text) {
+      return stripEmoji(apiResponse.text.replace(/\*\*/g, ''));
     }
+  } catch (error) {
+    serverError = error;
+    console.warn('Server AI route unavailable.', error);
   }
 
-  if (browserApiKeys.length === 0) {
+  const serverMissingProvider =
+    serverError instanceof AIRequestError &&
+    /No AI provider configured/i.test(serverError.message || '');
+
+  if (browserApiKeys.length === 0 && serverMissingProvider) {
+    throw new AIRequestError(
+      'missing_api_key',
+      'Missing AI keys. Configure VITE_GEMINI_API_KEY for browser calls or GEMINI_API_KEY on the server /api/ai runtime.'
+    );
+  }
+
+  if (browserApiKeys.length === 0 && !serverError) {
     throw new AIRequestError(
       'missing_api_key',
       'Missing VITE_GEMINI_API_KEY or VITE_GEMINI_API_KEY_BACKUP.'
     );
+  }
+
+  if (serverError instanceof AIRequestError) {
+    throw new AIRequestError(
+      serverError.code,
+      serverError.message,
+      serverError.status
+    );
+  }
+
+  if (browserError instanceof AIRequestError) {
+    throw browserError;
   }
 
   throw new AIRequestError('all_ai_paths_failed', 'All AI paths failed.');
