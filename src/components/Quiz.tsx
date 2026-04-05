@@ -9,6 +9,7 @@ interface QuizProps {
   onAnswer: (correct: boolean) => void;
   targetLanguage?: string;
   nativeLanguage?: string;
+  useAI?: boolean;
 }
 
 interface AIQuizPayload {
@@ -46,7 +47,7 @@ const parseAIQuizPayload = (rawText: string): AIQuizPayload | null => {
   }
 };
 
-export default function Quiz({ currentWord, allWords, onAnswer, targetLanguage = 'Hiligaynon', nativeLanguage = 'English' }: QuizProps) {
+export default function Quiz({ currentWord, allWords, onAnswer, targetLanguage = 'Hiligaynon', nativeLanguage = 'English', useAI = false }: QuizProps) {
   const [options, setOptions] = useState<VocabularyItem[]>([]);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
@@ -98,6 +99,11 @@ export default function Quiz({ currentWord, allWords, onAnswer, targetLanguage =
     let cancelled = false;
 
     const buildAIQuiz = async () => {
+      if (!useAI) {
+        setLocalOptions();
+        return;
+      }
+
       if (typeof navigator !== 'undefined' && !navigator.onLine) {
         setLocalOptions();
         return;
@@ -191,7 +197,7 @@ export default function Quiz({ currentWord, allWords, onAnswer, targetLanguage =
     return () => {
       cancelled = true;
     };
-  }, [currentWord.id, currentWord.nativeWord, currentWord.englishWord, currentWord.category, currentWord.difficulty, currentWord.emoji, targetLanguage, nativeLanguage, allWords]);
+  }, [currentWord.id, currentWord.nativeWord, currentWord.englishWord, currentWord.category, currentWord.difficulty, currentWord.emoji, targetLanguage, nativeLanguage, allWords, useAI]);
 
   const handleSelect = (wordId: string) => {
     if (showResult) return; // Prevent multiple selections
@@ -270,9 +276,6 @@ export default function Quiz({ currentWord, allWords, onAnswer, targetLanguage =
               className={`${getButtonStyle(word)} rounded-2xl p-6 transition-all duration-300 disabled:cursor-not-allowed`}
             >
               <div className="flex items-center gap-4">
-                <div className="text-5xl leading-none flex items-center justify-center flex-shrink-0">
-                  {word.emoji}
-                </div>
                 <div className="text-left flex-1">
                   <p className="theme-title font-baloo text-2xl font-bold">
                     {word.nativeWord}

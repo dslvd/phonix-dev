@@ -9,6 +9,7 @@ import SentenceLearning from './pages/SentenceLearning';
 import VocabularyCollection from './pages/VocabularyCollection';
 import Profile from './pages/Profile';
 import Premium from './pages/Premium';
+import AdminDashboard from './pages/AdminDashboard';
 import Mascot from './components/Mascot';
 import { usePremium } from './lib/usePremium';
 import { clearPremiumStatus } from './lib/premiumService';
@@ -25,7 +26,8 @@ export type Page =
   | 'sentence'
   | 'collection'
   | 'profile'
-  | 'premium';
+  | 'premium'
+  | 'admin';
 
 export interface AppState {
   nativeLanguage: string;
@@ -256,6 +258,16 @@ function App() {
     const email = (user.email || '').trim();
     return name === 'guest' || email.length === 0;
   })();
+  const isAdmin = (() => {
+    const user = getStoredUser();
+    if (!user) {
+      return false;
+    }
+
+    const name = (user.name || '').trim().toLowerCase();
+    const email = (user.email || '').trim().toLowerCase();
+    return name === 'admin' || email.includes('admin');
+  })();
   const userKey = getUserKey();
 
   useEffect(() => {
@@ -336,7 +348,7 @@ function App() {
     };
   }, [appState, userKey, isGuestMode, hasHydratedFromCloud]);
 
-  const showDesktopSidebar = currentPage === 'dashboard';
+  const showDesktopSidebar = currentPage === 'dashboard' || currentPage === 'admin';
   const shouldShowGlobalMascot = currentPage !== 'landing';
   const globalMascotMessage = (() => {
     const isFilipino = (appState.nativeLanguage || '').trim().toLowerCase() === 'filipino';
@@ -394,10 +406,13 @@ function App() {
     { label: 'Learn', icon: '🏠', page: 'dashboard' },
     { label: 'Backpack', icon: '🎒', page: 'collection' },
     { label: 'Scan', icon: '📸', page: 'scan' },
-    { label: 'Premium', icon: '⭐', page: 'premium' },
+    { label: 'Premium', icon: '⭐', page: 'premium' }
   ];
+  if (isAdmin) {
+    desktopNavItems.push({ label: 'Admin', icon: '🛠️', page: 'admin' });
+  }
   if (!isGuestMode) {
-    desktopNavItems.splice(4, 0, { label: 'Profile', icon: '👤', page: 'profile' });
+    desktopNavItems.splice(3, 0, { label: 'Profile', icon: '👤', page: 'profile' });
   }
 
   const renderPage = () => {
@@ -424,6 +439,10 @@ function App() {
           : <Profile navigate={navigate} appState={appState} premium={premium}/>;
       case 'premium':
         return <Premium navigate={navigate} premium={premium} />;
+      case 'admin':
+        return isAdmin
+          ? <AdminDashboard navigate={navigate} appState={appState} premium={premium} />
+          : <Dashboard navigate={navigate} appState={appState} premium={premium}/>;
       default:
         return <Landing navigate={navigate} resetAppState={resetAppState} />;
     }
