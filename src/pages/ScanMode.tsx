@@ -422,26 +422,50 @@ const translateManualText = async () => {
     setIsScanning(true);
     setError(null);
 
+    const sourceText = manualText.trim();
+    const targetLanguage = appState.targetLanguage || 'Hiligaynon';
     let translatedText = '';
 
     try {
-      translatedText = await translateTextWithGemini(
-        manualText.trim(),
-        appState.targetLanguage || 'Hiligaynon'
-      );
-    } catch (apiError: any) {
-      console.error('Gemini error:', apiError);
+      const response = await fetch('/api/scan-translate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sourceText,
+          targetLanguage,
+        }),
+      });
 
-      // ✅ Friendly fallback message
-      translatedText = '';
-      setError('⚠️ Translation is temporarily unavailable. Please try again in a few seconds.');
+      const data = (await response.json().catch(() => null)) as ScanApiResponse & { error?: string } | null;
+
+      if (!response.ok) {
+        throw new Error(data?.error || `Manual translation failed (${response.status})`);
+      }
+
+      translatedText = (data?.translatedText || '').trim();
+      if (!translatedText) {
+        throw new Error('Translation text is empty from server route');
+      }
+    } catch (serverError) {
+      console.warn('Server manual translate route unavailable, trying browser Gemini fallback.', serverError);
+
+      translatedText = await translateTextWithGemini(sourceText, targetLanguage);
+    }
+
+    if (!translatedText.trim()) {
+      throw new Error('Translation is empty');
     }
 
     setScanResult({
-      detectedText: manualText.trim(),
-      translatedText,
+      detectedText: sourceText,
+      translatedText: translatedText.trim(),
       confidence: 'manual',
     });
+  } catch (err) {
+    console.error('Manual translate error:', err);
+    setError(err instanceof Error ? err.message : 'Translation is temporarily unavailable. Please try again in a few seconds.');
   } finally {
     setIsScanning(false);
   }

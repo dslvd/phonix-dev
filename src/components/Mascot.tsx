@@ -133,12 +133,10 @@ export default function Mascot({
         },
       ]);
 
-      if (err instanceof AIRequestError && err.code === 'rate_limited') {
-        setError('Gemini is busy right now. Smart Helper Mode answered locally.');
-      } else if (err instanceof AIRequestError && err.code === 'missing_api_key') {
+      if (err instanceof AIRequestError && err.code === 'missing_api_key') {
         setError('Gemini key is missing. Smart Helper Mode answered locally.');
       } else {
-        setError('Cloud AI is unavailable right now. Smart Helper Mode answered locally.');
+        setError('');
       }
     } finally {
       setLoading(false);
