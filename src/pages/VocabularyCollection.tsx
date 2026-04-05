@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import ProgressBar from '../components/ProgressBar';
 import NavigationHeader from '../components/NavigationHeader';
 import { Page, AppState } from '../App';
-import { vocabularyData } from '../data/vocabulary';
+import { VocabularyItem } from '../data/vocabulary';
+import { fetchAIVocabulary, readCachedAIVocabulary, writeCachedAIVocabulary } from '../lib/aiVocabulary';
 
 interface VocabularyCollectionProps {
   navigate: (page: Page) => void;
@@ -17,6 +18,7 @@ export default function VocabularyCollection({
   appState,
 }: VocabularyCollectionProps) {
   const [showNoBatteryModal, setShowNoBatteryModal] = useState(false);
+  const [aiVocabulary, setAiVocabulary] = useState<VocabularyItem[]>([]);
   const isGuestMode = (() => {
     if (typeof window === 'undefined') {
       return false;
@@ -37,7 +39,44 @@ export default function VocabularyCollection({
     }
   })();
 
-  const learnedVocabulary = vocabularyData.filter((item) =>
+  const targetLanguage = appState.targetLanguage || 'Hiligaynon';
+  const nativeLanguage = appState.nativeLanguage || 'English';
+
+  useEffect(() => {
+    const cached = readCachedAIVocabulary(targetLanguage, nativeLanguage);
+    if (cached.length > 0) {
+      setAiVocabulary(cached);
+    }
+
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const refreshWords = async () => {
+      try {
+        const words = await fetchAIVocabulary(targetLanguage, nativeLanguage);
+        if (cancelled) {
+          return;
+        }
+        setAiVocabulary(words);
+        writeCachedAIVocabulary(targetLanguage, nativeLanguage, words);
+      } catch {
+        // Keep cached AI vocabulary when provider is unavailable.
+      }
+    };
+
+    refreshWords();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [targetLanguage, nativeLanguage]);
+
+  const totalWords = aiVocabulary.length || 47;
+
+  const learnedVocabulary = aiVocabulary.filter((item) =>
     appState.learnedWords.includes(item.id)
   );
 
@@ -58,12 +97,12 @@ export default function VocabularyCollection({
                 <div className="mb-3 flex items-center justify-between">
                   <h3 className="theme-summary-label text-lg font-bold">Words Learned</h3>
                   <span className="theme-summary-value text-lg font-bold">
-                    {learnedVocabulary.length}/{vocabularyData.length}
+                    {learnedVocabulary.length}/{totalWords}
                   </span>
                 </div>
                 <ProgressBar
                   current={learnedVocabulary.length}
-                  total={vocabularyData.length}
+                  total={totalWords}
                   color="success"
                   showNumbers={false}
                 />
@@ -72,12 +111,12 @@ export default function VocabularyCollection({
                 <div className="mb-3 flex items-center justify-between">
                   <h3 className="theme-summary-label text-lg font-bold">Quiz Stars</h3>
                   <span className="theme-summary-value text-lg font-bold">
-                    {appState.stars}/{vocabularyData.length}
+                    {appState.stars}/{totalWords}
                   </span>
                 </div>
                 <ProgressBar
                   current={appState.stars}
-                  total={vocabularyData.length}
+                  total={totalWords}
                   color="success"
                   showNumbers={false}
                 />
@@ -180,7 +219,7 @@ export default function VocabularyCollection({
           <div className="mt-12">
             <h2 className="theme-title mb-6 font-baloo text-3xl font-bold">More to Learn</h2>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-              {vocabularyData
+              {aiVocabulary
                 .filter((item) => !appState.learnedWords.includes(item.id))
                 .map((item, index) => (
                   <motion.div
@@ -205,7 +244,7 @@ export default function VocabularyCollection({
           </div>
         )}
 
-        {!isGuestMode && learnedVocabulary.length > 0 && learnedVocabulary.length < vocabularyData.length && (
+        {!isGuestMode && learnedVocabulary.length > 0 && learnedVocabulary.length < totalWords && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

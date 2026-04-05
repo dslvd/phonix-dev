@@ -4,8 +4,9 @@ import NavigationHeader from '../components/NavigationHeader';
 import Quiz from '../components/Quiz';
 import EnergyBar from '../components/EnergyBar';
 import { Page, AppState } from '../App';
-import { vocabularyData, getBeginnerWords, getIntermediateWords, getAdvancedWords, VocabularyItem } from '../data/vocabulary';
+import { VocabularyItem } from '../data/vocabulary';
 import { usePremium } from '../lib/usePremium';
+import { fetchAIVocabulary, readCachedAIVocabulary, writeCachedAIVocabulary } from '../lib/aiVocabulary';
 
 interface VocabularyLearningProps {
   navigate: (page: Page) => void;
@@ -24,28 +25,79 @@ export default function VocabularyLearning({
   const [wordsBeforeQuiz, setWordsBeforeQuiz] = useState(3); // Quiz every 3 words
   const [consecutiveWords, setConsecutiveWords] = useState(0);
   const [showOutOfBatteriesModal, setShowOutOfBatteriesModal] = useState(false);
+  const [aiVocabulary, setAiVocabulary] = useState<VocabularyItem[]>([]);
   const [aiFlashcardItem, setAiFlashcardItem] = useState<VocabularyItem | null>(null);
 
-  
-  // Get current difficulty level based on learned words
-  const getCurrentDifficultyWords = () => {
-    const learnedCount = appState.learnedWords.length;
-    if (learnedCount < 20) {
-      return getBeginnerWords();
-    } else if (learnedCount < 40) {
-      return getIntermediateWords();
-    } else {
-      return getAdvancedWords();
+  const targetLanguage = appState.targetLanguage || 'Hiligaynon';
+  const nativeLanguage = appState.nativeLanguage || 'English';
+
+  useEffect(() => {
+    const cached = readCachedAIVocabulary(targetLanguage, nativeLanguage);
+    if (cached.length > 0) {
+      setAiVocabulary(cached);
     }
+
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadAIVocabulary = async () => {
+      try {
+        const words = await fetchAIVocabulary(targetLanguage, nativeLanguage);
+        if (cancelled) {
+          return;
+        }
+
+        setAiVocabulary(words);
+        writeCachedAIVocabulary(targetLanguage, nativeLanguage, words);
+      } catch {
+        // Keep using cached AI words when provider is unavailable.
+      }
+    };
+
+    loadAIVocabulary();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [targetLanguage, nativeLanguage]);
+
+  const currentLevelWords = (() => {
+    const learnedCount = appState.learnedWords.length;
+    const difficulty = learnedCount < 20 ? 'beginner' : learnedCount < 40 ? 'intermediate' : 'advanced';
+    return aiVocabulary.filter((item) => item.difficulty === difficulty);
+  })();
+
+  const fallbackItem: VocabularyItem = {
+    id: 'ai-loading',
+    nativeWord: 'Loading',
+    englishWord: 'Loading',
+    category: 'general',
+    emoji: '🧠',
+    difficulty: 'beginner',
   };
-  
-  const currentLevelWords = getCurrentDifficultyWords();
-  const currentItem = vocabularyData[appState.currentVocabIndex];
+
+  const currentItem = aiVocabulary[appState.currentVocabIndex] || aiVocabulary[0] || fallbackItem;
+  const hasAIVocabulary = aiVocabulary.length > 0;
   const displayedItem = aiFlashcardItem || currentItem;
   const currentItemLearned = appState.learnedWords.includes(currentItem.id);
   const nextIndex = appState.currentVocabIndex + 1;
-  const nextItem = nextIndex < vocabularyData.length ? vocabularyData[nextIndex] : null;
+  const nextItem = nextIndex < aiVocabulary.length ? aiVocabulary[nextIndex] : null;
   const nextItemLearned = nextItem ? appState.learnedWords.includes(nextItem.id) : false;
+
+  useEffect(() => {
+    if (!hasAIVocabulary) {
+      return;
+    }
+
+    if (appState.currentVocabIndex < aiVocabulary.length) {
+      return;
+    }
+
+    updateState({ currentVocabIndex: Math.max(0, aiVocabulary.length - 1) });
+  }, [hasAIVocabulary, appState.currentVocabIndex, aiVocabulary.length, updateState]);
 
   // Check if we should show quiz
   useEffect(() => {
@@ -178,6 +230,10 @@ export default function VocabularyLearning({
   ]);
 
   const handleNext = () => {
+    if (!hasAIVocabulary) {
+      return;
+    }
+
     const isNewDiscovery = !appState.learnedWords.includes(currentItem.id);
     const tryingToAdvanceIntoNewContent =
       !premium.isPremium &&
@@ -204,7 +260,7 @@ export default function VocabularyLearning({
     }
 
     // Move to next or go to sentence page
-    if (appState.currentVocabIndex < vocabularyData.length - 1) {
+    if (appState.currentVocabIndex < aiVocabulary.length - 1) {
       updateState({
         currentVocabIndex: appState.currentVocabIndex + 1,
       });
@@ -321,7 +377,7 @@ export default function VocabularyLearning({
         title="Vocabulary Learning"
         showProgress={true}
         currentProgress={appState.currentVocabIndex + 1}
-        totalProgress={vocabularyData.length}
+        totalProgress={Math.max(aiVocabulary.length, 1)}
       />
 
       {/* Main Content */}
@@ -340,7 +396,12 @@ export default function VocabularyLearning({
             />
           </motion.div>
 
-          {isQuizMode ? (
+          {!hasAIVocabulary ? (
+            <div className="theme-surface rounded-3xl border p-10 text-center">
+              <p className="theme-title font-baloo text-3xl font-bold">Generating AI vocabulary...</p>
+              <p className="theme-muted mt-2 text-sm font-semibold">Please stay online while we build your word set.</p>
+            </div>
+          ) : isQuizMode ? (
             // Quiz Mode
             <Quiz
               currentWord={displayedItem}
@@ -520,7 +581,7 @@ export default function VocabularyLearning({
             transition={{ delay: 0.7 }}
             className="mt-6 flex justify-center gap-2"
           >
-            {vocabularyData.slice(0, Math.min(10, vocabularyData.length)).map((item, index) => (
+            {aiVocabulary.slice(0, Math.min(10, aiVocabulary.length)).map((item, index) => (
               <motion.div
                 key={item.id}
                 initial={{ scale: 0 }}
@@ -535,9 +596,9 @@ export default function VocabularyLearning({
                 }`}
               />
             ))}
-            {vocabularyData.length > 10 && (
+            {aiVocabulary.length > 10 && (
               <div className="theme-muted ml-2 self-center text-xs">
-                +{vocabularyData.length - 10} more
+                +{aiVocabulary.length - 10} more
               </div>
             )}
           </motion.div>
