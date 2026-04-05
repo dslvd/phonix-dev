@@ -10,6 +10,8 @@ interface QuizProps {
   targetLanguage?: string;
   nativeLanguage?: string;
   useAI?: boolean;
+  difficultyBand?: 'beginner' | 'intermediate' | 'advanced';
+  levelStage?: number;
 }
 
 interface AIQuizPayload {
@@ -47,7 +49,16 @@ const parseAIQuizPayload = (rawText: string): AIQuizPayload | null => {
   }
 };
 
-export default function Quiz({ currentWord, allWords, onAnswer, targetLanguage = 'Hiligaynon', nativeLanguage = 'English', useAI = true }: QuizProps) {
+export default function Quiz({
+  currentWord,
+  allWords,
+  onAnswer,
+  targetLanguage = 'Hiligaynon',
+  nativeLanguage = 'English',
+  useAI = true,
+  difficultyBand,
+  levelStage = 1,
+}: QuizProps) {
   const [options, setOptions] = useState<VocabularyItem[]>([]);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
@@ -105,13 +116,27 @@ export default function Quiz({ currentWord, allWords, onAnswer, targetLanguage =
       }
 
       try {
+        const stageHint =
+          levelStage <= 1
+            ? 'Stage 1: easier distractors are allowed.'
+            : levelStage === 2
+            ? 'Stage 2: use moderately similar distractors.'
+            : levelStage === 3
+            ? 'Stage 3: distractors should be close in category and meaning.'
+            : levelStage === 4
+            ? 'Stage 4: distractors should be very close and tricky.'
+            : 'Stage 5: use highly confusable distractors with similar form and meaning.';
+
         const prompt = [
           'You are generating one multiple-choice language-learning quiz item.',
           `Difficulty level: ${currentWord.difficulty}.`,
+          `Difficulty band: ${difficultyBand || currentWord.difficulty}.`,
+          `Current stage: ${Math.max(1, Math.min(5, levelStage))} of 5.`,
           `Target language: ${targetLanguage}.`,
           `Learner native language: ${nativeLanguage}.`,
           `Correct answer in ${targetLanguage}: ${currentWord.nativeWord}.`,
           `Reference English word: ${currentWord.englishWord}.`,
+          stageHint,
           '',
           'Return STRICT JSON only with this shape:',
           '{',
@@ -192,7 +217,7 @@ export default function Quiz({ currentWord, allWords, onAnswer, targetLanguage =
     return () => {
       cancelled = true;
     };
-  }, [currentWord.id, currentWord.nativeWord, currentWord.englishWord, currentWord.category, currentWord.difficulty, currentWord.emoji, targetLanguage, nativeLanguage, allWords, useAI]);
+  }, [currentWord.id, currentWord.nativeWord, currentWord.englishWord, currentWord.category, currentWord.difficulty, currentWord.emoji, targetLanguage, nativeLanguage, allWords, useAI, difficultyBand, levelStage]);
 
   const handleSelect = (wordId: string) => {
     if (showResult) return; // Prevent multiple selections
