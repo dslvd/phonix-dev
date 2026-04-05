@@ -9,7 +9,7 @@ import SentenceLearning from './pages/SentenceLearning';
 import VocabularyCollection from './pages/VocabularyCollection';
 import Profile from './pages/Profile';
 import Premium from './pages/Premium';
-import AdminDashboard from './pages/AdminDashboard';
+import AdminDashboard from './pages/AdminDashboardPage';
 import Mascot from './components/Mascot';
 import { usePremium } from './lib/usePremium';
 import { clearPremiumStatus } from './lib/premiumService';

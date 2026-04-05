@@ -6,7 +6,7 @@ import EnergyBar from '../components/EnergyBar';
 import { Page, AppState } from '../App';
 import { VocabularyItem } from '../data/vocabulary';
 import { usePremium } from '../lib/usePremium';
-import { fetchAIVocabulary, readCachedAIVocabulary, writeCachedAIVocabulary } from '../lib/aiVocabulary';
+import { fetchAIVocabulary, getFiveStageLevel, readCachedAIVocabularyOrLatest, writeCachedAIVocabulary } from '../lib/aiVocabulary';
 
 interface VocabularyLearningProps {
   navigate: (page: Page) => void;
@@ -21,18 +21,20 @@ export default function VocabularyLearning({
   updateState,
   premium,
 }: VocabularyLearningProps) {
+  const targetLanguage = appState.targetLanguage || 'Hiligaynon';
+  const nativeLanguage = appState.nativeLanguage || 'English';
+
   const [isQuizMode, setIsQuizMode] = useState(false);
   const [wordsBeforeQuiz, setWordsBeforeQuiz] = useState(3); // Quiz every 3 words
   const [consecutiveWords, setConsecutiveWords] = useState(0);
   const [showOutOfBatteriesModal, setShowOutOfBatteriesModal] = useState(false);
-  const [aiVocabulary, setAiVocabulary] = useState<VocabularyItem[]>([]);
+  const [aiVocabulary, setAiVocabulary] = useState<VocabularyItem[]>(() =>
+    readCachedAIVocabularyOrLatest(targetLanguage, nativeLanguage)
+  );
   const [aiFlashcardItem, setAiFlashcardItem] = useState<VocabularyItem | null>(null);
 
-  const targetLanguage = appState.targetLanguage || 'Hiligaynon';
-  const nativeLanguage = appState.nativeLanguage || 'English';
-
   useEffect(() => {
-    const cached = readCachedAIVocabulary(targetLanguage, nativeLanguage);
+    const cached = readCachedAIVocabularyOrLatest(targetLanguage, nativeLanguage);
     if (cached.length > 0) {
       setAiVocabulary(cached);
     }
@@ -69,6 +71,40 @@ export default function VocabularyLearning({
     const difficulty = learnedCount < 20 ? 'beginner' : learnedCount < 40 ? 'intermediate' : 'advanced';
     return aiVocabulary.filter((item) => item.difficulty === difficulty);
   })();
+  const beginnerWords = aiVocabulary.filter((item) => item.difficulty === 'beginner');
+  const intermediateWords = aiVocabulary.filter((item) => item.difficulty === 'intermediate');
+  const advancedWords = aiVocabulary.filter((item) => item.difficulty === 'advanced');
+
+  const beginnerCount = beginnerWords.length || 20;
+  const intermediateCount = intermediateWords.length || 20;
+  const advancedCount = advancedWords.length || 7;
+
+  const learnedCount = appState.learnedWords.length;
+  const currentDifficultyBand: 'beginner' | 'intermediate' | 'advanced' =
+    learnedCount < beginnerCount
+      ? 'beginner'
+      : learnedCount < beginnerCount + intermediateCount
+      ? 'intermediate'
+      : 'advanced';
+  const bandProgress =
+    currentDifficultyBand === 'beginner'
+      ? learnedCount
+      : currentDifficultyBand === 'intermediate'
+      ? Math.max(0, learnedCount - beginnerCount)
+      : Math.max(0, learnedCount - beginnerCount - intermediateCount);
+  const bandTotal =
+    currentDifficultyBand === 'beginner'
+      ? beginnerCount
+      : currentDifficultyBand === 'intermediate'
+      ? intermediateCount
+      : advancedCount;
+  const levelStage = getFiveStageLevel(bandProgress, bandTotal);
+  const difficultyLabel =
+    currentDifficultyBand === 'beginner'
+      ? 'Beginner'
+      : currentDifficultyBand === 'intermediate'
+      ? 'Intermediate'
+      : 'Advanced';
 
   const fallbackItem: VocabularyItem = {
     id: 'ai-loading',
@@ -394,6 +430,13 @@ export default function VocabularyLearning({
               isPremium={premium.isPremium}
               onUpgrade={() => navigate('premium')}
             />
+            {hasAIVocabulary && (
+              <div className="mt-3 text-center">
+                <span className="inline-flex items-center rounded-full border border-[#FF9126] bg-[#1d3443] px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] text-[#ffd7aa]">
+                  {difficultyLabel} Stage {levelStage}/5
+                </span>
+              </div>
+            )}
           </motion.div>
 
           {!hasAIVocabulary ? (
@@ -410,6 +453,8 @@ export default function VocabularyLearning({
               targetLanguage={appState.targetLanguage || 'Hiligaynon'}
               nativeLanguage={appState.nativeLanguage || 'English'}
               useAI={true}
+              difficultyBand={currentDifficultyBand}
+              levelStage={levelStage}
             />
           ) : (
             // Regular Flashcard Mode

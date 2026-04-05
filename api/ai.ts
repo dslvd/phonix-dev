@@ -1,3 +1,7 @@
+declare const process: {
+  env: Record<string, string | undefined>;
+};
+
 const jsonHeaders = {
   'Content-Type': 'application/json',
 };

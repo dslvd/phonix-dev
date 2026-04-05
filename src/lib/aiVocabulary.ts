@@ -18,6 +18,9 @@ const LEVEL_COUNTS: Record<Difficulty, number> = {
   intermediate: 20,
   advanced: 7,
 };
+const LATEST_AI_VOCABULARY_CACHE_KEY = 'phonix-ai-vocabulary:latest';
+const memoryCache = new Map<string, VocabularyItem[]>();
+const inFlightRequests = new Map<string, Promise<VocabularyItem[]>>();
 
 const clampDifficulty = (value: string | undefined): Difficulty => {
   if (value === 'beginner' || value === 'intermediate' || value === 'advanced') {
@@ -137,7 +140,13 @@ export const readCachedAIVocabulary = (targetLanguage: string, nativeLanguage: s
     return [];
   }
 
-  const raw = window.localStorage.getItem(getAIVocabularyCacheKey(targetLanguage, nativeLanguage));
+  const cacheKey = getAIVocabularyCacheKey(targetLanguage, nativeLanguage);
+  const memory = memoryCache.get(cacheKey);
+  if (memory && memory.length > 0) {
+    return memory;
+  }
+
+  const raw = window.localStorage.getItem(cacheKey);
   if (!raw) {
     return [];
   }
@@ -147,10 +156,47 @@ export const readCachedAIVocabulary = (targetLanguage: string, nativeLanguage: s
     if (!Array.isArray(parsed)) {
       return [];
     }
+    memoryCache.set(cacheKey, parsed);
     return parsed;
   } catch {
     return [];
   }
+};
+
+export const readLatestCachedAIVocabulary = (): VocabularyItem[] => {
+  if (typeof window === 'undefined') {
+    return [];
+  }
+
+  const memory = memoryCache.get(LATEST_AI_VOCABULARY_CACHE_KEY);
+  if (memory && memory.length > 0) {
+    return memory;
+  }
+
+  const raw = window.localStorage.getItem(LATEST_AI_VOCABULARY_CACHE_KEY);
+  if (!raw) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as VocabularyItem[];
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+    memoryCache.set(LATEST_AI_VOCABULARY_CACHE_KEY, parsed);
+    return parsed;
+  } catch {
+    return [];
+  }
+};
+
+export const readCachedAIVocabularyOrLatest = (targetLanguage: string, nativeLanguage: string): VocabularyItem[] => {
+  const exact = readCachedAIVocabulary(targetLanguage, nativeLanguage);
+  if (exact.length > 0) {
+    return exact;
+  }
+
+  return readLatestCachedAIVocabulary();
 };
 
 export const writeCachedAIVocabulary = (targetLanguage: string, nativeLanguage: string, words: VocabularyItem[]) => {
@@ -158,13 +204,40 @@ export const writeCachedAIVocabulary = (targetLanguage: string, nativeLanguage: 
     return;
   }
 
-  window.localStorage.setItem(getAIVocabularyCacheKey(targetLanguage, nativeLanguage), JSON.stringify(words));
+  const cacheKey = getAIVocabularyCacheKey(targetLanguage, nativeLanguage);
+  memoryCache.set(cacheKey, words);
+  memoryCache.set(LATEST_AI_VOCABULARY_CACHE_KEY, words);
+
+  window.localStorage.setItem(cacheKey, JSON.stringify(words));
+  window.localStorage.setItem(LATEST_AI_VOCABULARY_CACHE_KEY, JSON.stringify(words));
+};
+
+export const getFiveStageLevel = (progress: number, total: number): number => {
+  if (total <= 0) {
+    return 1;
+  }
+
+  const stageSize = Math.max(1, Math.ceil(total / 5));
+  const stage = Math.floor(progress / stageSize) + 1;
+  return Math.max(1, Math.min(5, stage));
 };
 
 export const fetchAIVocabulary = async (
   targetLanguage: string,
   nativeLanguage: string
 ): Promise<VocabularyItem[]> => {
+  const cacheKey = getAIVocabularyCacheKey(targetLanguage, nativeLanguage);
+  const memory = memoryCache.get(cacheKey);
+  if (memory && memory.length > 0) {
+    return memory;
+  }
+
+  const activeRequest = inFlightRequests.get(cacheKey);
+  if (activeRequest) {
+    return activeRequest;
+  }
+
+  const requestPromise = (async () => {
   const prompt = [
     'Generate a complete vocabulary list for a language-learning app.',
     `Target language: ${targetLanguage || 'Hiligaynon'}.`,
@@ -191,27 +264,38 @@ export const fetchAIVocabulary = async (
     '6. Keep words useful for daily conversation.',
   ].join('\n');
 
-  const response = await fetch('/api/ai', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt }),
-  });
+    const response = await fetch('/api/ai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt }),
+    });
 
-  if (!response.ok) {
-    throw new Error('ai-vocabulary-request-failed');
+    if (!response.ok) {
+      throw new Error('ai-vocabulary-request-failed');
+    }
+
+    const data = await response.json();
+    const payload = parsePayload(String(data?.text || ''));
+    const rawWords = payload?.words || [];
+
+    const normalized = rawWords
+      .map((word, index) => normalizeWord(word, index, 'beginner'))
+      .filter((word): word is VocabularyItem => !!word);
+
+    if (normalized.length < 20) {
+      throw new Error('ai-vocabulary-invalid-payload');
+    }
+
+    const finalized = enforceLevelCounts(normalized);
+    memoryCache.set(cacheKey, finalized);
+    return finalized;
+  })();
+
+  inFlightRequests.set(cacheKey, requestPromise);
+
+  try {
+    return await requestPromise;
+  } finally {
+    inFlightRequests.delete(cacheKey);
   }
-
-  const data = await response.json();
-  const payload = parsePayload(String(data?.text || ''));
-  const rawWords = payload?.words || [];
-
-  const normalized = rawWords
-    .map((word, index) => normalizeWord(word, index, 'beginner'))
-    .filter((word): word is VocabularyItem => !!word);
-
-  if (normalized.length < 20) {
-    throw new Error('ai-vocabulary-invalid-payload');
-  }
-
-  return enforceLevelCounts(normalized);
 };
