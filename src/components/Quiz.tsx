@@ -7,12 +7,53 @@ interface QuizProps {
   currentWord: VocabularyItem;
   allWords: VocabularyItem[];
   onAnswer: (correct: boolean) => void;
+  targetLanguage?: string;
+  nativeLanguage?: string;
 }
 
-export default function Quiz({ currentWord, allWords, onAnswer }: QuizProps) {
+interface AIQuizPayload {
+  question?: string;
+  correctFeedback?: string;
+  incorrectFeedback?: string;
+  options?: Array<{
+    nativeWord?: string;
+    englishWord?: string;
+    emoji?: string;
+    isCorrect?: boolean;
+  }>;
+}
+
+const stripCodeFence = (text: string) => text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim();
+
+const parseAIQuizPayload = (rawText: string): AIQuizPayload | null => {
+  const cleaned = stripCodeFence(rawText);
+
+  try {
+    return JSON.parse(cleaned) as AIQuizPayload;
+  } catch {
+    const start = cleaned.indexOf('{');
+    const end = cleaned.lastIndexOf('}');
+
+    if (start === -1 || end === -1 || end <= start) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(cleaned.slice(start, end + 1)) as AIQuizPayload;
+    } catch {
+      return null;
+    }
+  }
+};
+
+export default function Quiz({ currentWord, allWords, onAnswer, targetLanguage = 'Hiligaynon', nativeLanguage = 'English' }: QuizProps) {
   const [options, setOptions] = useState<VocabularyItem[]>([]);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
+  const [challengeText, setChallengeText] = useState('');
+  const [correctText, setCorrectText] = useState('');
+  const [incorrectText, setIncorrectText] = useState('');
+
   const challengeLines = [
     'What is this in Hiligaynon?',
     'Which Hiligaynon word matches this?',
@@ -31,22 +72,126 @@ export default function Quiz({ currentWord, allWords, onAnswer }: QuizProps) {
     'Good try. Let us keep practicing.',
     'Close. You will get the next one.',
   ];
-  const challengeText = challengeLines[currentWord.englishWord.length % challengeLines.length];
-  const correctText = correctLines[currentWord.nativeWord.length % correctLines.length];
-  const incorrectText = incorrectLines[currentWord.id.length % incorrectLines.length];
 
   useEffect(() => {
-    // Generate 4 multiple choice options (1 correct + 3 wrong)
-    const wrongOptions = allWords
-      .filter(word => word.id !== currentWord.id)
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 3);
-    
-    const allOptions = [currentWord, ...wrongOptions].sort(() => Math.random() - 0.5);
-    setOptions(allOptions);
     setSelectedAnswer(null);
     setShowResult(false);
-  }, [currentWord.id]);
+
+    const fallbackChallenge = challengeLines[currentWord.englishWord.length % challengeLines.length];
+    const fallbackCorrect = correctLines[currentWord.nativeWord.length % correctLines.length];
+    const fallbackIncorrect = incorrectLines[currentWord.id.length % incorrectLines.length];
+
+    setChallengeText(fallbackChallenge);
+    setCorrectText(fallbackCorrect);
+    setIncorrectText(fallbackIncorrect);
+
+    const setLocalOptions = () => {
+      const wrongOptions = allWords
+        .filter((word) => word.id !== currentWord.id)
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 3);
+
+      const localOptions = [currentWord, ...wrongOptions].sort(() => Math.random() - 0.5);
+      setOptions(localOptions);
+    };
+
+    let cancelled = false;
+
+    const buildAIQuiz = async () => {
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        setLocalOptions();
+        return;
+      }
+
+      try {
+        const prompt = [
+          'You are generating one multiple-choice language-learning quiz item.',
+          `Difficulty level: ${currentWord.difficulty}.`,
+          `Target language: ${targetLanguage}.`,
+          `Learner native language: ${nativeLanguage}.`,
+          `Correct answer in ${targetLanguage}: ${currentWord.nativeWord}.`,
+          `Reference English word: ${currentWord.englishWord}.`,
+          '',
+          'Return STRICT JSON only with this shape:',
+          '{',
+          '  "question": "string",',
+          '  "correctFeedback": "string",',
+          '  "incorrectFeedback": "string",',
+          '  "options": [',
+          '    { "nativeWord": "string", "englishWord": "string", "emoji": "string", "isCorrect": true|false }',
+          '  ]',
+          '}',
+          '',
+          'Rules:',
+          '1. Provide exactly 4 options.',
+          '2. Exactly one option must have isCorrect=true and it must be the same word as the correct answer.',
+          '3. Wrong options must be plausible but clearly different from the correct answer.',
+          '4. Keep all text concise and learner-friendly.',
+        ].join('\n');
+
+        const response = await fetch('/api/ai', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt }),
+        });
+
+        if (!response.ok) {
+          throw new Error('ai-quiz-request-failed');
+        }
+
+        const data = await response.json();
+        const payload = parseAIQuizPayload(String(data?.text || ''));
+
+        if (!payload?.options || payload.options.length !== 4) {
+          throw new Error('ai-quiz-invalid-options');
+        }
+
+        const normalized = payload.options.map((option, index) => {
+          const nativeWord = (option.nativeWord || '').trim();
+          const isCorrect = !!option.isCorrect || nativeWord.toLowerCase() === currentWord.nativeWord.toLowerCase();
+
+          return {
+            id: isCorrect ? currentWord.id : `ai-${currentWord.id}-${index}`,
+            nativeWord: isCorrect ? currentWord.nativeWord : nativeWord,
+            englishWord: (option.englishWord || currentWord.englishWord).trim() || currentWord.englishWord,
+            category: currentWord.category,
+            emoji: (option.emoji || currentWord.emoji).trim() || currentWord.emoji,
+            difficulty: currentWord.difficulty,
+          } satisfies VocabularyItem;
+        });
+
+        const uniqueNativeWords = new Set(normalized.map((item) => item.nativeWord.toLowerCase()));
+        const correctCount = normalized.filter((item) => item.id === currentWord.id).length;
+
+        if (uniqueNativeWords.size < 4 || correctCount !== 1) {
+          throw new Error('ai-quiz-invalid-uniqueness');
+        }
+
+        if (!cancelled) {
+          setOptions(normalized.sort(() => Math.random() - 0.5));
+          if (payload.question?.trim()) {
+            setChallengeText(payload.question.trim());
+          }
+          if (payload.correctFeedback?.trim()) {
+            setCorrectText(payload.correctFeedback.trim());
+          }
+          if (payload.incorrectFeedback?.trim()) {
+            setIncorrectText(payload.incorrectFeedback.trim());
+          }
+        }
+      } catch {
+        if (!cancelled) {
+          setLocalOptions();
+        }
+      }
+    };
+
+    buildAIQuiz();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentWord.id, currentWord.nativeWord, currentWord.englishWord, currentWord.category, currentWord.difficulty, currentWord.emoji, targetLanguage, nativeLanguage, allWords]);
 
   const handleSelect = (wordId: string) => {
     if (showResult) return; // Prevent multiple selections

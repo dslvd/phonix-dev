@@ -59,9 +59,9 @@ export default function Profile({ navigate, appState, premium }: ProfileProps) {
           animate={{ opacity: 1, y: 0 }}
           className="rounded-2xl border-b-4 border-[#FF9126] bg-gradient-to-b from-[#FF9126] to-[#FF9126] px-5 py-4"
         >
-          <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#d7ffc2]">Your account</p>
+          <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#fff3de]">Your account</p>
           <h1 className="mt-1 font-baloo text-4xl font-bold text-white">Profile</h1>
-          <p className="text-sm font-bold text-[#e8ffd5]">Manage your learning journey</p>
+          <p className="text-sm font-bold text-[#ffd9b0]">Manage your learning journey</p>
         </motion.div>
 
         <div className="mt-5 grid gap-5 lg:grid-cols-2">
@@ -100,7 +100,7 @@ export default function Profile({ navigate, appState, premium }: ProfileProps) {
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={handleSaveName}
-                          className="rounded-xl border-b-4 border-[#FF9126] bg-[#FF9126] px-4 py-2 font-bold text-[#184a00]"
+                          className="rounded-xl border-b-4 border-[#FF9126] bg-[#FF9126] px-4 py-2 font-bold text-[#4a2a00]"
                         >
                           ✓
                         </motion.button>
@@ -153,9 +153,9 @@ export default function Profile({ navigate, appState, premium }: ProfileProps) {
             className="theme-surface rounded-2xl border p-4"
           >
             <div className="rounded-2xl border-b-4 border-[#FF9126] bg-gradient-to-b from-[#FF9126] to-[#FF9126] p-4">
-              <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#d7ffc2]">Now learning</p>
+              <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#fff3de]">Now learning</p>
               <h3 className="mt-1 font-baloo text-4xl font-bold text-white">{appState.targetLanguage || 'Hiligaynon'}</h3>
-              <p className="text-sm font-bold text-[#e8ffd5]">Ready to practice</p>
+              <p className="text-sm font-bold text-[#ffd9b0]">Ready to practice</p>
             </div>
 
             <div className="mt-3 space-y-2.5">

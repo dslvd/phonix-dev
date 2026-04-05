@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import Mascot from '../components/Mascot';
 import NavigationHeader from '../components/NavigationHeader';
 import Quiz from '../components/Quiz';
 import EnergyBar from '../components/EnergyBar';
@@ -190,11 +189,7 @@ export default function VocabularyLearning({
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden flex flex-col">
-      {/* Premium animated background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-[#FF9126] via-[#FF9126] to-[#FF9126] -z-10" />
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(52,211,153,0.15),transparent_50%)] -z-10" />
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_80%_70%,rgba(56,189,248,0.15),transparent_50%)] -z-10" />
+    <div className="theme-page min-h-screen flex flex-col">
       <NavigationHeader
         onBack={() => navigate('dashboard')}
         onLogout={() => navigate('landing')}
@@ -226,6 +221,8 @@ export default function VocabularyLearning({
               currentWord={currentItem}
               allWords={currentLevelWords}
               onAnswer={handleQuizAnswer}
+              targetLanguage={appState.targetLanguage || 'Hiligaynon'}
+              nativeLanguage={appState.nativeLanguage || 'English'}
             />
           ) : (
             // Regular Flashcard Mode
@@ -246,10 +243,10 @@ export default function VocabularyLearning({
                   opacity: [0.5, 0.8, 0.5]
                 }}
                 transition={{ duration: 3, repeat: Infinity }}
-                className="absolute -inset-1 bg-gradient-to-r from-[#FF9126] via-[#FF9126] to-cyan-400 rounded-3xl blur-2xl opacity-50"
+                className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-[#FF9126] via-[#ffb35a] to-[#56b8e8] opacity-50 blur-2xl"
               />
               
-              <div className="relative bg-white/80 backdrop-blur-2xl rounded-3xl p-8 border border-white/50 shadow-2xl">
+              <div className="theme-surface relative rounded-3xl border p-8 shadow-2xl">
                 {/* Emoji Illustration with particle effect */}
                 <div className="relative mb-8 flex justify-center items-center">
                   <motion.div
@@ -290,7 +287,7 @@ export default function VocabularyLearning({
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="text-sm font-bold text-gray-500 mb-3 uppercase tracking-wider"
+                    className="theme-muted mb-3 text-sm font-bold uppercase tracking-wider"
                   >
                     {appState.targetLanguage}
                   </motion.p>
@@ -310,7 +307,7 @@ export default function VocabularyLearning({
                       className="relative group/btn flex-shrink-0"
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-[#FF9126] to-[#FF9126] rounded-full blur-lg opacity-50 group-hover/btn:opacity-100 transition-opacity" />
-                      <div className="relative bg-gradient-to-r from-[#FF9126]0 to-[#FF9126] text-white p-4 rounded-full shadow-lg flex items-center justify-center">
+                      <div className="relative flex items-center justify-center rounded-full bg-gradient-to-r from-[#FF9126] to-[#ffb35a] p-4 text-white shadow-lg">
                         <span className="text-2xl leading-none">🔊</span>
                       </div>
                     </motion.button>
@@ -324,11 +321,11 @@ export default function VocabularyLearning({
                   transition={{ delay: 0.4 }}
                   className="relative"
                 >
-                  <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 shadow-inner border border-gray-200">
-                    <p className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">
+                  <div className="theme-surface-soft rounded-2xl border p-6 shadow-inner">
+                    <p className="theme-muted mb-2 text-xs font-bold uppercase tracking-wider">
                       {appState.nativeLanguage}
                     </p>
-                    <h3 className="font-baloo text-5xl font-bold bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent">
+                    <h3 className="theme-title font-baloo text-5xl font-bold">
                       {currentItem.englishWord}
                     </h3>
                   </div>
@@ -340,9 +337,9 @@ export default function VocabularyLearning({
                     initial={{ opacity: 0, scale: 0 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.5, type: 'spring' }}
-                    className="inline-flex items-center gap-2 bg-gradient-to-r from-[#FF9126] to-teal-100 px-4 py-2 rounded-full border border-[#FF9126]"
+                    className="inline-flex items-center gap-2 rounded-full border border-[#FF9126] bg-gradient-to-r from-[#FF9126] to-[#ffb35a] px-4 py-2"
                   >
-                    <span className="text-xs font-bold text-[#FF9126] uppercase tracking-wide">
+                    <span className="text-xs font-bold uppercase tracking-wide text-[#4a2a00]">
                       {currentItem.category}
                     </span>
                   </motion.div>
@@ -368,8 +365,8 @@ export default function VocabularyLearning({
                 disabled={appState.currentVocabIndex === 0}
                 className={`w-full py-4 px-6 rounded-2xl font-bold text-lg transition-all ${
                   appState.currentVocabIndex === 0
-                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-white/80 backdrop-blur-lg border-2 border-gray-300 text-gray-700 hover:border-[#FF9126] hover:shadow-lg'
+                    ? 'theme-lock-button cursor-not-allowed'
+                    : 'theme-nav-button border text-sm hover:border-[#FF9126] hover:shadow-lg'
                 }`}
               >
                 ← Previous
@@ -405,15 +402,15 @@ export default function VocabularyLearning({
                 transition={{ delay: 0.7 + index * 0.05 }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   index === appState.currentVocabIndex
-                    ? 'bg-gradient-to-r from-[#FF9126]0 to-[#FF9126] w-8 shadow-lg'
+                    ? 'w-8 bg-gradient-to-r from-[#FF9126] to-[#ffb35a] shadow-lg'
                     : appState.learnedWords.includes(item.id)
-                    ? 'bg-gradient-to-r from-[#FF9126] to-orange-400 w-2'
+                    ? 'w-2 bg-gradient-to-r from-[#FAC775] to-[#ffb35a]'
                     : 'bg-gray-300 w-2'
                 }`}
               />
             ))}
             {vocabularyData.length > 10 && (
-              <div className="text-xs text-gray-500 ml-2 self-center">
+              <div className="theme-muted ml-2 self-center text-xs">
                 +{vocabularyData.length - 10} more
               </div>
             )}
@@ -422,28 +419,6 @@ export default function VocabularyLearning({
           )}
         </div>
       </div>
-
-      <Mascot
-        message={
-          appState.nativeLanguage === 'Filipino'
-            ? isQuizMode
-              ? 'Subukan mo ito. Piliin ang tamang sagot.'
-              : `Pwede kitang tulungan sa salitang "${currentItem.englishWord}".`
-            : isQuizMode
-            ? 'Give this one a try. Pick the best answer.'
-            : `I can help with the word "${currentItem.englishWord}".`
-        }
-        animation={isQuizMode ? 'bounce' : 'float'}
-        responseLanguage={appState.nativeLanguage || 'English'}
-        pageContext={`You are on the Vocabulary Learning page.
-${isQuizMode ? 'The learner is currently in quiz mode.' : 'The learner is reviewing a vocabulary card.'}
-Current word: ${currentItem.englishWord} -> ${currentItem.nativeWord}.
-Category: ${currentItem.category}.
-Batteries left: ${appState.batteriesRemaining} out of 5.
-${premium.isPremium ? 'The learner has premium and unlimited batteries.' : 'Free learners lose 1 battery on quiz mistakes.'}
-${appState.batteriesRemaining === 0 ? 'The learner can review, but cannot move forward into new content unless they upgrade.' : 'The learner can continue practicing and move forward.'}
-If the learner asks about the quiz, explain what they should answer or what to do next on this screen.`}
-      />
 
       {showOutOfBatteriesModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">

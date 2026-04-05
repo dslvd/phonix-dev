@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Button from '../components/Button';
 import Card from '../components/Card';
-import Mascot from '../components/Mascot';
 import NavigationHeader from '../components/NavigationHeader';
 import { Page, AppState } from '../App';
 import { sentenceData } from '../data/vocabulary';
@@ -196,21 +195,6 @@ export default function SentenceLearning({
           </div>
         </div>
       </div>
-
-      <Mascot
-        message={
-          appState.nativeLanguage === 'Filipino'
-            ? 'Pwede kitang tulungan sa pangungusap na ito.'
-            : 'I can help with this sentence.'
-        }
-        animation="wiggle"
-        responseLanguage={appState.nativeLanguage || 'English'}
-        pageContext={`You are on the Sentence Practice page.
-Current sentence in ${appState.targetLanguage}: ${currentSentence.nativeSentence}.
-Translation in ${appState.nativeLanguage}: ${currentSentence.englishSentence}.
-If the learner asks what is happening, explain the current sentence, pronunciation help, and the previous/next controls on this page.`}
-      />
-
     </div>
   );
 }

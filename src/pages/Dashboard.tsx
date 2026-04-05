@@ -31,6 +31,7 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
   })();
 
   const hasLoggedInUser = typeof window !== 'undefined' && !!window.localStorage.getItem('user');
+  const showRightRail = !isGuestMode || !hasLoggedInUser;
 
   const beginnerWords = getBeginnerWords();
   const intermediateWords = getIntermediateWords();
@@ -78,22 +79,66 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
   return (
     <div className="theme-page min-h-screen px-4 py-5 text-slate-100 lg:px-6">
       <div className="mx-auto max-w-6xl">
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr),320px]">
+        <div className={`grid gap-5 ${showRightRail ? 'xl:grid-cols-[minmax(0,1fr),320px]' : ''}`}>
           <section>
+            {isGuestMode && (
+              <motion.div
+                initial={{ opacity: 0, y: -14 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="theme-surface mb-5 rounded-2xl border p-5"
+              >
+                <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#FAC775]">Welcome to Phonix</p>
+                <h2 className="theme-title mt-1 font-baloo text-3xl font-bold">Learn Hiligaynon fast with guided lessons and AI support</h2>
+                <p className="theme-muted mt-2 text-sm font-semibold">
+                  Practice words, run quick quizzes, scan real-world text, and build your vocabulary step by step.
+                </p>
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                  <div className="theme-surface-soft rounded-xl border p-3">
+                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#FAC775]">1. Learn</p>
+                    <p className="theme-muted mt-1 text-sm font-semibold">Follow bite-sized vocabulary lessons and unlock new levels.</p>
+                  </div>
+                  <div className="theme-surface-soft rounded-xl border p-3">
+                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#FAC775]">2. Scan</p>
+                    <p className="theme-muted mt-1 text-sm font-semibold">Translate text from photos instantly with OCR and AI.</p>
+                  </div>
+                  <div className="theme-surface-soft rounded-xl border p-3">
+                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#FAC775]">3. Save Progress</p>
+                    <p className="theme-muted mt-1 text-sm font-semibold">Create a profile anytime to sync your streak and XP.</p>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button
+                    onClick={() => navigate('landing')}
+                    className="rounded-xl border-b-4 border-[#FF9126] bg-[#FF9126] px-4 py-2.5 text-sm font-bold uppercase tracking-[0.08em] text-[#4a2a00]"
+                  >
+                    Create Profile
+                  </button>
+                  <button
+                    onClick={() => navigate('scan')}
+                    className="rounded-xl border border-[#2a4151] bg-[#56b8e8] px-4 py-2.5 text-sm font-bold uppercase tracking-[0.08em] text-[#0a344a]"
+                  >
+                    Try Scan Mode
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
             {!isGuestMode && (
               <motion.div
                 initial={{ opacity: 0, y: -14 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="rounded-2xl border-b-4 border-[#FF9126] bg-gradient-to-b from-[#FF9126] to-[#FF9126] px-5 py-4"
               >
-                <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#d7ffc2]">Progress</p>
+                <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#fff3de]">Progress</p>
                 <div className="mt-3 h-3 overflow-hidden rounded-full bg-[#FF9126]">
                   <div
                     className="h-full rounded-full bg-[#FAC775]"
                     style={{ width: `${seasonedProgress}%` }}
                   />
                 </div>
-                <p className="mt-2 text-sm font-bold text-[#e8ffd5]">{seasonedProgress}% complete ({appState.learnedWords.length}/{totalWords} words)</p>
+                <p className="mt-2 text-sm font-bold text-[#ffd9b0]">{seasonedProgress}% complete ({appState.learnedWords.length}/{totalWords} words)</p>
               </motion.div>
             )}
 
@@ -139,91 +184,85 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
                   );
                 })}
 
-                <div className="pt-3 text-center">
-                  <button
-                    onClick={() => navigate('scan')}
-                    className="rounded-xl border border-[#8457d7] bg-[#b37dff] px-5 py-2.5 text-sm font-bold uppercase tracking-[0.1em] text-[#2c0f5a] transition hover:brightness-105"
-                  >
-                    Jump Here
-                  </button>
-                </div>
               </div>
             </div>
           </section>
 
-          <aside className="space-y-4">
-            {!isGuestMode && (
-              <div className="theme-surface rounded-2xl border p-4">
-                <h3 className="theme-title text-xl font-bold">Unlock Leaderboards</h3>
-                <p className="theme-muted mt-2 text-sm font-semibold">Complete 9 more lessons to start competing.</p>
-              </div>
-            )}
-
-            {!isGuestMode && (
-              <div className="theme-surface rounded-2xl border p-4">
-                <div className="rounded-2xl border-b-4 border-[#FF9126] bg-gradient-to-b from-[#FF9126] to-[#FF9126] p-4">
-                  <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#d7ffc2]">Now learning</p>
-                  <h3 className="mt-1 font-baloo text-4xl font-bold text-white">{appState.targetLanguage || 'Hiligaynon'}</h3>
-                  <p className="text-sm font-bold text-[#e8ffd5]">Ready to practice</p>
+          {showRightRail && (
+            <aside className="space-y-4">
+              {!isGuestMode && (
+                <div className="theme-surface rounded-2xl border p-4">
+                  <h3 className="theme-title text-xl font-bold">Unlock Leaderboards</h3>
+                  <p className="theme-muted mt-2 text-sm font-semibold">Complete 9 more lessons to start competing.</p>
                 </div>
+              )}
 
-                <div className="mt-3 space-y-2.5">
-                  <div className="theme-surface-soft rounded-xl border p-3">
-                    <p className="theme-muted text-xs font-bold uppercase tracking-[0.12em]">Words learned</p>
-                    <p className="theme-title mt-1 font-baloo text-4xl font-bold">{appState.learnedWords.length}</p>
+              {!isGuestMode && (
+                <div className="theme-surface rounded-2xl border p-4">
+                  <div className="rounded-2xl border-b-4 border-[#FF9126] bg-gradient-to-b from-[#FF9126] to-[#FF9126] p-4">
+                    <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#fff3de]">Now learning</p>
+                    <h3 className="mt-1 font-baloo text-4xl font-bold text-white">{appState.targetLanguage || 'Hiligaynon'}</h3>
+                    <p className="text-sm font-bold text-[#ffd9b0]">Ready to practice</p>
                   </div>
 
-                  <div className="theme-surface-soft rounded-xl border p-3">
-                    <p className="theme-muted text-xs font-bold uppercase tracking-[0.12em]">Stars earned</p>
-                    <p className="mt-1 font-baloo text-4xl font-bold text-[#ffd166]">{appState.stars}</p>
-                  </div>
+                  <div className="mt-3 space-y-2.5">
+                    <div className="theme-surface-soft rounded-xl border p-3">
+                      <p className="theme-muted text-xs font-bold uppercase tracking-[0.12em]">Words learned</p>
+                      <p className="theme-title mt-1 font-baloo text-4xl font-bold">{appState.learnedWords.length}</p>
+                    </div>
 
-                  <div className="theme-surface-soft rounded-xl border p-3">
-                    <p className="theme-muted text-xs font-bold uppercase tracking-[0.12em]">Batteries</p>
-                    <p className="mt-1 font-baloo text-[1.85rem] leading-none font-bold text-[#ffb86b]">
-                      {premium.isPremium ? '∞ Unlimited Batteries' : `${appState.batteriesRemaining} / 5 batteries`}
-                    </p>
-                  </div>
+                    <div className="theme-surface-soft rounded-xl border p-3">
+                      <p className="theme-muted text-xs font-bold uppercase tracking-[0.12em]">Stars earned</p>
+                      <p className="mt-1 font-baloo text-4xl font-bold text-[#ffd166]">{appState.stars}</p>
+                    </div>
 
-                  <div className="theme-surface-soft rounded-xl border p-3">
-                    <p className="theme-muted text-xs font-bold uppercase tracking-[0.12em]">Streak</p>
-                    <p className="mt-1 font-baloo text-[1.85rem] leading-none font-bold text-[#ff8e6d]">
-                      🔥 {appState.currentStreak} {appState.currentStreak === 1 ? 'day' : 'days'}
-                    </p>
-                    <p className="theme-muted mt-1 text-xs font-semibold">
-                      Best: {appState.longestStreak} {appState.longestStreak === 1 ? 'day' : 'days'}
-                    </p>
-                  </div>
+                    <div className="theme-surface-soft rounded-xl border p-3">
+                      <p className="theme-muted text-xs font-bold uppercase tracking-[0.12em]">Batteries</p>
+                      <p className="mt-1 font-baloo text-[1.85rem] leading-none font-bold text-[#ffb86b]">
+                        {premium.isPremium ? '∞ Unlimited Batteries' : `${appState.batteriesRemaining} / 5 batteries`}
+                      </p>
+                    </div>
 
-                  <div className="theme-surface-soft rounded-xl border p-3">
-                    <p className="theme-muted text-xs font-bold uppercase tracking-[0.12em]">XP</p>
-                    <p className="mt-1 font-baloo text-4xl font-bold text-[#7ed6ff]">{appState.totalXP}</p>
+                    <div className="theme-surface-soft rounded-xl border p-3">
+                      <p className="theme-muted text-xs font-bold uppercase tracking-[0.12em]">Streak</p>
+                      <p className="mt-1 font-baloo text-[1.85rem] leading-none font-bold text-[#ff8e6d]">
+                        🔥 {appState.currentStreak} {appState.currentStreak === 1 ? 'day' : 'days'}
+                      </p>
+                      <p className="theme-muted mt-1 text-xs font-semibold">
+                        Best: {appState.longestStreak} {appState.longestStreak === 1 ? 'day' : 'days'}
+                      </p>
+                    </div>
+
+                    <div className="theme-surface-soft rounded-xl border p-3">
+                      <p className="theme-muted text-xs font-bold uppercase tracking-[0.12em]">XP</p>
+                      <p className="mt-1 font-baloo text-4xl font-bold text-[#7ed6ff]">{appState.totalXP}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {!hasLoggedInUser && (
-              <div className="theme-surface rounded-2xl border p-4">
-                <h3 className="theme-title text-xl font-bold">Save your progress</h3>
-                <p className="theme-muted mt-2 text-sm font-semibold">Keep your streak and lesson path synced.</p>
-                <div className="mt-4 space-y-2">
-                  <button
-                    onClick={() => navigate('landing')}
-                    className="w-full rounded-xl border-b-4 border-[#FF9126] bg-[#FF9126] px-4 py-3 text-sm font-bold uppercase tracking-[0.08em] text-[#1f4b00]"
-                  >
-                    Create Profile
-                  </button>
-                  <button
-                    onClick={() => navigate(premium.isPremium ? 'scan' : 'premium')}
-                    className="w-full rounded-xl border border-[#2a4151] bg-[#56b8e8] px-4 py-3 text-sm font-bold uppercase tracking-[0.08em] text-[#0a344a]"
-                  >
-                    {premium.isPremium ? 'Open Scan Mode' : 'Get Unlimited Batteries'}
-                  </button>
+              {!hasLoggedInUser && (
+                <div className="theme-surface rounded-2xl border p-4">
+                  <h3 className="theme-title text-xl font-bold">Save your progress</h3>
+                  <p className="theme-muted mt-2 text-sm font-semibold">Keep your streak and lesson path synced.</p>
+                  <div className="mt-4 space-y-2">
+                    <button
+                      onClick={() => navigate('landing')}
+                      className="w-full rounded-xl border-b-4 border-[#FF9126] bg-[#FF9126] px-4 py-3 text-sm font-bold uppercase tracking-[0.08em] text-[#4a2a00]"
+                    >
+                      Create Profile
+                    </button>
+                    <button
+                      onClick={() => navigate(premium.isPremium ? 'scan' : 'premium')}
+                      className="w-full rounded-xl border border-[#2a4151] bg-[#56b8e8] px-4 py-3 text-sm font-bold uppercase tracking-[0.08em] text-[#0a344a]"
+                    >
+                      {premium.isPremium ? 'Open Scan Mode' : 'Get Unlimited Batteries'}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
-          </aside>
+              )}
+            </aside>
+          )}
         </div>
       </div>
     </div>

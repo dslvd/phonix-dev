@@ -203,24 +203,26 @@ function App() {
   };
 
   const themeToggle = (
-    <div className="theme-toggle inline-flex items-center gap-2 rounded-full p-2" aria-label="Theme mode switch">
+    <div className="theme-toggle inline-flex items-center gap-1 rounded-full p-1" role="group" aria-label="Theme mode switch">
       <button
-        onClick={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
-        className="theme-toggle-option flex h-12 w-12 items-center justify-center rounded-full text-2xl font-bold"
+        onClick={() => setTheme('light')}
+        className="theme-toggle-option grid h-9 w-9 place-items-center rounded-full text-lg leading-none font-bold sm:h-10 sm:w-10"
         data-active={theme === 'light'}
-        aria-label="Toggle theme"
-        title="Toggle theme"
+        aria-label="Switch to light mode"
+        aria-pressed={theme === 'light'}
+        title="Light mode"
       >
-        ☀
+        <span className="text-base leading-none">☀</span>
       </button>
       <button
-        onClick={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
-        className="theme-toggle-option flex h-12 w-12 items-center justify-center rounded-full text-2xl font-bold"
+        onClick={() => setTheme('dark')}
+        className="theme-toggle-option grid h-9 w-9 place-items-center rounded-full text-lg leading-none font-bold sm:h-10 sm:w-10"
         data-active={theme === 'dark'}
-        aria-label="Toggle theme"
-        title="Toggle theme"
+        aria-label="Switch to dark mode"
+        aria-pressed={theme === 'dark'}
+        title="Dark mode"
       >
-        ☾
+        <span className="text-base leading-none">☾</span>
       </button>
     </div>
   );
@@ -272,7 +274,8 @@ function App() {
 
     const hydrateFromCloud = async () => {
       try {
-        const response = await fetch(`/api/user-state?userKey=${encodeURIComponent(userKey)}`);
+        const safeUserKey = encodeURIComponent(userKey).replace(/\./g, '%2E');
+        const response = await fetch(`/api/user-state?userKey=${safeUserKey}`);
         if (!response.ok) {
           return;
         }
@@ -334,7 +337,7 @@ function App() {
   }, [appState, userKey, isGuestMode, hasHydratedFromCloud]);
 
   const showDesktopSidebar = currentPage === 'dashboard';
-  const shouldShowGlobalMascot = currentPage === 'scan';
+  const shouldShowGlobalMascot = currentPage !== 'landing';
   const globalMascotMessage = (() => {
     const isFilipino = (appState.nativeLanguage || '').trim().toLowerCase() === 'filipino';
     const vocabularyMessages = isFilipino
@@ -389,7 +392,6 @@ function App() {
   })();
   const desktopNavItems: Array<{ label: string; icon: string; page: Page }> = [
     { label: 'Learn', icon: '🏠', page: 'dashboard' },
-    { label: 'Words', icon: '🔤', page: 'vocabulary' },
     { label: 'Backpack', icon: '🎒', page: 'collection' },
     { label: 'Scan', icon: '📸', page: 'scan' },
     { label: 'Premium', icon: '⭐', page: 'premium' },
