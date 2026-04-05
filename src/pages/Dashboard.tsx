@@ -1,8 +1,9 @@
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { Page, AppState } from '../App';
-import { getBeginnerWords, getIntermediateWords, getAdvancedWords } from '../data/vocabulary';
+import { VocabularyItem } from '../data/vocabulary';
 import { usePremium } from '../lib/usePremium';
+import { fetchAIVocabulary, readCachedAIVocabulary, writeCachedAIVocabulary } from '../lib/aiVocabulary';
 
 interface DashboardProps {
   navigate: (page: Page) => void;
@@ -33,6 +34,7 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
 
   const hasLoggedInUser = typeof window !== 'undefined' && !!window.localStorage.getItem('user');
   const showRightRail = !isGuestMode || !hasLoggedInUser;
+  const [aiVocabulary, setAiVocabulary] = useState<VocabularyItem[]>([]);
 
   const defaultLevelDescriptions: Record<'Beginner' | 'Intermediate' | 'Advanced', string> = {
     Beginner: 'Core everyday words and pronunciation foundations.',
@@ -40,6 +42,41 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
     Advanced: 'Nuanced vocabulary to speak with confidence and depth.',
   };
   const [levelDescriptions, setLevelDescriptions] = useState(defaultLevelDescriptions);
+
+  useEffect(() => {
+    const targetLanguage = appState.targetLanguage || 'Hiligaynon';
+    const nativeLanguage = appState.nativeLanguage || 'English';
+
+    const cached = readCachedAIVocabulary(targetLanguage, nativeLanguage);
+    if (cached.length > 0) {
+      setAiVocabulary(cached);
+    }
+
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const refreshAIVocabulary = async () => {
+      try {
+        const words = await fetchAIVocabulary(targetLanguage, nativeLanguage);
+        if (cancelled) {
+          return;
+        }
+        setAiVocabulary(words);
+        writeCachedAIVocabulary(targetLanguage, nativeLanguage, words);
+      } catch {
+        // Keep cached AI vocabulary when provider is unavailable.
+      }
+    };
+
+    refreshAIVocabulary();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [appState.targetLanguage, appState.nativeLanguage]);
 
   useEffect(() => {
     setLevelDescriptions(defaultLevelDescriptions);
@@ -133,15 +170,18 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
     };
   }, [appState.targetLanguage, appState.nativeLanguage]);
 
-  const beginnerWords = getBeginnerWords();
-  const intermediateWords = getIntermediateWords();
-  const advancedWords = getAdvancedWords();
+  const beginnerWords = aiVocabulary.filter((item) => item.difficulty === 'beginner');
+  const intermediateWords = aiVocabulary.filter((item) => item.difficulty === 'intermediate');
+  const advancedWords = aiVocabulary.filter((item) => item.difficulty === 'advanced');
 
-  const beginnerTotal = beginnerWords.length;
-  const intermediateTotal = beginnerTotal + intermediateWords.length;
+  const beginnerCount = beginnerWords.length || 20;
+  const intermediateCount = intermediateWords.length || 20;
+  const advancedCount = advancedWords.length || 7;
+  const beginnerTotal = beginnerCount;
+  const intermediateTotal = beginnerTotal + intermediateCount;
 
   const beginnerProgress = Math.min(appState.learnedWords.length, beginnerTotal);
-  const intermediateProgress = Math.max(0, Math.min(appState.learnedWords.length - beginnerTotal, intermediateWords.length));
+  const intermediateProgress = Math.max(0, Math.min(appState.learnedWords.length - beginnerTotal, intermediateCount));
   const advancedProgress = Math.max(0, appState.learnedWords.length - intermediateTotal);
 
   const levels = [
@@ -158,7 +198,7 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
       icon: '⭐',
       unlocked: appState.learnedWords.length >= beginnerTotal,
       progress: intermediateProgress,
-      total: intermediateWords.length,
+      total: intermediateCount,
       description: levelDescriptions.Intermediate,
     },
     {
@@ -166,14 +206,14 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
       icon: '⭐',
       unlocked: appState.learnedWords.length >= intermediateTotal,
       progress: advancedProgress,
-      total: advancedWords.length,
+      total: advancedCount,
       description: levelDescriptions.Advanced,
     },
   ];
 
   const activeLessonIndex = levels.findIndex((level) => level.unlocked && level.progress < level.total);
   const lessonIndex = activeLessonIndex === -1 ? levels.length - 1 : activeLessonIndex;
-  const totalWords = beginnerWords.length + intermediateWords.length + advancedWords.length;
+  const totalWords = beginnerCount + intermediateCount + advancedCount;
   const seasonedProgress = Math.min(100, Math.round((appState.learnedWords.length / totalWords) * 100));
 
   return (

@@ -91,6 +91,48 @@ function getStoredTheme(): ThemeMode {
   return stored === 'light' ? 'light' : 'dark';
 }
 
+function getInitialPage(): Page {
+  if (typeof window === 'undefined') {
+    return 'landing';
+  }
+
+  const hasUser = !!window.localStorage.getItem('user');
+  if (!hasUser) {
+    return 'landing';
+  }
+
+  const allowedPages: Page[] = [
+    'setup',
+    'mode',
+    'dashboard',
+    'scan',
+    'vocabulary',
+    'sentence',
+    'collection',
+    'profile',
+    'premium',
+    'admin',
+  ];
+  const storedPage = window.localStorage.getItem('phonix-current-page') as Page | null;
+
+  if (storedPage && allowedPages.includes(storedPage)) {
+    return storedPage;
+  }
+
+  const rawState = window.localStorage.getItem('phonix-app-state');
+  if (!rawState) {
+    return 'setup';
+  }
+
+  try {
+    const state = JSON.parse(rawState) as Partial<AppState>;
+    const hasLanguageSetup = !!(state.nativeLanguage || '').trim() && !!(state.targetLanguage || '').trim();
+    return hasLanguageSetup ? 'dashboard' : 'setup';
+  } catch {
+    return 'setup';
+  }
+}
+
 function App() {
   const premium = usePremium();
 
@@ -108,7 +150,7 @@ function App() {
 
     return window.innerWidth < 1024;
   });
-  const [currentPage, setCurrentPage] = useState<Page>('landing');
+  const [currentPage, setCurrentPage] = useState<Page>(getInitialPage);
   const [hasHydratedFromCloud, setHasHydratedFromCloud] = useState(false);
   const [theme, setTheme] = useState<ThemeMode>(getStoredTheme);
   const [appState, setAppState] = useState<AppState>(() => {
@@ -203,6 +245,20 @@ function App() {
   const navigate = (page: Page) => {
     setCurrentPage(page);
   };
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const hasUser = !!window.localStorage.getItem('user');
+    if (!hasUser || currentPage === 'landing') {
+      window.localStorage.removeItem('phonix-current-page');
+      return;
+    }
+
+    window.localStorage.setItem('phonix-current-page', currentPage);
+  }, [currentPage]);
 
   const themeToggle = (
     <div className="theme-toggle inline-flex items-center gap-1 rounded-full p-1" role="group" aria-label="Theme mode switch">
