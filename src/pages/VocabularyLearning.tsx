@@ -26,25 +26,6 @@ export default function VocabularyLearning({
   const [showOutOfBatteriesModal, setShowOutOfBatteriesModal] = useState(false);
   const [aiFlashcardItem, setAiFlashcardItem] = useState<VocabularyItem | null>(null);
 
-  const isLoggedInUser = (() => {
-    if (typeof window === 'undefined') {
-      return false;
-    }
-
-    const rawUser = window.localStorage.getItem('user');
-    if (!rawUser) {
-      return false;
-    }
-
-    try {
-      const user = JSON.parse(rawUser) as { name?: string; email?: string };
-      const name = (user.name || '').trim().toLowerCase();
-      const email = (user.email || '').trim();
-      return name !== 'guest' && email.length > 0;
-    } catch {
-      return false;
-    }
-  })();
   
   // Get current difficulty level based on learned words
   const getCurrentDifficultyWords = () => {
@@ -60,7 +41,7 @@ export default function VocabularyLearning({
   
   const currentLevelWords = getCurrentDifficultyWords();
   const currentItem = vocabularyData[appState.currentVocabIndex];
-  const displayedItem = isLoggedInUser ? aiFlashcardItem || currentItem : currentItem;
+  const displayedItem = aiFlashcardItem || currentItem;
   const currentItemLearned = appState.learnedWords.includes(currentItem.id);
   const nextIndex = appState.currentVocabIndex + 1;
   const nextItem = nextIndex < vocabularyData.length ? vocabularyData[nextIndex] : null;
@@ -109,10 +90,6 @@ export default function VocabularyLearning({
     };
 
     setAiFlashcardItem(null);
-
-    if (!isLoggedInUser) {
-      return;
-    }
 
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
       return;
@@ -198,7 +175,6 @@ export default function VocabularyLearning({
     currentItem.difficulty,
     appState.targetLanguage,
     appState.nativeLanguage,
-    isLoggedInUser,
   ]);
 
   const handleNext = () => {
@@ -372,7 +348,7 @@ export default function VocabularyLearning({
               onAnswer={handleQuizAnswer}
               targetLanguage={appState.targetLanguage || 'Hiligaynon'}
               nativeLanguage={appState.nativeLanguage || 'English'}
-              useAI={isLoggedInUser}
+              useAI={true}
             />
           ) : (
             // Regular Flashcard Mode

@@ -47,7 +47,7 @@ const parseAIQuizPayload = (rawText: string): AIQuizPayload | null => {
   }
 };
 
-export default function Quiz({ currentWord, allWords, onAnswer, targetLanguage = 'Hiligaynon', nativeLanguage = 'English', useAI = false }: QuizProps) {
+export default function Quiz({ currentWord, allWords, onAnswer, targetLanguage = 'Hiligaynon', nativeLanguage = 'English', useAI = true }: QuizProps) {
   const [options, setOptions] = useState<VocabularyItem[]>([]);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
@@ -99,11 +99,6 @@ export default function Quiz({ currentWord, allWords, onAnswer, targetLanguage =
     let cancelled = false;
 
     const buildAIQuiz = async () => {
-      if (!useAI) {
-        setLocalOptions();
-        return;
-      }
-
       if (typeof navigator !== 'undefined' && !navigator.onLine) {
         setLocalOptions();
         return;
@@ -279,9 +274,6 @@ export default function Quiz({ currentWord, allWords, onAnswer, targetLanguage =
                 <div className="text-left flex-1">
                   <p className="theme-title font-baloo text-2xl font-bold">
                     {word.nativeWord}
-                  </p>
-                  <p className="theme-muted mt-1 text-sm">
-                    {word.englishWord}
                   </p>
                 </div>
                 {showResult && word.id === currentWord.id && (
