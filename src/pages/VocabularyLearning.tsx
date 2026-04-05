@@ -4,7 +4,7 @@ import NavigationHeader from '../components/NavigationHeader';
 import Quiz from '../components/Quiz';
 import EnergyBar from '../components/EnergyBar';
 import { Page, AppState } from '../App';
-import { vocabularyData, getBeginnerWords, getIntermediateWords, getAdvancedWords } from '../data/vocabulary';
+import { vocabularyData, getBeginnerWords, getIntermediateWords, getAdvancedWords, VocabularyItem } from '../data/vocabulary';
 import { usePremium } from '../lib/usePremium';
 
 interface VocabularyLearningProps {
@@ -24,6 +24,27 @@ export default function VocabularyLearning({
   const [wordsBeforeQuiz, setWordsBeforeQuiz] = useState(3); // Quiz every 3 words
   const [consecutiveWords, setConsecutiveWords] = useState(0);
   const [showOutOfBatteriesModal, setShowOutOfBatteriesModal] = useState(false);
+  const [aiFlashcardItem, setAiFlashcardItem] = useState<VocabularyItem | null>(null);
+
+  const isLoggedInUser = (() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    const rawUser = window.localStorage.getItem('user');
+    if (!rawUser) {
+      return false;
+    }
+
+    try {
+      const user = JSON.parse(rawUser) as { name?: string; email?: string };
+      const name = (user.name || '').trim().toLowerCase();
+      const email = (user.email || '').trim();
+      return name !== 'guest' && email.length > 0;
+    } catch {
+      return false;
+    }
+  })();
   
   // Get current difficulty level based on learned words
   const getCurrentDifficultyWords = () => {
@@ -39,6 +60,7 @@ export default function VocabularyLearning({
   
   const currentLevelWords = getCurrentDifficultyWords();
   const currentItem = vocabularyData[appState.currentVocabIndex];
+  const displayedItem = isLoggedInUser ? aiFlashcardItem || currentItem : currentItem;
   const currentItemLearned = appState.learnedWords.includes(currentItem.id);
   const nextIndex = appState.currentVocabIndex + 1;
   const nextItem = nextIndex < vocabularyData.length ? vocabularyData[nextIndex] : null;
@@ -51,6 +73,133 @@ export default function VocabularyLearning({
       setIsQuizMode(true);
     }
   }, [consecutiveWords, wordsBeforeQuiz, isQuizMode, currentItemLearned]);
+
+  useEffect(() => {
+    const stripCodeFence = (text: string) => text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim();
+
+    const parseAIFlashcardPayload = (rawText: string) => {
+      const cleaned = stripCodeFence(rawText);
+
+      try {
+        return JSON.parse(cleaned) as {
+          nativeWord?: string;
+          englishWord?: string;
+          category?: string;
+          emoji?: string;
+        };
+      } catch {
+        const start = cleaned.indexOf('{');
+        const end = cleaned.lastIndexOf('}');
+
+        if (start === -1 || end === -1 || end <= start) {
+          return null;
+        }
+
+        try {
+          return JSON.parse(cleaned.slice(start, end + 1)) as {
+            nativeWord?: string;
+            englishWord?: string;
+            category?: string;
+            emoji?: string;
+          };
+        } catch {
+          return null;
+        }
+      }
+    };
+
+    setAiFlashcardItem(null);
+
+    if (!isLoggedInUser) {
+      return;
+    }
+
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const buildAIFlashcard = async () => {
+      try {
+        const prompt = [
+          'You are generating one language-learning flashcard item.',
+          `Difficulty level: ${currentItem.difficulty}.`,
+          `Target language: ${appState.targetLanguage || 'Hiligaynon'}.`,
+          `Learner native language: ${appState.nativeLanguage || 'English'}.`,
+          `Reference native word: ${currentItem.nativeWord}.`,
+          `Reference English word: ${currentItem.englishWord}.`,
+          `Reference category: ${currentItem.category}.`,
+          '',
+          'Return STRICT JSON only with this shape:',
+          '{',
+          '  "nativeWord": "string",',
+          '  "englishWord": "string",',
+          '  "category": "string",',
+          '  "emoji": "string"',
+          '}',
+          '',
+          'Rules:',
+          '1. Keep nativeWord and englishWord concise and learner-friendly.',
+          '2. Preserve the same meaning as the reference word pair.',
+          '3. category should stay simple (one short word or phrase).',
+        ].join('\n');
+
+        const response = await fetch('/api/ai', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt }),
+        });
+
+        if (!response.ok) {
+          throw new Error('ai-flashcard-request-failed');
+        }
+
+        const data = await response.json();
+        const payload = parseAIFlashcardPayload(String(data?.text || ''));
+
+        const nativeWord = (payload?.nativeWord || '').trim();
+        const englishWord = (payload?.englishWord || '').trim();
+
+        if (!nativeWord || !englishWord) {
+          throw new Error('ai-flashcard-invalid-payload');
+        }
+
+        const nextFlashcard: VocabularyItem = {
+          id: currentItem.id,
+          nativeWord,
+          englishWord,
+          category: (payload?.category || currentItem.category).trim() || currentItem.category,
+          emoji: (payload?.emoji || currentItem.emoji).trim() || currentItem.emoji,
+          difficulty: currentItem.difficulty,
+        };
+
+        if (!cancelled) {
+          setAiFlashcardItem(nextFlashcard);
+        }
+      } catch {
+        if (!cancelled) {
+          setAiFlashcardItem(null);
+        }
+      }
+    };
+
+    buildAIFlashcard();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    currentItem.id,
+    currentItem.nativeWord,
+    currentItem.englishWord,
+    currentItem.category,
+    currentItem.emoji,
+    currentItem.difficulty,
+    appState.targetLanguage,
+    appState.nativeLanguage,
+    isLoggedInUser,
+  ]);
 
   const handleNext = () => {
     const isNewDiscovery = !appState.learnedWords.includes(currentItem.id);
@@ -135,7 +284,7 @@ export default function VocabularyLearning({
       // Cancel any ongoing speech
       window.speechSynthesis.cancel();
       
-      const utterance = new SpeechSynthesisUtterance(currentItem.nativeWord);
+      const utterance = new SpeechSynthesisUtterance(displayedItem.nativeWord);
       
       // Configure for Hiligaynon/Filipino pronunciation
       utterance.lang = 'fil-PH'; // Filipino language code
@@ -218,17 +367,18 @@ export default function VocabularyLearning({
           {isQuizMode ? (
             // Quiz Mode
             <Quiz
-              currentWord={currentItem}
+              currentWord={displayedItem}
               allWords={currentLevelWords}
               onAnswer={handleQuizAnswer}
               targetLanguage={appState.targetLanguage || 'Hiligaynon'}
               nativeLanguage={appState.nativeLanguage || 'English'}
+              useAI={isLoggedInUser}
             />
           ) : (
             // Regular Flashcard Mode
             <>
           <motion.div
-            key={currentItem.id}
+            key={displayedItem.id}
             initial={{ opacity: 0, scale: 0.8, rotateY: -90 }}
             animate={{ opacity: 1, scale: 1, rotateY: 0 }}
             exit={{ opacity: 0, scale: 0.8, rotateY: 90 }}
@@ -257,7 +407,7 @@ export default function VocabularyLearning({
                     transition={{ duration: 4, repeat: Infinity }}
                     className="text-[150px] leading-none flex items-center justify-center"
                   >
-                    {currentItem.emoji}
+                    {displayedItem.emoji}
                   </motion.div>
                   
                   {/* Floating particles */}
@@ -298,7 +448,7 @@ export default function VocabularyLearning({
                       transition={{ delay: 0.3, type: 'spring' }}
                       className="font-baloo text-6xl font-bold bg-gradient-to-r from-[#FF9126] to-[#FF9126] bg-clip-text text-transparent"
                     >
-                      {currentItem.nativeWord}
+                      {displayedItem.nativeWord}
                     </motion.h2>
                     <motion.button
                       whileHover={{ scale: 1.1, rotate: 10 }}
@@ -326,7 +476,7 @@ export default function VocabularyLearning({
                       {appState.nativeLanguage}
                     </p>
                     <h3 className="theme-title font-baloo text-5xl font-bold">
-                      {currentItem.englishWord}
+                      {displayedItem.englishWord}
                     </h3>
                   </div>
                 </motion.div>
@@ -340,7 +490,7 @@ export default function VocabularyLearning({
                     className="inline-flex items-center gap-2 rounded-full border border-[#FF9126] bg-gradient-to-r from-[#FF9126] to-[#ffb35a] px-4 py-2"
                   >
                     <span className="text-xs font-bold uppercase tracking-wide text-[#4a2a00]">
-                      {currentItem.category}
+                      {displayedItem.category}
                     </span>
                   </motion.div>
                 </div>
