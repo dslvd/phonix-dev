@@ -121,21 +121,11 @@ export default function Landing({ navigate, resetAppState }: LandingProps) {
       <Card className="max-w-md w-full animate-pop">
         {/* Logo with wooden sign style */}
         <div className="text-center mb-8">
-          <motion.div
-            initial={{ scale: 0, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
-            className="inline-block"
-          >
-            <div className="mb-4 rounded-3xl border-b-4 border-[#FF9126] bg-gradient-to-b from-[#FF9126] to-[#FF9126] p-6 shadow-2xl">
-              <div className="flex items-center justify-center gap-3">
-                <span className="text-5xl leading-none flex items-center justify-center">🦜</span>
-                <h1 className="font-baloo text-5xl font-bold text-white text-shadow leading-none">
-                  Pho<span className="text-yellow-300">nix</span>
-                </h1>
-              </div>
+          <div className="inline-block">
+            <div className="mb-4 p-2">
+              <h1 className="font-baloo text-5xl font-bold leading-none text-[#FF9126]">Phonix</h1>
             </div>
-          </motion.div>
+          </div>
           <p className="text-sm font-semibold text-[#8bb1c7]">
             Learn Filipino languages the fun way
           </p>
@@ -209,45 +199,27 @@ export default function Landing({ navigate, resetAppState }: LandingProps) {
           </Button>
         </motion.div>
 
-        {/* Feature Icons */}
+        {/* Compact Feature Chips */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
-          className="theme-surface-soft mb-8 flex justify-around rounded-2xl border py-4"
+          className="mb-8 grid grid-cols-3 gap-2"
         >
-          <div className="text-center">
-            <div className="text-4xl mb-2 leading-none flex items-center justify-center">📖</div>
-            <p className="theme-title text-xs font-bold">Read</p>
+          <div className="theme-surface-soft rounded-xl border px-2 py-2 text-center">
+            <div className="mx-auto flex h-7 w-7 items-center justify-center text-base leading-none">📖</div>
+            <p className="theme-title mt-1 text-[11px] font-bold uppercase tracking-[0.08em]">Read</p>
+            <p className="theme-muted text-[10px]">Quick lessons</p>
           </div>
-          <div className="text-center">
-            <div className="text-4xl mb-2 leading-none flex items-center justify-center">👂</div>
-            <p className="theme-title text-xs font-bold">Listen</p>
+          <div className="theme-surface-soft rounded-xl border px-2 py-2 text-center">
+            <div className="mx-auto flex h-7 w-7 items-center justify-center text-base leading-none">👂</div>
+            <p className="theme-title mt-1 text-[11px] font-bold uppercase tracking-[0.08em]">Listen</p>
+            <p className="theme-muted text-[10px]">Hear words</p>
           </div>
-          <div className="text-center">
-            <div className="text-4xl mb-2 leading-none flex items-center justify-center">🎓</div>
-            <p className="theme-title text-xs font-bold">Learn</p>
-          </div>
-        </motion.div>
-
-        {/* Mascot Message */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.8 }}
-          className="text-center"
-        >
-          <div className="theme-surface-soft relative inline-block rounded-2xl border px-6 py-3 shadow-lg">
-            <p className="theme-title text-sm font-bold">
-              Beep! Boop! Beep! Hello friends! Let's learn!
-            </p>
-            <motion.div
-              animate={{ rotate: [0, 10, -10, 0] }}
-              transition={{ duration: 1, repeat: Infinity, delay: 1 }}
-              className="text-4xl mt-2 leading-none flex items-center justify-center"
-            >
-              🤖
-            </motion.div>
+          <div className="theme-surface-soft rounded-xl border px-2 py-2 text-center">
+            <div className="mx-auto flex h-7 w-7 items-center justify-center text-base leading-none">🎓</div>
+            <p className="theme-title mt-1 text-[11px] font-bold uppercase tracking-[0.08em]">Learn</p>
+            <p className="theme-muted text-[10px]">Build streak</p>
           </div>
         </motion.div>
       </Card>

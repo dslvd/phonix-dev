@@ -2,6 +2,10 @@ const jsonHeaders = {
   'Content-Type': 'application/json',
 };
 
+declare const process: {
+  env: Record<string, string | undefined>;
+};
+
 interface D1Row {
   state_json: string;
   updated_at: string;

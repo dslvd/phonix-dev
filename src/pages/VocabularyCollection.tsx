@@ -165,7 +165,12 @@ export default function VocabularyCollection({
             <div className="mb-6 flex items-center justify-center text-9xl leading-none">🎒</div>
             <h2 className="theme-title mb-4 font-baloo text-3xl font-bold">Your backpack is empty</h2>
             <p className="theme-muted mb-8 font-semibold">Complete lessons to collect words here</p>
-            <Button variant="primary" onClick={() => navigate('dashboard')} icon="📚">
+            <Button
+              variant="primary"
+              onClick={() => navigate('dashboard')}
+              icon="📚"
+              className="mx-auto w-fit"
+            >
               Start Learning
             </Button>
           </motion.div>
@@ -228,7 +233,7 @@ export default function VocabularyCollection({
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                 <button
                   onClick={() => navigate('premium')}
-                  className="flex-1 rounded-2xl border-b-4 border-[#FF9126] bg-[#FF9126] px-6 py-4 font-bold text-[#184a00] shadow-lg"
+                  className="flex-1 rounded-2xl border-b-4 border-[#FF9126] bg-[#FF9126] px-6 py-4 font-bold text-[#4a2a00] shadow-lg"
                 >
                   Upgrade to Premium
                 </button>
