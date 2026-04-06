@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, type ChangeEvent } from 'react';
+import { useState, useRef, useEffect, type ChangeEvent, type ClipboardEvent as ReactClipboardEvent, type DragEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as pdfjsLib from 'pdfjs-dist';
 import mammoth from 'mammoth';
@@ -26,6 +26,13 @@ interface ScanApiResponse {
   detectedText: string;
   translatedText: string;
   confidence?: string;
+}
+
+interface PendingAttachment {
+  file?: File;
+  sourceText?: string;
+  name: string;
+  type: 'file' | 'pasted-image' | 'pasted-text';
 }
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
@@ -65,7 +72,8 @@ export default function ScanMode({ navigate, appState, updateState, premium }: S
   const [showQuickTips, setShowQuickTips] = useState(true);
   const [showLoginRequiredModal, setShowLoginRequiredModal] = useState(false);
   const [manualText, setManualText] = useState('');
-  const [selectedFileName, setSelectedFileName] = useState('');
+  const [pendingAttachment, setPendingAttachment] = useState<PendingAttachment | null>(null);
+  const [isDragActive, setIsDragActive] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -455,8 +463,85 @@ const handleUploadClick = () => {
   fileInputRef.current?.click();
 };
 
-const processUploadedFile = async (file: File) => {
+const clearPendingAttachment = () => {
+  setPendingAttachment(null);
+  if (fileInputRef.current) {
+    fileInputRef.current.value = '';
+  }
+};
+
+const attachPendingFile = (file: File, type: PendingAttachment['type'] = 'file') => {
+  setError(null);
+  setPendingAttachment({
+    file,
+    name: file.name || (type === 'pasted-image' ? 'Pasted image' : 'Attached file'),
+    type,
+  });
+};
+
+const attachPendingText = (text: string, name = 'Pasted text') => {
+  const sourceText = cleanOCRText(text);
+
+  if (!sourceText) {
+    setError('The pasted text is empty.');
+    return;
+  }
+
+  setError(null);
+  setPendingAttachment({
+    sourceText,
+    name,
+    type: 'pasted-text',
+  });
+};
+
+const processAttachment = async (attachment: PendingAttachment) => {
   const targetLanguage = appState.targetLanguage || 'Hiligaynon';
+  const sourceTextFromAttachment = cleanOCRText(attachment.sourceText || '');
+
+  if (sourceTextFromAttachment) {
+    let translatedText = '';
+
+    try {
+      const response = await fetch('/api/scan-translate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sourceText: sourceTextFromAttachment,
+          targetLanguage,
+        }),
+      });
+
+      const data = (await response.json().catch(() => null)) as ScanApiResponse & { error?: string } | null;
+
+      if (!response.ok) {
+        throw new Error(data?.error || `Attachment translation failed (${response.status})`);
+      }
+
+      translatedText = (data?.translatedText || '').trim();
+    } catch (serverError) {
+      console.warn('Server attachment translate route unavailable, trying browser Gemini fallback.', serverError);
+      translatedText = await translateTextWithGemini(sourceTextFromAttachment, targetLanguage);
+    }
+
+    if (!translatedText) {
+      throw new Error('Translation is empty');
+    }
+
+    return {
+      detectedText: sourceTextFromAttachment,
+      translatedText,
+      confidence: 'upload',
+    } satisfies ScanApiResponse;
+  }
+
+  if (!attachment.file) {
+    throw new Error('No file or pasted text is attached yet.');
+  }
+
+  const file = attachment.file;
   const normalizedType = file.type.toLowerCase();
   const lowerName = file.name.toLowerCase();
   const isImage = normalizedType.startsWith('image/');
@@ -536,17 +621,24 @@ const handleFileSelected = async (event: ChangeEvent<HTMLInputElement>) => {
 
   if (!file) return;
 
-  if (!canUseBatteryAction()) {
-    event.target.value = '';
+  attachPendingFile(file, 'file');
+};
+
+const translatePendingAttachment = async () => {
+  if (!pendingAttachment) {
+    setError('Attach or paste a file first, then translate it.');
     return;
   }
 
-  setSelectedFileName(file.name);
+  if (!canUseBatteryAction()) {
+    return;
+  }
+
   setIsScanning(true);
   setError(null);
 
   try {
-    const result = await processUploadedFile(file);
+    const result = await processAttachment(pendingAttachment);
 
     setScanResult({
       detectedText: result.detectedText,
@@ -557,12 +649,87 @@ const handleFileSelected = async (event: ChangeEvent<HTMLInputElement>) => {
     spendBatteryIfNeeded();
     playSuccessSound();
   } catch (err) {
-    console.error('Upload scan error:', err);
-    setError(err instanceof Error ? err.message : 'Failed to scan uploaded file.');
+    console.error('Attachment translate error:', err);
+    setError(err instanceof Error ? err.message : 'Failed to translate attached content.');
   } finally {
-    event.target.value = '';
     setIsScanning(false);
   }
+};
+
+const handlePasteAttachment = async (event: ReactClipboardEvent<HTMLElement> | globalThis.ClipboardEvent) => {
+  const target = event.target as HTMLElement | null;
+  const targetTag = target?.tagName?.toLowerCase();
+  const isEditableTarget =
+    targetTag === 'textarea' ||
+    targetTag === 'input' ||
+    target?.isContentEditable;
+
+  if (isEditableTarget) {
+    return;
+  }
+
+  if (!event.clipboardData) {
+    return;
+  }
+
+  const items = Array.from(event.clipboardData.items || []);
+  const fileItem = items.find((item) => item.kind === 'file');
+  const textItem = items.find((item) => item.type === 'text/plain');
+
+  if (!fileItem && !textItem) {
+    return;
+  }
+
+  event.preventDefault();
+  setError(null);
+
+  if (fileItem) {
+    const file = fileItem.getAsFile();
+
+    if (!file) {
+      setError('Could not read the pasted file.');
+      return;
+    }
+
+    attachPendingFile(file, file.type.startsWith('image/') ? 'pasted-image' : 'file');
+    return;
+  }
+
+  if (textItem) {
+    textItem.getAsString((value) => {
+      attachPendingText(value, 'Pasted text');
+    });
+  }
+};
+
+const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
+  if (!event.dataTransfer?.types?.includes('Files')) {
+    return;
+  }
+
+  event.preventDefault();
+  setIsDragActive(true);
+};
+
+const handleDragLeave = (event: DragEvent<HTMLDivElement>) => {
+  if (event.currentTarget.contains(event.relatedTarget as Node | null)) {
+    return;
+  }
+
+  setIsDragActive(false);
+};
+
+const handleDropAttachment = (event: DragEvent<HTMLDivElement>) => {
+  event.preventDefault();
+  setIsDragActive(false);
+
+  const file = event.dataTransfer.files?.[0];
+
+  if (!file) {
+    return;
+  }
+
+  attachPendingFile(file, 'file');
 };
 
 const captureAndAnalyze = async () => {
@@ -815,8 +982,25 @@ const translateManualText = async () => {
     };
   }, []);
 
+  useEffect(() => {
+    const handleWindowPaste = (event: ClipboardEvent) => {
+      void handlePasteAttachment(event);
+    };
+
+    window.addEventListener('paste', handleWindowPaste);
+
+    return () => {
+      window.removeEventListener('paste', handleWindowPaste);
+    };
+  }, [handlePasteAttachment]);
+
   return (
-    <div className="theme-page min-h-screen text-slate-100">
+    <div
+      className={`theme-page min-h-screen text-slate-100 ${isDragActive ? 'ring-4 ring-[#56b8e8]/50 ring-inset' : ''}`}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDropAttachment}
+    >
       <NavigationHeader
         onBack={() => {
           stopCamera();
@@ -979,24 +1163,38 @@ const translateManualText = async () => {
                   <div>
                     <h4 className="theme-title font-baloo text-xl font-bold">Upload File</h4>
                     <p className="theme-muted mt-1 max-w-md text-sm font-semibold leading-7">
-                      Upload an image, PDF, DOCX, or text file, then scan and translate it instantly.
+                      Attach an image, PDF, DOCX, or text file, or paste text/image here, then click translate.
                     </p>
-                    {selectedFileName && (
-                      <p className="mt-2 inline-flex rounded-full bg-white/60 px-3 py-1 text-sm font-semibold text-primary dark:bg-white/10">
-                        Selected: {selectedFileName}
-                      </p>
+                    {pendingAttachment && (
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <div className="inline-flex max-w-full items-center gap-2 rounded-full bg-white/60 px-3 py-1 text-sm font-semibold text-primary dark:bg-white/10">
+                          <span className="truncate">Attached: {pendingAttachment.name}</span>
+                          <button
+                            onClick={clearPendingAttachment}
+                            className="theme-muted rounded-full border px-2 py-0.5 text-xs font-bold transition hover:text-primary"
+                            aria-label="Remove attached file"
+                          >
+                            x
+                          </button>
+                        </div>
+                      </div>
                     )}
                   </div>
 
-                  <Button
-                    variant="secondary"
-                    onClick={handleUploadClick}
-                    disabled={isScanning}
-                    className="w-full sm:min-w-[190px] sm:w-auto"
-                  >
-                    {isScanning ? 'Processing...' : 'Upload File'}
-                  </Button>
+                  <div className="w-full sm:w-auto sm:min-w-[220px]">
+                    <Button
+                      variant={pendingAttachment ? 'primary' : 'secondary'}
+                      onClick={pendingAttachment ? translatePendingAttachment : handleUploadClick}
+                      disabled={isScanning}
+                      className="w-full"
+                    >
+                      {isScanning ? 'Translating...' : pendingAttachment ? 'Translate' : 'Attach File'}
+                    </Button>
+                  </div>
                 </div>
+                <p className="theme-muted mt-3 text-xs font-semibold">
+                  Tip: press `Ctrl+V` to paste an image, copied file, or text, or drag and drop a file anywhere on this page.
+                </p>
               </div>
 
               {error && (
