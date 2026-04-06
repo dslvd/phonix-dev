@@ -689,7 +689,7 @@ function App() {
           <aside className="theme-surface-strong sticky top-4 flex h-[calc(100vh-2rem)] flex-col overflow-hidden rounded-[28px] border p-4">
             <div>
               <h1 className="font-baloo text-4xl font-bold text-[#FF9126]">phonix</h1>
-              <p className="theme-muted text-xs font-bold uppercase tracking-[0.16em]">learning app</p>
+              <p className="theme-muted text-xs font-bold uppercase tracking-[0.16em]">AI-DRIVEN learning app</p>
             </div>
 
             <nav className="mt-6 space-y-2">

@@ -231,52 +231,52 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
   const totalWords = beginnerCount + intermediateCount + advancedCount;
   const roadmapNodeTemplates = [
     {
-      title: 'Camp Start',
-      icon: '🏕️',
+      title: 'Starter Nest',
+      icon: '🐣',
       description: levelDescriptions.Beginner,
-      hint: 'Launch point',
+      hint: 'Warm up',
       tone: 'from-[#FF9126] to-[#ffb35a]',
     },
     {
-      title: 'Word Forest',
-      icon: '🌲',
+      title: 'Word Garden',
+      icon: '🌱',
       description: `${levelDescriptions.Beginner} Use short bursts to collect more words.`,
-      hint: 'Beginner path',
+      hint: 'Word builder',
       tone: 'from-[#56b8e8] to-[#2f9de4]',
     },
     {
-      title: 'Phrase Path',
-      icon: '🪨',
+      title: 'Phrase Bridge',
+      icon: '🌉',
       description: `${levelDescriptions.Intermediate} Start combining what you know.`,
-      hint: 'Phrase builder',
+      hint: 'Sentence prep',
       tone: 'from-[#7ed6ff] to-[#56b8e8]',
     },
     {
-      title: 'Scan Sprint',
-      icon: '📸',
+      title: 'Scan Quest',
+      icon: '🧩',
       description: 'Use camera scan and upload tools to collect new words.',
-      hint: 'AI quest',
+      hint: 'Explorer mode',
       tone: 'from-[#ff8e6d] to-[#ffb86b]',
     },
     {
-      title: 'Conversation Cove',
-      icon: '🧭',
+      title: 'Talk Trail',
+      icon: '💬',
       description: 'Practice speaking with guided sentence learning.',
-      hint: 'Midway stop',
+      hint: 'Speak up',
       tone: 'from-[#ffd166] to-[#ff9f43]',
     },
     {
-      title: 'Sentence Summit',
-      icon: '⛰️',
+      title: 'Sentence Sky',
+      icon: '🪂',
       description: 'Unlock advanced structures and stronger language confidence.',
-      hint: 'Advanced gate',
+      hint: 'Challenge zone',
       tone: 'from-[#c8a4ff] to-[#8f66db]',
     },
     {
-      title: 'Master Peak',
-      icon: '🏔️',
+      title: 'Champion Star',
+      icon: '🏆',
       description: 'Finish the full road and keep progressing for mastery.',
-      hint: 'Final peak',
+      hint: 'Final boss',
       tone: 'from-[#FF9126] to-[#ffd166]',
     },
   ];
@@ -289,7 +289,8 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
     const total = Math.max(stageSize, Math.min(totalWords + stageNumber * 2, stageSize + Math.floor(index / 2)));
     const rawProgress = Math.min(appState.learnedWords.length, Math.min(totalWords + stageNumber * 2, (index + 1) * stageSize));
     const progress = Math.min(total, rawProgress);
-    const unlocked = appState.learnedWords.length >= Math.max(0, index * Math.floor(stageSize * 0.8));
+    const unlockedByThreshold = appState.learnedWords.length >= Math.max(0, index * Math.floor(stageSize * 0.8));
+    const unlocked = index === 0 || progress >= total || unlockedByThreshold;
 
     return {
       ...template,
@@ -324,16 +325,16 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
 
                 <div className="mt-4 grid gap-3 sm:grid-cols-3">
                   <div className="theme-surface-soft rounded-xl border p-3">
-                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#FAC775]">1. Learn</p>
-                    <p className="theme-muted mt-1 text-sm font-semibold">Follow bite-sized vocabulary lessons and unlock new levels.</p>
+                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#FAC775]">1. Play Lessons</p>
+                    <p className="theme-muted mt-1 text-sm font-semibold">Finish fun word missions and unlock new checkpoints.</p>
                   </div>
                   <div className="theme-surface-soft rounded-xl border p-3">
-                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#FAC775]">2. Scan</p>
-                    <p className="theme-muted mt-1 text-sm font-semibold">Translate text from photos instantly with OCR and AI.</p>
+                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#FAC775]">2. Explore</p>
+                    <p className="theme-muted mt-1 text-sm font-semibold">Scan real text to discover extra words from daily life.</p>
                   </div>
                   <div className="theme-surface-soft rounded-xl border p-3">
-                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#FAC775]">3. Save Progress</p>
-                    <p className="theme-muted mt-1 text-sm font-semibold">Create a profile anytime to sync your streak and XP.</p>
+                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#FAC775]">3. Keep Streak</p>
+                    <p className="theme-muted mt-1 text-sm font-semibold">Stay consistent and grow your streak, stars, and XP.</p>
                   </div>
                 </div>
 
@@ -380,10 +381,10 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
             <div className="theme-surface mt-5 rounded-3xl border px-4 py-6 sm:px-6">
               <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#FAC775]">Roadmap</p>
-                  <h3 className="theme-title mt-1 font-baloo text-3xl font-bold">Your learning route</h3>
+                  <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#FAC775]">Adventure Map</p>
+                  <h3 className="theme-title mt-1 font-baloo text-3xl font-bold">Your learning journey</h3>
                 </div>
-                <p className="theme-muted text-sm font-semibold">Tap a tile to jump back into vocabulary practice.</p>
+                <p className="theme-muted text-sm font-semibold">Follow the path, clear levels, and keep your streak alive.</p>
               </div>
 
               <div className="relative mx-auto max-w-4xl">
@@ -394,6 +395,15 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
                     const completion = Math.max(0, Math.min(100, Math.round((node.progress / node.total) * 100)));
                     const isCurrent = index === roadmapFocusIndex;
                     const isOdd = index % 2 === 1;
+                    const isCompleted = node.progress >= node.total;
+                    const statusText = !node.unlocked ? 'Locked' : isCompleted ? 'Completed' : isCurrent ? 'Play now' : 'Unlocked';
+                    const statusClass = !node.unlocked
+                      ? 'theme-muted'
+                      : isCompleted
+                      ? 'text-[#7fe6b3]'
+                      : isCurrent
+                      ? 'text-[#ffd166]'
+                      : 'text-[#7ed6ff]';
 
                     return (
                       <motion.div
@@ -440,9 +450,21 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
 
                             <div className="mt-3 flex items-center justify-between text-xs font-semibold">
                               <p className="theme-muted">{node.progress}/{node.total} completed</p>
-                              <p className={`font-bold ${node.unlocked ? 'text-[#7ed6ff]' : 'theme-muted'}`}>
-                                {node.unlocked ? (isCurrent ? 'Continue here' : 'Unlocked') : 'Locked'}
-                              </p>
+                              <p className={`font-bold ${statusClass}`}>{statusText}</p>
+                            </div>
+
+                            <div className="mt-3">
+                              <button
+                                onClick={node.unlocked ? () => navigate('vocabulary') : undefined}
+                                disabled={!node.unlocked}
+                                className={`w-full rounded-xl border px-3 py-2 text-xs font-bold uppercase tracking-[0.08em] transition ${
+                                  node.unlocked
+                                    ? 'theme-nav-button hover:border-[#56b8e8]'
+                                    : 'theme-lock-button cursor-not-allowed'
+                                }`}
+                              >
+                                {node.unlocked ? (isCurrent ? 'Start Level' : 'Practice Again') : 'Locked'}
+                              </button>
                             </div>
                           </div>
                         </div>
