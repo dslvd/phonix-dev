@@ -25,6 +25,18 @@ interface VocabularyLearningProps {
 
 const QUIZ_GOAL_PER_CYCLE = 15;
 
+const getQuizIntervalForBand = (band: 'beginner' | 'intermediate' | 'advanced') => {
+  if (band === 'beginner') {
+    return 3;
+  }
+
+  if (band === 'intermediate') {
+    return 4;
+  }
+
+  return 5;
+};
+
 export default function VocabularyLearning({
   navigate,
   appState,
@@ -55,7 +67,7 @@ export default function VocabularyLearning({
   const levelCycle = getVocabularyLevelCycle(appState.learnedWords.length);
 
   const [isQuizMode, setIsQuizMode] = useState(false);
-  const [wordsBeforeQuiz, setWordsBeforeQuiz] = useState(3); // Quiz every 3 words
+  const [wordsBeforeQuiz, setWordsBeforeQuiz] = useState(3);
   const [consecutiveWords, setConsecutiveWords] = useState(0);
   const [showOutOfBatteriesModal, setShowOutOfBatteriesModal] = useState(false);
   const [showLevelCompleteModal, setShowLevelCompleteModal] = useState(false);
@@ -136,6 +148,11 @@ export default function VocabularyLearning({
       : learnedCount < beginnerCount + intermediateCount
       ? 'intermediate'
       : 'advanced';
+
+  useEffect(() => {
+    setWordsBeforeQuiz(getQuizIntervalForBand(currentDifficultyBand));
+  }, [currentDifficultyBand]);
+
   const bandProgress =
     currentDifficultyBand === 'beginner'
       ? learnedCount
@@ -361,13 +378,13 @@ export default function VocabularyLearning({
             : [lessonBackpackItem, ...prev.backpackItems],
         };
       });
-      setConsecutiveWords((prev) => prev + 1);
     } else {
       updateState((prev) => ({
         totalXP: prev.totalXP + 2,
       }));
-      setConsecutiveWords(0);
     }
+
+    setConsecutiveWords((prev) => prev + 1);
 
     // Move to next or go to sentence page
     if (appState.currentVocabIndex < aiVocabulary.length - 1) {
@@ -417,7 +434,7 @@ export default function VocabularyLearning({
     // Reset quiz mode and counter
     setIsQuizMode(false);
     setConsecutiveWords(0);
-    setWordsBeforeQuiz(Math.floor(Math.random() * 2) + 3); // Next quiz in 3-4 words
+    setWordsBeforeQuiz(getQuizIntervalForBand(currentDifficultyBand));
     
     // Move to next word after quiz
     advanceToNextWord();
