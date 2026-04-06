@@ -8,6 +8,9 @@ interface NavigationHeaderProps {
   showProgress?: boolean;
   currentProgress?: number;
   totalProgress?: number;
+  batteryCurrent?: number;
+  batteryMax?: number;
+  isPremium?: boolean;
   showStats?: boolean;
   streakCount?: number;
   starCount?: number;
@@ -21,30 +24,13 @@ export default function NavigationHeader({
   showProgress = false,
   currentProgress = 0,
   totalProgress = 0,
+  batteryCurrent,
+  batteryMax,
+  isPremium = false,
   showStats = true,
   streakCount = 0,
   starCount = 0,
 }: NavigationHeaderProps) {
-  const isGuestMode = (() => {
-    if (typeof window === 'undefined') {
-      return false;
-    }
-
-    const rawUser = window.localStorage.getItem('user');
-    if (!rawUser) {
-      return false;
-    }
-
-    try {
-      const user = JSON.parse(rawUser) as { name?: string; email?: string };
-      const name = (user.name || '').trim().toLowerCase();
-      const email = (user.email || '').trim();
-      return name === 'guest' || email.length === 0;
-    } catch {
-      return false;
-    }
-  })();
-
   const storedStats = (() => {
     if (typeof window === 'undefined') {
       return { streakCount: 0, starCount: 0 };
@@ -103,8 +89,15 @@ export default function NavigationHeader({
           </div>
         )}
 
+        {typeof batteryCurrent === 'number' && typeof batteryMax === 'number' && (
+          <div className="theme-nav-button flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-bold">
+            <span>{isPremium ? '🔋' : batteryCurrent <= 0 ? '🪫' : '🔋'}</span>
+            <span>{isPremium ? '∞' : `${batteryCurrent}/${batteryMax}`}</span>
+          </div>
+        )}
+
         <div className="flex items-center gap-2">
-          {showStats && !isGuestMode && (
+          {showStats && (
             <>
               <div className="theme-nav-button flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-bold">
                 <span>🔥</span>

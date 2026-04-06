@@ -93,6 +93,16 @@ export default function SentenceLearning({
       return;
     }
 
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(option);
+      utterance.lang = 'fil-PH';
+      utterance.rate = 0.85;
+      utterance.pitch = 0.75;
+      utterance.volume = 1.0;
+      window.speechSynthesis.speak(utterance);
+    }
+
     const isCorrect = option.toLowerCase() === question.correctWord.toLowerCase();
     setSelectedOption(option);
     setShowResult(true);

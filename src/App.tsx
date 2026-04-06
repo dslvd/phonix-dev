@@ -14,7 +14,7 @@ import Instructions from './pages/Instructions';
 import Mascot from './components/Mascot';
 import { usePremium } from './lib/usePremium';
 import { clearPremiumStatus } from './lib/premiumService';
-import { getVocabularyLevelCycle, prefetchAIVocabulary } from './lib/aiVocabulary';
+import { getVocabularyLevelCycle, prefetchAIVocabularyWindow } from './lib/aiVocabulary';
 
 type ThemeMode = 'dark' | 'light';
 
@@ -50,6 +50,8 @@ export interface AppState {
   mode: 'learn' | 'scan' | null;
   currentVocabIndex: number;
   learnedWords: string[];
+  quizAnswersInCycle: number;
+  sentenceAnswersInCycle: number;
   stars: number;
   currentStreak: number;
   longestStreak: number;
@@ -72,6 +74,8 @@ function createDefaultAppState(getTodayKey: () => string): AppState {
     mode: null,
     currentVocabIndex: 0,
     learnedWords: [],
+    quizAnswersInCycle: 0,
+    sentenceAnswersInCycle: 0,
     stars: 0,
     currentStreak: 1,
     longestStreak: 1,
@@ -352,6 +356,7 @@ function App() {
     return name === 'admin' || email.includes('admin');
   })();
   const userKey = getUserKey();
+  const levelCycle = getVocabularyLevelCycle(appState.learnedWords.length);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -436,7 +441,7 @@ function App() {
       return;
     }
 
-    if (!userKey || isGuestMode) {
+    if (!userKey && !isGuestMode) {
       return;
     }
 
@@ -447,9 +452,8 @@ function App() {
       return;
     }
 
-    const levelCycle = getVocabularyLevelCycle(appState.learnedWords.length);
-    prefetchAIVocabulary(targetLanguage, nativeLanguage, { levelCycle });
-  }, [appState.targetLanguage, appState.nativeLanguage, appState.learnedWords.length, userKey, isGuestMode]);
+    prefetchAIVocabularyWindow(targetLanguage, nativeLanguage, levelCycle);
+  }, [appState.targetLanguage, appState.nativeLanguage, levelCycle, userKey, isGuestMode]);
 
   const showDesktopSidebar = currentPage === 'dashboard' || currentPage === 'admin';
   const keepMainPanel = currentPage === 'dashboard';
