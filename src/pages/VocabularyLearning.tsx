@@ -3,15 +3,21 @@ import { useState, useEffect } from 'react';
 import NavigationHeader from '../components/NavigationHeader';
 import Quiz from '../components/Quiz';
 import EnergyBar from '../components/EnergyBar';
-import { Page, AppState } from '../App';
+import { Page, AppState, BackpackItem, UpdateStateFn } from '../App';
 import { VocabularyItem } from '../data/vocabulary';
 import { usePremium } from '../lib/usePremium';
-import { fetchAIVocabulary, getFiveStageLevel, readCachedAIVocabularyOrLatest, writeCachedAIVocabulary } from '../lib/aiVocabulary';
+import {
+  fetchAIVocabulary,
+  getFiveStageLevel,
+  prefetchAIVocabulary,
+  readCachedAIVocabulary,
+  writeCachedAIVocabulary,
+} from '../lib/aiVocabulary';
 
 interface VocabularyLearningProps {
   navigate: (page: Page) => void;
   appState: AppState;
-  updateState: (updates: Partial<AppState>) => void;
+  updateState: UpdateStateFn;
   premium: ReturnType<typeof usePremium>;
 }
 
@@ -21,6 +27,25 @@ export default function VocabularyLearning({
   updateState,
   premium,
 }: VocabularyLearningProps) {
+  const isGuestMode = (() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    const rawUser = window.localStorage.getItem('user');
+    if (!rawUser) {
+      return false;
+    }
+
+    try {
+      const user = JSON.parse(rawUser) as { name?: string; email?: string };
+      const name = (user.name || '').trim().toLowerCase();
+      const email = (user.email || '').trim();
+      return name === 'guest' || email.length === 0;
+    } catch {
+      return false;
+    }
+  })();
   const targetLanguage = appState.targetLanguage || 'Hiligaynon';
   const nativeLanguage = appState.nativeLanguage || 'English';
 
@@ -28,20 +53,27 @@ export default function VocabularyLearning({
   const [wordsBeforeQuiz, setWordsBeforeQuiz] = useState(3); // Quiz every 3 words
   const [consecutiveWords, setConsecutiveWords] = useState(0);
   const [showOutOfBatteriesModal, setShowOutOfBatteriesModal] = useState(false);
-  const [aiVocabulary, setAiVocabulary] = useState<VocabularyItem[]>(() =>
-    readCachedAIVocabularyOrLatest(targetLanguage, nativeLanguage)
-  );
+  const [aiVocabulary, setAiVocabulary] = useState<VocabularyItem[]>(() => {
+    return readCachedAIVocabulary(targetLanguage, nativeLanguage);
+  });
   const [aiFlashcardItem, setAiFlashcardItem] = useState<VocabularyItem | null>(null);
 
   useEffect(() => {
-    const cached = readCachedAIVocabularyOrLatest(targetLanguage, nativeLanguage);
+    const cached = readCachedAIVocabulary(targetLanguage, nativeLanguage);
     if (cached.length > 0) {
       setAiVocabulary(cached);
+    }
+
+    if (isGuestMode) {
+      return;
     }
 
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
       return;
     }
+
+    setAiFlashcardItem(null);
+    prefetchAIVocabulary(targetLanguage, nativeLanguage);
 
     let cancelled = false;
 
@@ -64,7 +96,7 @@ export default function VocabularyLearning({
     return () => {
       cancelled = true;
     };
-  }, [targetLanguage, nativeLanguage]);
+  }, [targetLanguage, nativeLanguage, isGuestMode]);
 
   const currentLevelWords = (() => {
     const learnedCount = appState.learnedWords.length;
@@ -179,6 +211,14 @@ export default function VocabularyLearning({
 
     setAiFlashcardItem(null);
 
+    if (!hasAIVocabulary) {
+      return;
+    }
+
+    if (isGuestMode) {
+      return;
+    }
+
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
       return;
     }
@@ -255,6 +295,7 @@ export default function VocabularyLearning({
       cancelled = true;
     };
   }, [
+    hasAIVocabulary,
     currentItem.id,
     currentItem.nativeWord,
     currentItem.englishWord,
@@ -263,6 +304,7 @@ export default function VocabularyLearning({
     currentItem.difficulty,
     appState.targetLanguage,
     appState.nativeLanguage,
+    isGuestMode,
   ]);
 
   const handleNext = () => {
@@ -283,15 +325,32 @@ export default function VocabularyLearning({
 
     // Add to learned words if not already learned
     if (isNewDiscovery) {
-      updateState({
-        learnedWords: [...appState.learnedWords, currentItem.id],
-        totalXP: appState.totalXP + 10,
+      const lessonBackpackId = `lesson:${currentItem.id}`;
+      const lessonBackpackItem: BackpackItem = {
+        id: lessonBackpackId,
+        nativeText: currentItem.nativeWord,
+        translatedText: currentItem.englishWord,
+        source: 'lesson',
+        createdAt: new Date().toISOString(),
+        difficulty: currentItem.difficulty,
+        emoji: currentItem.emoji,
+      };
+      updateState((prev) => {
+        const hasLessonItem = prev.backpackItems.some((item) => item.id === lessonBackpackId);
+        const hasLearnedWord = prev.learnedWords.includes(currentItem.id);
+        return {
+          learnedWords: hasLearnedWord ? prev.learnedWords : [...prev.learnedWords, currentItem.id],
+          totalXP: prev.totalXP + 10,
+          backpackItems: hasLessonItem
+            ? prev.backpackItems
+            : [lessonBackpackItem, ...prev.backpackItems],
+        };
       });
       setConsecutiveWords((prev) => prev + 1);
     } else {
-      updateState({
-        totalXP: appState.totalXP + 2,
-      });
+      updateState((prev) => ({
+        totalXP: prev.totalXP + 2,
+      }));
       setConsecutiveWords(0);
     }
 
@@ -308,12 +367,12 @@ export default function VocabularyLearning({
   const handleQuizAnswer = (correct: boolean) => {
     // Award stars for correct answers
     if (correct) {
-      updateState({
-        stars: appState.stars + 1,
-      });
+      updateState((prev) => ({
+        stars: prev.stars + 1,
+      }));
     } else if (!premium.isPremium) {
       const nextBatteries = Math.max(0, appState.batteriesRemaining - 1);
-      updateState({ batteriesRemaining: nextBatteries });
+      updateState((prev) => ({ batteriesRemaining: Math.max(0, prev.batteriesRemaining - 1) }));
 
       if (nextBatteries === 0) {
         setIsQuizMode(false);
@@ -345,17 +404,17 @@ export default function VocabularyLearning({
     }
   };
 
-  const playAudio = (e?: React.MouseEvent<HTMLButtonElement>) => {
+  const playAudio = (text: string, lang: string, e?: React.MouseEvent<HTMLElement>) => {
     e?.preventDefault();
     e?.stopPropagation();
     if ('speechSynthesis' in window) {
       // Cancel any ongoing speech
       window.speechSynthesis.cancel();
       
-      const utterance = new SpeechSynthesisUtterance(displayedItem.nativeWord);
+      const utterance = new SpeechSynthesisUtterance(text);
       
-      // Configure for Hiligaynon/Filipino pronunciation
-      utterance.lang = 'fil-PH'; // Filipino language code
+      // Configure language voice based on the clicked word
+      utterance.lang = lang;
       utterance.rate = 0.85;
       utterance.pitch = 0.75;
       utterance.volume = 1.0;
@@ -375,13 +434,15 @@ export default function VocabularyLearning({
           );
         });
 
-        const filipinoVoice = voices.find((voice) => {
+        const preferredVoice = voices.find((voice) => {
           const lang = voice.lang.toLowerCase();
-          return lang.includes('fil') || lang.includes('tl') || lang.includes('ph');
+          const target = lang.startsWith('fil') || lang.startsWith('tl') || lang.includes('ph');
+          const english = lang.startsWith('en');
+          return utterance.lang.startsWith('en') ? english : target;
         });
 
         const englishFallback = voices.find((voice) => voice.lang.toLowerCase().startsWith('en'));
-        utterance.voice = robotVoice || filipinoVoice || englishFallback || voices[0] || null;
+        utterance.voice = robotVoice || preferredVoice || englishFallback || voices[0] || null;
         window.speechSynthesis.speak(utterance);
       };
 
@@ -440,10 +501,19 @@ export default function VocabularyLearning({
           </motion.div>
 
           {!hasAIVocabulary ? (
-            <div className="theme-surface rounded-3xl border p-10 text-center">
-              <p className="theme-title font-baloo text-3xl font-bold">Generating AI vocabulary...</p>
-              <p className="theme-muted mt-2 text-sm font-semibold">Please stay online while we build your word set.</p>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="theme-surface rounded-3xl border p-8 text-center"
+            >
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-[#FF9126] bg-[#1d3443] text-2xl">
+                ⚡
+              </div>
+              <h2 className="theme-title mt-4 font-baloo text-3xl font-bold">Preparing AI lesson</h2>
+              <p className="theme-muted mt-2 text-sm font-semibold">
+                The AI vocabulary set is loading now. This starts as soon as the request is ready.
+              </p>
+            </motion.div>
           ) : isQuizMode ? (
             // Quiz Mode
             <Quiz
@@ -452,7 +522,7 @@ export default function VocabularyLearning({
               onAnswer={handleQuizAnswer}
               targetLanguage={appState.targetLanguage || 'Hiligaynon'}
               nativeLanguage={appState.nativeLanguage || 'English'}
-              useAI={true}
+              useAI={!isGuestMode}
               difficultyBand={currentDifficultyBand}
               levelStage={levelStage}
             />
@@ -528,21 +598,12 @@ export default function VocabularyLearning({
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: 0.3, type: 'spring' }}
-                      className="font-baloo text-6xl font-bold bg-gradient-to-r from-[#FF9126] to-[#FF9126] bg-clip-text text-transparent"
+                      onClick={(e) => playAudio(displayedItem.nativeWord, 'fil-PH', e)}
+                      className="cursor-pointer select-none font-baloo text-6xl font-bold bg-gradient-to-r from-[#FF9126] to-[#FF9126] bg-clip-text text-transparent"
+                      title="Tap to hear pronunciation"
                     >
                       {displayedItem.nativeWord}
                     </motion.h2>
-                    <motion.button
-                      whileHover={{ scale: 1.1, rotate: 10 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={(e) => playAudio(e)}
-                      className="relative group/btn flex-shrink-0"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-[#FF9126] to-[#FF9126] rounded-full blur-lg opacity-50 group-hover/btn:opacity-100 transition-opacity" />
-                      <div className="relative flex items-center justify-center rounded-full bg-gradient-to-r from-[#FF9126] to-[#ffb35a] p-4 text-white shadow-lg">
-                        <span className="text-2xl leading-none">🔊</span>
-                      </div>
-                    </motion.button>
                   </div>
                 </div>
 
@@ -557,7 +618,11 @@ export default function VocabularyLearning({
                     <p className="theme-muted mb-2 text-xs font-bold uppercase tracking-wider">
                       {appState.nativeLanguage}
                     </p>
-                    <h3 className="theme-title font-baloo text-5xl font-bold">
+                    <h3
+                      onClick={(e) => playAudio(displayedItem.englishWord, 'en-US', e)}
+                      className="theme-title cursor-pointer select-none font-baloo text-5xl font-bold"
+                      title="Tap to hear pronunciation"
+                    >
                       {displayedItem.englishWord}
                     </h3>
                   </div>

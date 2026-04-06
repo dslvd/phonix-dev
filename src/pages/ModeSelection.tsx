@@ -24,6 +24,7 @@ export default function ModeSelection({ navigate, updateState }: ModeSelectionPr
       <NavigationHeader
         onBack={() => navigate('setup')}
         onLogout={() => navigate('landing')}
+        showStats={false}
       />
       <div className="flex items-center justify-center p-4 min-h-[calc(100vh-80px)]">
       <div className="max-w-2xl w-full">

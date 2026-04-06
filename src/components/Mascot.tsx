@@ -30,6 +30,25 @@ export default function Mascot({
   responseLanguage = 'English',
 }: MascotProps) {
   const isFilipino = responseLanguage.trim().toLowerCase() === 'filipino';
+  const isGuestMode = (() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    const rawUser = window.localStorage.getItem('user');
+    if (!rawUser) {
+      return false;
+    }
+
+    try {
+      const user = JSON.parse(rawUser) as { name?: string; email?: string };
+      const name = (user.name || '').trim().toLowerCase();
+      const email = (user.email || '').trim();
+      return name === 'guest' || email.length === 0;
+    } catch {
+      return false;
+    }
+  })();
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
@@ -86,6 +105,20 @@ export default function Mascot({
   const handleAsk = async () => {
     const trimmedQuery = query.trim();
     if (!trimmedQuery || loading) return;
+
+    if (isGuestMode) {
+      setError('Log in to continue using AI Assistant features.');
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `assistant-login-${Date.now()}`,
+          role: 'assistant',
+          text: cleanAssistantText('Please log in to use AI responses. You can still continue lessons as guest.'),
+        },
+      ]);
+      setQuery('');
+      return;
+    }
 
     const history: AIChatTurn[] = messages.map((entry) => ({
       role: entry.role,
@@ -216,12 +249,13 @@ export default function Mascot({
                     }}
                     rows={1}
                     placeholder={uiText.placeholder}
+                    disabled={isGuestMode}
                     className="theme-nav-button theme-title max-h-28 min-h-[44px] flex-1 resize-none rounded-2xl border px-4 py-3 text-sm font-semibold outline-none transition focus:border-[#FF9126]"
                   />
                   <button
                     type="button"
                     onClick={handleAsk}
-                    disabled={loading || !query.trim()}
+                    disabled={isGuestMode || loading || !query.trim()}
                     className="rounded-2xl border-b-4 border-[#FF9126] bg-[#FF9126] px-4 py-3 text-sm font-bold text-[#4a2a00] shadow-lg transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {uiText.send}

@@ -28,6 +28,7 @@ export default function LanguageSetup({ navigate, updateState }: LanguageSetupPr
       <NavigationHeader
         onBack={() => navigate('landing')}
         onLogout={() => navigate('landing')}
+        showStats={false}
       />
       <div className="flex items-center justify-center p-4 min-h-[calc(100vh-80px)]">
       <Card className="max-w-md w-full">
@@ -118,14 +119,6 @@ export default function LanguageSetup({ navigate, updateState }: LanguageSetupPr
           </Button>
         </motion.div>
 
-        {/* Decorative elements */}
-        <motion.div
-          animate={{ rotate: [0, 5, -5, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className="text-6xl text-center mt-6 opacity-70 leading-none flex items-center justify-center"
-        >
-          ✨
-        </motion.div>
       </Card>
       </div>
     </div>
