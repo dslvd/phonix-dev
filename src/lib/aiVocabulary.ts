@@ -20,13 +20,14 @@ interface AIVocabularyOptions {
 const LEVEL_COUNTS: Record<Difficulty, number> = {
   beginner: 20,
   intermediate: 20,
-  advanced: 7,
+  advanced: 8,
 };
 const LATEST_AI_VOCABULARY_CACHE_KEY = 'phonix-ai-vocabulary:latest';
 const PAIR_LATEST_CACHE_KEY_PREFIX = 'phonix-ai-vocabulary:pair-latest';
 const memoryCache = new Map<string, VocabularyItem[]>();
 const inFlightRequests = new Map<string, Promise<VocabularyItem[]>>();
 const LEVEL_PACK_SIZE = LEVEL_COUNTS.beginner + LEVEL_COUNTS.intermediate + LEVEL_COUNTS.advanced;
+export const VOCABULARY_PACK_WORD_COUNT = LEVEL_PACK_SIZE;
 const LEVEL_THEMES = [
   'Animal Friends',
   'Color Quest',
@@ -353,10 +354,10 @@ export const fetchAIVocabulary = async (
       '  ]',
       '}',
       'Rules:',
-      '1. Provide exactly 47 words total.',
+      `1. Provide exactly ${VOCABULARY_PACK_WORD_COUNT} words total.`,
       '2. beginner must have exactly 20 words.',
       '3. intermediate must have exactly 20 words.',
-      '4. advanced must have exactly 7 words.',
+      '4. advanced must have exactly 8 words.',
       '5. Avoid duplicates in nativeWord and englishWord.',
       '6. Keep words useful for daily conversation.',
       '7. Make vocabulary clearly match the level focus theme.',
