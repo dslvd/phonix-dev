@@ -102,26 +102,15 @@ export default function VocabularyLearning({
 
   const [isQuizMode, setIsQuizMode] = useState(false);
   const [wordsBeforeQuiz, setWordsBeforeQuiz] = useState(3);
-<<<<<<< HEAD
   const [consecutiveWords, setConsecutiveWords] = useState(0);
   const [showOutOfBatteriesModal, setShowOutOfBatteriesModal] = useState(false);
   const [showLevelCompleteModal, setShowLevelCompleteModal] = useState(false);
   const [activeCheckpointId, setActiveCheckpointId] = useState<string | null>(null);
   const previousLevelCycleRef = useRef(levelCycle);
   const shownCheckpointIdsRef = useRef<Set<string>>(new Set());
-  const lastAutoSpokenWordIdRef = useRef<string | null>(null);
   const [aiVocabulary, setAiVocabulary] = useState<VocabularyItem[]>(() => {
     return readCachedAIVocabularyOrPairLatest(targetLanguage, nativeLanguage, { levelCycle });
   });
-=======
-  const [consecutiveWords, setConsecutiveWords] = useState(0);
-  const [showOutOfBatteriesModal, setShowOutOfBatteriesModal] = useState(false);
-  const [showLevelCompleteModal, setShowLevelCompleteModal] = useState(false);
-  const previousLevelCycleRef = useRef(levelCycle);
-  const [aiVocabulary, setAiVocabulary] = useState<VocabularyItem[]>(() => {
-    return readCachedAIVocabularyOrPairLatest(targetLanguage, nativeLanguage, { levelCycle });
-  });
->>>>>>> 1e8ff8165d511d888bbeeecb1a326218ba8aa5df
   const [aiFlashcardItem, setAiFlashcardItem] = useState<VocabularyItem | null>(null);
 
   useEffect(() => {
