@@ -15,13 +15,13 @@ interface NavigationHeaderProps {
 
 export default function NavigationHeader({
   onBack,
-  onLogout,
+  onLogout: _onLogout,
   onProfile,
   title,
   showProgress = false,
   currentProgress = 0,
   totalProgress = 0,
-  showStats = false,
+  showStats = true,
   streakCount = 0,
   starCount = 0,
 }: NavigationHeaderProps) {
@@ -45,80 +45,88 @@ export default function NavigationHeader({
     }
   })();
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    if (onLogout) {
-      onLogout();
+  const storedStats = (() => {
+    if (typeof window === 'undefined') {
+      return { streakCount: 0, starCount: 0 };
     }
-  };
+
+    const rawState = window.localStorage.getItem('phonix-app-state');
+    if (!rawState) {
+      return { streakCount: 0, starCount: 0 };
+    }
+
+    try {
+      const state = JSON.parse(rawState) as { currentStreak?: number; stars?: number };
+      return {
+        streakCount: typeof state.currentStreak === 'number' ? state.currentStreak : 0,
+        starCount: typeof state.stars === 'number' ? state.stars : 0,
+      };
+    } catch {
+      return { streakCount: 0, starCount: 0 };
+    }
+  })();
+
+  const displayStreakCount = streakCount || storedStats.streakCount;
+  const displayStarCount = starCount || storedStats.starCount;
 
   return (
-    <div className="theme-surface-strong sticky top-0 z-50 border-b p-4">
-      <div className="max-w-6xl mx-auto flex justify-between items-center">
-        {/* Left: Back Button or Logo */}
-        <div className="flex items-center gap-3">
+    <div className="theme-surface-strong sticky inset-x-0 top-0 z-50 w-full border-b">
+      <div className="flex w-full items-center justify-between gap-3 px-4 py-3">
+        <div className="flex min-w-0 items-center gap-2.5">
           {onBack ? (
             <motion.button
-              whileHover={{ scale: 1.08, x: -2 }}
+              whileHover={{ scale: 1.03, x: -1 }}
               whileTap={{ scale: 0.95 }}
               onClick={onBack}
-              className="flex items-center justify-center text-3xl leading-none text-[#FF9126] transition-colors hover:text-[#ffb35a]"
+              className="theme-nav-button flex h-10 w-10 items-center justify-center rounded-xl border text-xl leading-none transition"
+              aria-label="Go back"
             >
-              ⬅️
+              ←
             </motion.button>
           ) : (
-            <h1 className="font-baloo text-2xl font-bold text-[#FF9126]">🦜 Phonix</h1>
+            <h1 className="font-baloo text-2xl font-bold text-[#FF9126]">Phonix</h1>
           )}
-          
+
           {title && (
-            <h2 className="theme-title hidden font-baloo text-xl font-bold sm:block">
+            <h2 className="theme-title truncate font-baloo text-lg font-bold sm:text-xl">
               {title}
             </h2>
           )}
         </div>
 
-        {/* Center: Progress (if shown) */}
         {showProgress && (
-          <div className="theme-nav-button hidden items-center gap-2 rounded-full border px-4 py-2 md:flex">
-            <span className="text-sm font-bold">
+          <div className="theme-nav-button hidden items-center rounded-full border px-3 py-1.5 md:flex">
+            <span className="theme-muted mr-2 text-[11px] font-bold uppercase tracking-[0.08em]">Progress</span>
+            <span className="theme-title text-sm font-bold">
               {currentProgress} / {totalProgress}
             </span>
           </div>
         )}
 
-        {/* Right: Stats and Logout */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {showStats && !isGuestMode && (
             <>
-              <div className="bg-yellow-200 px-3 py-1 rounded-full font-bold text-sm hidden sm:flex items-center gap-1">
-                🔥 <span>{streakCount}</span>
+              <div className="theme-nav-button flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-bold">
+                <span>🔥</span>
+                <span>{displayStreakCount}</span>
               </div>
-              <div className="hidden items-center gap-1 rounded-full bg-[#1a6b8d] px-3 py-1 text-sm font-bold text-white sm:flex">
-                ⭐ <span>{starCount}</span>
+              <div className="theme-nav-button flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-bold">
+                <span>⭐</span>
+                <span>{displayStarCount}</span>
               </div>
             </>
           )}
-          
+
           {onProfile && (
             <motion.button
-              whileHover={{ scale: 1.1 }}
+              whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.95 }}
               onClick={onProfile}
-              className="flex items-center justify-center text-3xl leading-none text-[#6d3aa8] transition-colors hover:text-[#8a55c6]"
+              className="theme-nav-button flex h-10 w-10 items-center justify-center rounded-xl border text-lg leading-none transition-colors hover:text-[#2f9de4]"
               title="Profile"
+              aria-label="Open profile"
             >
               👤
-            </motion.button>
-          )}
-          
-          {onLogout && (
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleLogout}
-              className="theme-nav-button rounded-full border px-4 py-2 text-sm font-bold transition-colors"
-            >
-              Logout
             </motion.button>
           )}
         </div>

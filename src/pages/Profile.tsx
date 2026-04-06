@@ -234,7 +234,7 @@ export default function Profile({ navigate, appState, premium }: ProfileProps) {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="mt-5 grid gap-4 md:grid-cols-2"
+          className="mt-5 grid gap-4 md:grid-cols-3"
         >
           <button
             onClick={() => navigate('collection')}
@@ -244,6 +244,17 @@ export default function Profile({ navigate, appState, premium }: ProfileProps) {
               <div className="mb-2 text-4xl leading-none">🎒</div>
               <h3 className="theme-title font-baloo text-xl font-bold">My Vocabulary</h3>
               <p className="theme-muted mt-1 text-sm font-semibold">View all learned words</p>
+            </div>
+          </button>
+
+          <button
+            onClick={() => navigate('instructions')}
+            className="theme-surface rounded-2xl border p-5 text-center transition hover:border-[#56b8e8]"
+          >
+            <div>
+              <div className="mb-2 text-4xl leading-none">📘</div>
+              <h3 className="theme-title font-baloo text-xl font-bold">How It Works</h3>
+              <p className="theme-muted mt-1 text-sm font-semibold">See full app instructions</p>
             </div>
           </button>
 

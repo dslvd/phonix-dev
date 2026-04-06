@@ -19,6 +19,8 @@ Cloudflare D1 Setup
 5. Deploy. The app will then:
    - Load saved app state from D1 for logged-in users with email.
    - Auto-save app state changes back to D1.
+   - Cache AI vocabulary sets by language pair for faster lesson startup.
+   - Serve cached AI vocabulary instantly and refresh stale entries in the background.
 
 Notes:
 - Guest users are not synced.

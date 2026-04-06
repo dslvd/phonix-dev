@@ -254,7 +254,7 @@ export default function Premium({ navigate, premium }: PremiumProps) {
               },
             ].map((faq, index) => (
               <Card key={index} className="bg-white/10 border border-white/20">
-                <h3 className="text-yellow-300 font-bold mb-2">{faq.q}</h3>
+                <h3 className="theme-title mb-2 font-bold">{faq.q}</h3>
                 <p className="theme-muted">{faq.a}</p>
               </Card>
             ))}
