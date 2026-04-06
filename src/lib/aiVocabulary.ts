@@ -1,4 +1,5 @@
 import { VocabularyItem } from '../data/vocabulary';
+import { buildPhaseOneSupportWords } from './phaseOneSupportWords';
 
 type Difficulty = VocabularyItem['difficulty'];
 
@@ -64,6 +65,9 @@ const clampDifficulty = (value: string | undefined): Difficulty => {
   }
   return 'beginner';
 };
+
+const getMeaningKey = (word: Pick<VocabularyItem, 'nativeWord' | 'englishWord'>) =>
+  `${word.nativeWord}`.trim().toLowerCase() + '|' + `${word.englishWord}`.trim().toLowerCase();
 
 const toSlug = (value: string) =>
   value
@@ -137,10 +141,18 @@ const enforceLevelCounts = (words: VocabularyItem[], levelCycle: number) => {
   }
 
   const finalWords: VocabularyItem[] = [];
+  const supportWords = buildPhaseOneSupportWords(levelCycle);
+  const supportWordKeys = new Set(supportWords.map(getMeaningKey));
 
   (['beginner', 'intermediate', 'advanced'] as Difficulty[]).forEach((difficulty) => {
     const expected = LEVEL_COUNTS[difficulty];
-    const current = byDifficulty[difficulty].slice(0, expected);
+    const current =
+      difficulty === 'beginner'
+        ? [
+            ...supportWords,
+            ...byDifficulty.beginner.filter((word) => !supportWordKeys.has(getMeaningKey(word))),
+          ].slice(0, expected)
+        : byDifficulty[difficulty].slice(0, expected);
 
     while (current.length < expected) {
       const idx = current.length + 1;
@@ -166,6 +178,24 @@ const enforceLevelCounts = (words: VocabularyItem[], levelCycle: number) => {
     seen.add(id);
     return { ...word, id };
   });
+};
+
+const ensurePhaseOneSupportWords = (words: VocabularyItem[], levelCycle: number): VocabularyItem[] => {
+  const supportWords = buildPhaseOneSupportWords(levelCycle);
+  const supportWordKeys = new Set(supportWords.map(getMeaningKey));
+
+  const beginnerWords = words.filter((word) => word.difficulty === 'beginner');
+  const intermediateWords = words.filter((word) => word.difficulty === 'intermediate');
+  const advancedWords = words.filter((word) => word.difficulty === 'advanced');
+
+  return [
+    ...[...supportWords, ...beginnerWords.filter((word) => !supportWordKeys.has(getMeaningKey(word)))].slice(
+      0,
+      LEVEL_COUNTS.beginner
+    ),
+    ...intermediateWords.slice(0, LEVEL_COUNTS.intermediate),
+    ...advancedWords.slice(0, LEVEL_COUNTS.advanced),
+  ];
 };
 
 export const getAIVocabularyCacheKey = (targetLanguage: string, nativeLanguage: string, levelCycle = 0) =>
@@ -195,8 +225,9 @@ export const readCachedAIVocabulary = (targetLanguage: string, nativeLanguage: s
     if (!Array.isArray(parsed)) {
       return [];
     }
-    memoryCache.set(cacheKey, parsed);
-    return parsed;
+    const enriched = ensurePhaseOneSupportWords(parsed, normalizeLevelCycle(options.levelCycle));
+    memoryCache.set(cacheKey, enriched);
+    return enriched;
   } catch {
     return [];
   }
@@ -223,8 +254,9 @@ export const readCachedAIVocabularyByPairLatest = (targetLanguage: string, nativ
     if (!Array.isArray(parsed)) {
       return [];
     }
-    memoryCache.set(pairLatestKey, parsed);
-    return parsed;
+    const enriched = ensurePhaseOneSupportWords(parsed, 0);
+    memoryCache.set(pairLatestKey, enriched);
+    return enriched;
   } catch {
     return [];
   }
@@ -263,8 +295,9 @@ export const readLatestCachedAIVocabulary = (): VocabularyItem[] => {
     if (!Array.isArray(parsed)) {
       return [];
     }
-    memoryCache.set(LATEST_AI_VOCABULARY_CACHE_KEY, parsed);
-    return parsed;
+    const enriched = ensurePhaseOneSupportWords(parsed, 0);
+    memoryCache.set(LATEST_AI_VOCABULARY_CACHE_KEY, enriched);
+    return enriched;
   } catch {
     return [];
   }
@@ -320,12 +353,12 @@ export const fetchAIVocabulary = async (
   const cacheKey = getAIVocabularyCacheKey(targetLanguage, nativeLanguage, levelCycle);
   const memory = memoryCache.get(cacheKey);
   if (memory && memory.length > 0) {
-    return memory;
+    return ensurePhaseOneSupportWords(memory, levelCycle);
   }
 
   const pairLatest = readCachedAIVocabularyByPairLatest(targetLanguage, nativeLanguage);
   if (pairLatest.length > 0) {
-    return pairLatest;
+    return ensurePhaseOneSupportWords(pairLatest, levelCycle);
   }
 
   const activeRequest = inFlightRequests.get(cacheKey);
@@ -363,6 +396,7 @@ export const fetchAIVocabulary = async (
       '7. Make vocabulary clearly match the level focus theme.',
       '8. Do not reuse the exact same set from previous levels.',
       '9. Keep words kid-friendly, simple, and easy to learn.',
+      '10. Include these beginner support words in the pack: Cook, Work, and Hot.',
     ].join('\n');
 
     const response = await fetch('/api/ai-vocabulary', {
