@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import NavigationHeader from '../components/NavigationHeader';
-import { Page, AppState } from '../App';
+import { Page, AppState, UpdateStateFn } from '../App';
 import { usePremium } from '../lib/usePremium';
+import { formatBatteryCountdown } from '../lib/battery';
 
 interface ProfileProps {
   navigate: (page: Page) => void;
   appState: AppState;
+  updateState: UpdateStateFn;
   premium: ReturnType<typeof usePremium>;
 }
 
@@ -16,7 +18,7 @@ interface UserData {
   picture?: string;
 }
 
-export default function Profile({ navigate, appState, premium }: ProfileProps) {
+export default function Profile({ navigate, appState, updateState, premium }: ProfileProps) {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState('');
@@ -33,15 +35,18 @@ export default function Profile({ navigate, appState, premium }: ProfileProps) {
 
   const handleSaveName = () => {
     if (userData && editedName.trim()) {
-      const updatedUser = { ...userData, name: editedName };
+      const nextName = editedName.trim();
+      const updatedUser = { ...userData, name: nextName };
       localStorage.setItem('user', JSON.stringify(updatedUser));
       setUserData(updatedUser);
+      updateState({ displayName: nextName });
       setIsEditing(false);
     }
   };
 
   const handleLogout = () => {
     localStorage.removeItem('user');
+    sessionStorage.removeItem('phonix-admin-password');
     navigate('landing');
   };
 
@@ -172,7 +177,11 @@ export default function Profile({ navigate, appState, premium }: ProfileProps) {
               <div className="theme-surface-soft rounded-xl border p-3">
                 <p className="theme-muted text-xs font-bold uppercase tracking-[0.12em]">Batteries</p>
                 <p className="mt-1 font-baloo text-[1.85rem] leading-none font-bold text-[#ffb86b]">
-                  {premium.isPremium ? '∞ Unlimited Batteries' : `${appState.batteriesRemaining} / 5 batteries`}
+                  {premium.isPremium
+                    ? '∞ Unlimited Batteries'
+                    : appState.batteryResetAt
+                    ? `${appState.batteriesRemaining} / 5 · ${formatBatteryCountdown(appState.batteryResetAt)}`
+                    : `${appState.batteriesRemaining} / 5 batteries`}
                 </p>
               </div>
 

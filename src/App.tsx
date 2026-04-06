@@ -15,6 +15,7 @@ import Mascot from './components/Mascot';
 import { usePremium } from './lib/usePremium';
 import { clearPremiumStatus } from './lib/premiumService';
 import { getVocabularyLevelCycle, prefetchAIVocabularyWindow } from './lib/aiVocabulary';
+import { BATTERY_MAX, normalizeBatteryState } from './lib/battery';
 
 type ThemeMode = 'dark' | 'light';
 
@@ -45,6 +46,7 @@ export interface BackpackItem {
 }
 
 export interface AppState {
+  displayName: string;
   nativeLanguage: string;
   targetLanguage: string;
   mode: 'learn' | 'scan' | null;
@@ -58,6 +60,7 @@ export interface AppState {
   totalXP: number;
   lastActiveDate: string;
   batteriesRemaining: number;
+  batteryResetAt: string | null;
   backpackItems: BackpackItem[];
 }
 
@@ -67,8 +70,9 @@ export type UpdateStateAction =
 
 export type UpdateStateFn = (updates: UpdateStateAction) => void;
 
-function createDefaultAppState(getTodayKey: () => string): AppState {
+function createDefaultAppState(getTodayKey: () => string, displayName = ''): AppState {
   return {
+    displayName: displayName.trim(),
     nativeLanguage: '',
     targetLanguage: '',
     mode: null,
@@ -81,7 +85,8 @@ function createDefaultAppState(getTodayKey: () => string): AppState {
     longestStreak: 1,
     totalXP: 0,
     lastActiveDate: getTodayKey(),
-    batteriesRemaining: 5,
+    batteriesRemaining: BATTERY_MAX,
+    batteryResetAt: null,
     backpackItems: [],
   };
 }
@@ -121,6 +126,10 @@ function getStoredTheme(): ThemeMode {
 function getInitialPage(): Page {
   if (typeof window === 'undefined') {
     return 'landing';
+  }
+
+  if (window.location.pathname === '/admin') {
+    return 'admin';
   }
 
   const hasUser = !!window.localStorage.getItem('user');
@@ -182,14 +191,15 @@ function App() {
   const [hasHydratedFromCloud, setHasHydratedFromCloud] = useState(false);
   const [theme, setTheme] = useState<ThemeMode>(getStoredTheme);
   const [appState, setAppState] = useState<AppState>(() => {
-    const defaultState = createDefaultAppState(getTodayKey);
+    const storedUser = getStoredUser();
+    const defaultState = createDefaultAppState(getTodayKey, storedUser?.name || '');
 
     if (typeof window === 'undefined') {
       return defaultState;
     }
 
-    const storedUser = window.localStorage.getItem('user');
-    if (!storedUser) {
+    const rawStoredUser = window.localStorage.getItem('user');
+    if (!rawStoredUser) {
       window.localStorage.removeItem('phonix-app-state');
       return defaultState;
     }
@@ -200,11 +210,38 @@ function App() {
     }
 
     try {
-      return { ...defaultState, ...JSON.parse(stored) };
+      const parsed = { ...defaultState, ...JSON.parse(stored) } as AppState;
+      const user = getStoredUser();
+      const normalizedBatteryState = normalizeBatteryState(
+        {
+          batteriesRemaining: typeof parsed.batteriesRemaining === 'number' ? parsed.batteriesRemaining : BATTERY_MAX,
+          batteryResetAt: typeof parsed.batteryResetAt === 'string' ? parsed.batteryResetAt : null,
+        },
+        Date.now()
+      );
+
+      return {
+        ...parsed,
+        displayName: (parsed.displayName || user?.name || '').trim(),
+        ...normalizedBatteryState,
+      };
     } catch {
       return defaultState;
     }
   });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const handlePopState = () => {
+      setCurrentPage(getInitialPage());
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -270,8 +307,67 @@ function App() {
     window.localStorage.setItem('phonix-app-state', JSON.stringify(appState));
   }, [appState]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined' || premium.isPremium) {
+      return;
+    }
+
+    const normalized = normalizeBatteryState(
+      {
+        batteriesRemaining: appState.batteriesRemaining,
+        batteryResetAt: appState.batteryResetAt,
+      },
+      Date.now()
+    );
+
+    if (
+      normalized.batteriesRemaining !== appState.batteriesRemaining ||
+      normalized.batteryResetAt !== appState.batteryResetAt
+    ) {
+      setAppState((prev) => ({
+        ...prev,
+        ...normalized,
+      }));
+      return;
+    }
+
+    if (appState.batteriesRemaining > 0 || !appState.batteryResetAt) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      const next = normalizeBatteryState(
+        {
+          batteriesRemaining: appState.batteriesRemaining,
+          batteryResetAt: appState.batteryResetAt,
+        },
+        Date.now()
+      );
+
+      if (
+        next.batteriesRemaining !== appState.batteriesRemaining ||
+        next.batteryResetAt !== appState.batteryResetAt
+      ) {
+        setAppState((prev) => ({
+          ...prev,
+          ...next,
+        }));
+      }
+    }, 30000);
+
+    return () => window.clearInterval(intervalId);
+  }, [appState.batteriesRemaining, appState.batteryResetAt, premium.isPremium]);
+
   const navigate = (page: Page) => {
     setCurrentPage(page);
+
+    if (typeof window !== 'undefined') {
+      if (page === 'admin') {
+        window.history.pushState({}, '', '/admin');
+      } else if (window.location.pathname === '/admin') {
+        window.history.pushState({}, '', '/');
+      }
+    }
   };
 
   useEffect(() => {
@@ -321,17 +417,21 @@ function App() {
   };
 
   const resetAppState = () => {
-    const defaultState = createDefaultAppState(getTodayKey);
+    const storedUser = getStoredUser();
+    const defaultState = createDefaultAppState(getTodayKey, storedUser?.name || '');
     if (typeof window !== 'undefined') {
-      const storedUser = getStoredUser();
       const hasLoggedInUser = !!(storedUser?.email || '').trim();
       window.localStorage.removeItem('phonix-app-state');
+      window.sessionStorage.removeItem('phonix-admin-password');
 
       if (!hasLoggedInUser) {
         clearPremiumStatus();
       }
     }
-    setAppState(defaultState);
+    setAppState({
+      ...defaultState,
+      ...normalizeBatteryState({ batteriesRemaining: defaultState.batteriesRemaining, batteryResetAt: defaultState.batteryResetAt }, Date.now()),
+    });
     void premium.refresh();
   };
 
@@ -548,13 +648,11 @@ function App() {
       case 'profile':
         return isGuestMode
           ? <Landing navigate={navigate} resetAppState={resetAppState} />
-          : <Profile navigate={navigate} appState={appState} premium={premium}/>;
+          : <Profile navigate={navigate} appState={appState} updateState={updateState} premium={premium}/>;
       case 'premium':
         return <Premium navigate={navigate} premium={premium} />;
       case 'admin':
-        return isAdmin
-          ? <AdminDashboard navigate={navigate} appState={appState} premium={premium} />
-          : <Dashboard navigate={navigate} appState={appState} premium={premium}/>;
+        return <AdminDashboard navigate={navigate} appState={appState} premium={premium} />;
       default:
         return <Landing navigate={navigate} resetAppState={resetAppState} />;
     }
@@ -619,7 +717,10 @@ function App() {
                 {themeToggle}
               </div>
               <button
-                onClick={() => navigate('landing')}
+                onClick={() => {
+                  resetAppState();
+                  navigate('landing');
+                }}
                 className="theme-nav-button w-full rounded-xl border px-4 py-3 text-sm font-bold uppercase tracking-[0.08em] transition"
               >
                 Log Out

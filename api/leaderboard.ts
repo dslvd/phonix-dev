@@ -8,6 +8,7 @@ declare const process: {
 
 interface LeaderboardEntry {
   userKey: string;
+  displayName: string;
   totalXP: number;
   stars: number;
   learnedWords: number;
@@ -66,12 +67,14 @@ async function ensureTable() {
 function parseLeaderboardEntry(userKey: string, rawState: string): LeaderboardEntry | null {
   try {
     const parsed = JSON.parse(rawState) as {
+      displayName?: unknown;
       totalXP?: unknown;
       stars?: unknown;
       learnedWords?: unknown;
       currentStreak?: unknown;
     };
 
+    const displayName = typeof parsed.displayName === 'string' ? parsed.displayName.trim() : '';
     const totalXP = typeof parsed.totalXP === 'number' ? parsed.totalXP : 0;
     const stars = typeof parsed.stars === 'number' ? parsed.stars : 0;
     const learnedWords = Array.isArray(parsed.learnedWords) ? parsed.learnedWords.length : 0;
@@ -83,6 +86,7 @@ function parseLeaderboardEntry(userKey: string, rawState: string): LeaderboardEn
 
     return {
       userKey,
+      displayName: displayName || userKey.split('@')[0] || 'Player',
       totalXP,
       stars,
       learnedWords,
@@ -135,6 +139,7 @@ export default async function handler(req: any, res: any) {
       .map((entry, index) => ({
         rank: index + 1,
         userKey: entry.userKey,
+        displayName: entry.displayName,
         totalXP: entry.totalXP,
         stars: entry.stars,
         learnedWords: entry.learnedWords,

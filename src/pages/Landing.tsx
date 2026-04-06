@@ -66,8 +66,6 @@ export default function Landing({ navigate, resetAppState }: LandingProps) {
     try {
       const payload = JSON.parse(atob(response.credential.split('.')[1]));
       console.log('Google Sign-In successful:', payload);
-
-      resetAppState();
       
       // Store user data (you can expand this)
       localStorage.setItem('user', JSON.stringify({
@@ -75,6 +73,8 @@ export default function Landing({ navigate, resetAppState }: LandingProps) {
         email: payload.email,
         picture: payload.picture,
       }));
+
+      resetAppState();
       
       // Navigate to setup
       navigate('setup');
@@ -84,12 +84,12 @@ export default function Landing({ navigate, resetAppState }: LandingProps) {
   };
 
   const handleGuestLogin = () => {
-    resetAppState();
     localStorage.setItem('user', JSON.stringify({
       name: 'Guest',
       email: '',
       picture: null,
     }));
+    resetAppState();
     navigate('setup');
   };
 

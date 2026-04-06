@@ -1,13 +1,25 @@
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import { AppState, Page } from '../App';
 import { usePremium } from '../lib/usePremium';
+import { formatBatteryCountdown } from '../lib/battery';
 
 interface AdminDashboardProps {
   navigate: (page: Page) => void;
   appState: AppState;
   premium: ReturnType<typeof usePremium>;
+}
+
+interface AdminUserRecord {
+  userKey: string;
+  displayName: string;
+  totalXP: number;
+  stars: number;
+  learnedWords: number;
+  currentStreak: number;
+  updatedAt: string;
 }
 
 function getAdminIdentity() {
@@ -33,8 +45,25 @@ function getAdminIdentity() {
 
 export default function AdminDashboard({ navigate, appState, premium }: AdminDashboardProps) {
   const admin = getAdminIdentity();
+  const [adminPassword, setAdminPassword] = useState(() => {
+    if (typeof window === 'undefined') {
+      return '';
+    }
+
+    return window.sessionStorage.getItem('phonix-admin-password') || '';
+  });
+  const [passwordInput, setPasswordInput] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [users, setUsers] = useState<AdminUserRecord[]>([]);
+  const [deleteError, setDeleteError] = useState('');
   const wordsLearned = appState.learnedWords.length;
-  const batteries = premium.isPremium ? 'Unlimited' : `${appState.batteriesRemaining} / 5`;
+  const batteries = premium.isPremium
+    ? 'Unlimited'
+    : appState.batteryResetAt
+    ? `${appState.batteriesRemaining} / 5 · ${formatBatteryCountdown(appState.batteryResetAt)}`
+    : `${appState.batteriesRemaining} / 5`;
   const activityScore = Math.min(
     100,
     Math.round((appState.totalXP / 1500) * 100 + appState.currentStreak * 2 + wordsLearned * 0.8)
@@ -46,6 +75,154 @@ export default function AdminDashboard({ navigate, appState, premium }: AdminDas
     { label: 'Current Streak', value: `${appState.currentStreak} day${appState.currentStreak === 1 ? '' : 's'}`, hint: 'Consistency' },
     { label: 'Quiz Stars', value: `${appState.stars}`, hint: 'Quiz performance' },
   ];
+
+  useEffect(() => {
+    if (!adminPassword) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadUsers = async () => {
+      setIsLoadingUsers(true);
+      setAuthError('');
+
+      try {
+        const response = await fetch('/api/admin-users', {
+          headers: {
+            'x-admin-password': adminPassword,
+          },
+        });
+
+        if (response.status === 401) {
+          throw new Error('unauthorized');
+        }
+
+        if (!response.ok) {
+          throw new Error('failed-to-load-users');
+        }
+
+        const data = await response.json();
+        if (!cancelled) {
+          setUsers(Array.isArray(data?.users) ? data.users : []);
+          setIsAuthenticated(true);
+        }
+      } catch {
+        if (!cancelled) {
+          setIsAuthenticated(false);
+          setUsers([]);
+          setAdminPassword('');
+          if (typeof window !== 'undefined') {
+            window.sessionStorage.removeItem('phonix-admin-password');
+          }
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingUsers(false);
+        }
+      }
+    };
+
+    loadUsers();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [adminPassword]);
+
+  const handleAdminLogin = async () => {
+    const password = passwordInput.trim();
+    if (!password) {
+      setAuthError('Enter the admin password.');
+      return;
+    }
+
+    setIsLoadingUsers(true);
+    setAuthError('');
+
+    try {
+      const response = await fetch('/api/admin-users', {
+        headers: {
+          'x-admin-password': password,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('unauthorized');
+      }
+
+      const data = await response.json();
+      setAdminPassword(password);
+      setUsers(Array.isArray(data?.users) ? data.users : []);
+      setIsAuthenticated(true);
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.setItem('phonix-admin-password', password);
+      }
+    } catch {
+      setAuthError('Wrong admin password.');
+      setIsAuthenticated(false);
+      setUsers([]);
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  };
+
+  const handleDeleteUser = async (userKey: string) => {
+    const confirmDelete = window.confirm(`Delete ${userKey}? This removes the account data from the leaderboard.`);
+    if (!confirmDelete) {
+      return;
+    }
+
+    setDeleteError('');
+
+    try {
+      const response = await fetch('/api/admin-users', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-password': adminPassword,
+        },
+        body: JSON.stringify({ userKey }),
+      });
+
+      if (!response.ok) {
+        throw new Error('delete-failed');
+      }
+
+      setUsers((current) => current.filter((user) => user.userKey !== userKey));
+    } catch {
+      setDeleteError('Failed to delete user.');
+    }
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="theme-page min-h-screen p-6 text-slate-100 lg:p-8">
+        <div className="mx-auto max-w-md rounded-3xl border p-6 theme-surface">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#FAC775]">Admin Access</p>
+          <h1 className="theme-title mt-2 font-baloo text-4xl font-bold">Enter password</h1>
+          <p className="theme-muted mt-2 text-sm font-semibold">Protected admin area for Phonix page management.</p>
+          <div className="mt-5 space-y-3">
+            <input
+              type="password"
+              value={passwordInput}
+              onChange={(event) => setPasswordInput(event.target.value)}
+              placeholder="Admin password"
+              className="theme-surface-soft w-full rounded-2xl border px-4 py-3 font-semibold outline-none focus:border-[#56b8e8]"
+            />
+            {authError && <p className="text-sm font-semibold text-red-400">{authError}</p>}
+            <button
+              onClick={handleAdminLogin}
+              disabled={isLoadingUsers}
+              className="w-full rounded-2xl bg-gradient-to-r from-primary to-secondary px-6 py-4 font-bold text-white shadow-lg disabled:opacity-60"
+            >
+              {isLoadingUsers ? 'Checking...' : 'Unlock Admin'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="theme-page min-h-screen p-6 text-slate-100 lg:p-8">
@@ -130,6 +307,37 @@ export default function AdminDashboard({ navigate, appState, premium }: AdminDas
               <Button variant="outline" onClick={() => navigate('profile')} icon="👤" className="w-full">
                 Profile
               </Button>
+            </div>
+          </Card>
+
+          <Card hover={false} className="rounded-2xl border p-5">
+            <h2 className="theme-title font-baloo text-3xl font-bold">User Accounts</h2>
+            <p className="theme-muted mt-1 text-sm font-semibold">Delete synced accounts from Cloudflare D1.</p>
+            {deleteError && <p className="mt-2 text-sm font-semibold text-red-400">{deleteError}</p>}
+            <div className="mt-4 max-h-[24rem] space-y-3 overflow-y-auto pr-1">
+              {users.length === 0 ? (
+                <p className="theme-muted text-sm font-semibold">
+                  {isLoadingUsers ? 'Loading users...' : 'No synced users found.'}
+                </p>
+              ) : (
+                users.map((user) => (
+                  <div key={user.userKey} className="theme-surface-soft flex items-center justify-between gap-3 rounded-xl border px-3 py-3">
+                    <div className="min-w-0">
+                      <p className="theme-title truncate text-sm font-bold">{user.displayName}</p>
+                      <p className="theme-muted truncate text-xs font-semibold">{user.userKey}</p>
+                      <p className="theme-muted text-xs font-semibold">
+                        {user.learnedWords} words • {user.stars} stars • XP {user.totalXP}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteUser(user.userKey)}
+                      className="rounded-xl border border-red-400 px-3 py-2 text-xs font-bold text-red-300 transition hover:bg-red-500/10"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
           </Card>
         </section>

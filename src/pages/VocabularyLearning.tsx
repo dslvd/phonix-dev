@@ -13,6 +13,7 @@ import {
   readCachedAIVocabularyOrPairLatest,
   writeCachedAIVocabulary,
 } from '../lib/aiVocabulary';
+import { spendBattery } from '../lib/battery';
 
 interface VocabularyLearningProps {
   navigate: (page: Page) => void;
@@ -56,6 +57,7 @@ export default function VocabularyLearning({
   const [wordsBeforeQuiz, setWordsBeforeQuiz] = useState(3); // Quiz every 3 words
   const [consecutiveWords, setConsecutiveWords] = useState(0);
   const [showOutOfBatteriesModal, setShowOutOfBatteriesModal] = useState(false);
+  const [showLevelCompleteModal, setShowLevelCompleteModal] = useState(false);
   const previousLevelCycleRef = useRef(levelCycle);
   const lastAutoSpokenWordIdRef = useRef<string | null>(null);
   const [aiVocabulary, setAiVocabulary] = useState<VocabularyItem[]>(() => {
@@ -372,7 +374,7 @@ export default function VocabularyLearning({
         currentVocabIndex: appState.currentVocabIndex + 1,
       });
     } else {
-      navigate('sentence');
+      setShowLevelCompleteModal(true);
     }
   };
 
@@ -388,10 +390,20 @@ export default function VocabularyLearning({
         stars: prev.stars + 1,
       }));
     } else if (!premium.isPremium) {
-      const nextBatteries = Math.max(0, appState.batteriesRemaining - 1);
-      updateState((prev) => ({ batteriesRemaining: Math.max(0, prev.batteriesRemaining - 1) }));
+      const nextBatteryState = spendBattery(
+        {
+          batteriesRemaining: appState.batteriesRemaining,
+          batteryResetAt: appState.batteryResetAt,
+        },
+        1
+      );
+      updateState((prev) => ({
+        ...prev,
+        batteriesRemaining: nextBatteryState.batteriesRemaining,
+        batteryResetAt: nextBatteryState.batteryResetAt,
+      }));
 
-      if (nextBatteries === 0) {
+      if (nextBatteryState.batteriesRemaining === 0) {
         setIsQuizMode(false);
         setConsecutiveWords(0);
         setShowOutOfBatteriesModal(true);
@@ -507,6 +519,7 @@ export default function VocabularyLearning({
         totalProgress={Math.max(totalLearningUnits, 1)}
         batteryCurrent={appState.batteriesRemaining}
         batteryMax={5}
+        batteryResetAt={appState.batteryResetAt}
         isPremium={premium.isPremium}
       />
 
@@ -756,6 +769,9 @@ export default function VocabularyLearning({
             <p className="mt-3 text-gray-600 font-semibold">
               Every mistake costs 1 battery. Upgrade to premium for unlimited batteries, or come back later and keep practicing.
             </p>
+            <p className="mt-2 text-sm font-semibold text-gray-500">
+              Batteries refill automatically after 3 hours.
+            </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <button
                 onClick={() => navigate('premium')}
@@ -771,6 +787,38 @@ export default function VocabularyLearning({
                 className="flex-1 rounded-2xl bg-gray-100 px-6 py-4 font-bold text-gray-700"
               >
                 Back to Dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showLevelCompleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="max-w-md w-full rounded-3xl border-4 border-primary bg-white p-8 text-center shadow-2xl">
+            <div className="mb-4 flex items-center justify-center text-7xl leading-none">🎉</div>
+            <h3 className="font-baloo text-3xl font-bold text-gray-800">Level Complete!</h3>
+            <p className="mt-3 text-gray-600 font-semibold">
+              Nice work. You finished this level pack. Want to review the words you learned? Check your Backpack.
+            </p>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <button
+                onClick={() => {
+                  setShowLevelCompleteModal(false);
+                  navigate('collection');
+                }}
+                className="flex-1 rounded-2xl bg-gradient-to-r from-primary to-secondary px-6 py-4 font-bold text-white shadow-lg"
+              >
+                See Backpack
+              </button>
+              <button
+                onClick={() => {
+                  setShowLevelCompleteModal(false);
+                  navigate('sentence');
+                }}
+                className="flex-1 rounded-2xl bg-gray-100 px-6 py-4 font-bold text-gray-700"
+              >
+                Continue
               </button>
             </div>
           </div>
