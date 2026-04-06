@@ -405,7 +405,7 @@ function App() {
   }, [appState, userKey, isGuestMode, hasHydratedFromCloud]);
 
   const showDesktopSidebar = currentPage === 'dashboard' || currentPage === 'admin';
-  const shouldShowGlobalMascot = currentPage !== 'landing';
+  const shouldShowGlobalMascot = !['landing', 'setup', 'mode', 'scan'].includes(currentPage);
   const globalMascotMessage = (() => {
     const isFilipino = (appState.nativeLanguage || '').trim().toLowerCase() === 'filipino';
     const vocabularyMessages = isFilipino
