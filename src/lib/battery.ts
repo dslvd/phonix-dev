@@ -1,4 +1,4 @@
-export const BATTERY_MAX = 5;
+export const BATTERY_MAX = 10;
 export const BATTERY_REFILL_MS = 3 * 60 * 60 * 1000;
 
 export interface BatteryState {

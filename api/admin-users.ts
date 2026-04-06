@@ -1,3 +1,5 @@
+import { BATTERY_MAX } from '../src/lib/battery';
+
 const jsonHeaders = {
   'Content-Type': 'application/json',
 };
@@ -106,7 +108,7 @@ function buildResetState(userKey: string, displayName: string) {
     longestStreak: 1,
     totalXP: 0,
     lastActiveDate: getTodayKey(),
-    batteriesRemaining: 5,
+    batteriesRemaining: BATTERY_MAX,
     batteryResetAt: null,
     backpackItems: [],
   };

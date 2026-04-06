@@ -10,7 +10,7 @@ import {
   writeCachedAIVocabulary,
   VOCABULARY_PACK_WORD_COUNT,
 } from '../lib/aiVocabulary';
-import { formatBatteryCountdown } from '../lib/battery';
+import { BATTERY_MAX, formatBatteryCountdown } from '../lib/battery';
 
 interface DashboardProps {
   navigate: (page: Page) => void;
@@ -561,8 +561,8 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
                         {premium.isPremium
                           ? '∞ Unlimited Batteries'
                           : appState.batteryResetAt
-                          ? `${appState.batteriesRemaining} / 5 · ${formatBatteryCountdown(appState.batteryResetAt)}`
-                          : `${appState.batteriesRemaining} / 5 batteries`}
+                          ? `${appState.batteriesRemaining} / ${BATTERY_MAX} · ${formatBatteryCountdown(appState.batteryResetAt)}`
+                          : `${appState.batteriesRemaining} / ${BATTERY_MAX} batteries`}
                       </p>
                     </div>
 

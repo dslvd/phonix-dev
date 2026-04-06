@@ -4,7 +4,7 @@ import Card from '../components/Card';
 import Button from '../components/Button';
 import { AppState, Page } from '../App';
 import { usePremium } from '../lib/usePremium';
-import { formatBatteryCountdown } from '../lib/battery';
+import { BATTERY_MAX, formatBatteryCountdown } from '../lib/battery';
 
 interface AdminDashboardProps {
   navigate: (page: Page) => void;
@@ -63,8 +63,8 @@ export default function AdminDashboard({ navigate, appState, premium }: AdminDas
   const batteries = premium.isPremium
     ? 'Unlimited'
     : appState.batteryResetAt
-    ? `${appState.batteriesRemaining} / 5 · ${formatBatteryCountdown(appState.batteryResetAt)}`
-    : `${appState.batteriesRemaining} / 5`;
+    ? `${appState.batteriesRemaining} / ${BATTERY_MAX} · ${formatBatteryCountdown(appState.batteryResetAt)}`
+    : `${appState.batteriesRemaining} / ${BATTERY_MAX}`;
   const activityScore = Math.min(
     100,
     Math.round((appState.totalXP / 1500) * 100 + appState.currentStreak * 2 + wordsLearned * 0.8)
