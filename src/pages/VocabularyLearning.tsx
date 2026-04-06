@@ -25,6 +25,13 @@ interface VocabularyLearningProps {
 
 const QUIZ_GOAL_PER_CYCLE = 15;
 
+const normalizeComparableText = (value: string) =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/[^\p{L}\p{N}\s-]/gu, '')
+    .replace(/\s+/g, ' ');
+
 const getQuizIntervalForBand = (band: 'beginner' | 'intermediate' | 'advanced') => {
   if (band === 'beginner') {
     return 3;
@@ -302,12 +309,21 @@ export default function VocabularyLearning({
           throw new Error('ai-flashcard-invalid-payload');
         }
 
+        const sameNativeMeaning =
+          normalizeComparableText(nativeWord) === normalizeComparableText(currentItem.nativeWord);
+        const sameEnglishMeaning =
+          normalizeComparableText(englishWord) === normalizeComparableText(currentItem.englishWord);
+
+        if (!sameNativeMeaning || !sameEnglishMeaning) {
+          throw new Error('ai-flashcard-meaning-drift');
+        }
+
         const nextFlashcard: VocabularyItem = {
           id: currentItem.id,
-          nativeWord,
-          englishWord,
+          nativeWord: currentItem.nativeWord,
+          englishWord: currentItem.englishWord,
           category: (payload?.category || currentItem.category).trim() || currentItem.category,
-          emoji: (payload?.emoji || currentItem.emoji).trim() || currentItem.emoji,
+          emoji: currentItem.emoji,
           difficulty: currentItem.difficulty,
         };
 
