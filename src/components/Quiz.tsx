@@ -109,33 +109,7 @@ export default function Quiz({
       setOptions(localOptions);
     };
 
-    const applyAIOptions = (payload: AIQuizPayload) => {
-      if (!payload?.options || payload.options.length !== 4) {
-        return false;
-      }
-
-      const normalized = payload.options.map((option, index) => {
-        const nativeWord = (option.nativeWord || '').trim();
-        const isCorrect = !!option.isCorrect || nativeWord.toLowerCase() === currentWord.nativeWord.toLowerCase();
-
-        return {
-          id: isCorrect ? currentWord.id : `ai-${currentWord.id}-${index}`,
-          nativeWord: isCorrect ? currentWord.nativeWord : nativeWord,
-          englishWord: (option.englishWord || currentWord.englishWord).trim() || currentWord.englishWord,
-          category: currentWord.category,
-          emoji: (option.emoji || currentWord.emoji).trim() || currentWord.emoji,
-          difficulty: currentWord.difficulty,
-        } satisfies VocabularyItem;
-      });
-
-      const uniqueNativeWords = new Set(normalized.map((item) => item.nativeWord.toLowerCase()));
-      const correctCount = normalized.filter((item) => item.id === currentWord.id).length;
-
-      if (uniqueNativeWords.size < 4 || correctCount !== 1) {
-        return false;
-      }
-
-      setOptions(normalized.sort(() => Math.random() - 0.5));
+    const applyAIText = (payload: AIQuizPayload) => {
       if (payload.question?.trim()) {
         setChallengeText(payload.question.trim());
       }
@@ -146,7 +120,7 @@ export default function Quiz({
         setIncorrectText(payload.incorrectFeedback.trim());
       }
 
-      return true;
+      return !!(payload.question?.trim() || payload.correctFeedback?.trim() || payload.incorrectFeedback?.trim());
     };
 
     let cancelled = false;
@@ -164,7 +138,7 @@ export default function Quiz({
 
     const cachedPayload = aiQuizCache.get(quizCacheKey);
     if (cachedPayload) {
-      applyAIOptions(cachedPayload);
+      applyAIText(cachedPayload);
     }
 
     const buildAIQuiz = async () => {
@@ -236,9 +210,9 @@ export default function Quiz({
         aiQuizCache.set(quizCacheKey, payload);
 
         if (!cancelled) {
-          const applied = applyAIOptions(payload);
+          const applied = applyAIText(payload);
           if (!applied) {
-            throw new Error('ai-quiz-invalid-uniqueness');
+            throw new Error('ai-quiz-empty-text-payload');
           }
         }
       } catch {
