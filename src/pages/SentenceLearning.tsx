@@ -279,7 +279,7 @@ export default function SentenceLearning({
                 </div>
               </div>
 
-              <div className="mt-6 flex flex-wrap gap-3">
+              <div className="mt-6 flex flex-wrap justify-center gap-3">
                 {question.options.map((option) => {
                   const isCorrectOption = option.toLowerCase() === question.correctWord.toLowerCase();
                   const isSelected = selectedOption?.toLowerCase() === option.toLowerCase();
