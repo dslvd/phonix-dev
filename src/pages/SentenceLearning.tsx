@@ -166,6 +166,11 @@ export default function SentenceLearning({
     }
   };
 
+  const playMaskedSentenceAudio = (e?: React.MouseEvent<HTMLButtonElement>) => {
+    const spokenSentence = question.maskedSentence.replace(/_{3,}/g, 'blangko');
+    playAudio(spokenSentence, e);
+  };
+
   return (
     <div className="theme-page min-h-screen flex flex-col text-slate-100">
       <NavigationHeader
@@ -200,16 +205,16 @@ export default function SentenceLearning({
               </motion.div>
 
               {/* Native Sentence */}
-              <div className="mb-8 rounded-2xl border border-[#304656] bg-[#122733] p-6">
-                <p className="mb-3 text-sm font-bold text-[#8bb1c7]">
+              <div className="theme-surface-soft mb-8 rounded-2xl border p-6">
+                <p className="theme-muted mb-3 text-sm font-bold">
                   {appState.targetLanguage} Fill in the blank:
                 </p>
                 <div className="flex items-center justify-center gap-4">
-                  <h2 className="font-baloo text-3xl md:text-4xl font-bold text-[#dff1ff] leading-relaxed">
+                  <h2 className="theme-title font-baloo text-3xl md:text-4xl font-bold leading-relaxed">
                     {question.maskedSentence}
                   </h2>
                   <button
-                    onClick={(e) => playAudio(currentSentence.nativeSentence, e)}
+                    onClick={(e) => playMaskedSentenceAudio(e)}
                     className="bg-primary text-white p-4 rounded-full hover:scale-110 transition-transform flex-shrink-0"
                   >
                     🔊
@@ -218,8 +223,8 @@ export default function SentenceLearning({
               </div>
 
               {/* English Translation */}
-              <div className="rounded-2xl border border-[#304656] bg-[#0f202a] p-6 shadow-lg">
-                <p className="mb-3 text-sm font-bold text-[#8bb1c7]">
+              <div className="theme-surface rounded-2xl border p-6 shadow-lg">
+                <p className="theme-muted mb-3 text-sm font-bold">
                   {appState.nativeLanguage} Hint:
                 </p>
                 <div className="flex items-center justify-center gap-4">
@@ -262,7 +267,7 @@ export default function SentenceLearning({
               </div>
 
               {showResult && (
-                <div className="mt-4 rounded-xl border border-[#304656] bg-[#173447] p-4">
+                <div className="theme-surface-soft mt-4 rounded-xl border p-4">
                   <p className="theme-title text-lg font-bold">
                     {selectedOption?.toLowerCase() === question.correctWord.toLowerCase() ? 'Correct! Great job!' : 'Nice try!'}
                   </p>
