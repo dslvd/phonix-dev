@@ -101,6 +101,7 @@ export default function VocabularyLearning({
   const levelCycle = getVocabularyLevelCycle(appState.learnedWords.length);
 
   const [isQuizMode, setIsQuizMode] = useState(false);
+  const [quizWord, setQuizWord] = useState<VocabularyItem | null>(null);
   const [wordsBeforeQuiz, setWordsBeforeQuiz] = useState(3);
   const [consecutiveWords, setConsecutiveWords] = useState(0);
   const [showOutOfBatteriesModal, setShowOutOfBatteriesModal] = useState(false);
@@ -227,6 +228,14 @@ export default function VocabularyLearning({
   const nextIndex = appState.currentVocabIndex + 1;
   const nextItem = nextIndex < aiVocabulary.length ? aiVocabulary[nextIndex] : null;
   const nextItemLearned = nextItem ? appState.learnedWords.includes(nextItem.id) : false;
+  const introducedVocabulary = aiVocabulary.slice(0, Math.max(appState.currentVocabIndex, 0) + 1);
+  const introducedCurrentBandWords = introducedVocabulary.filter((item) => item.difficulty === currentDifficultyBand);
+  const quizWordPool =
+    introducedCurrentBandWords.length >= 4
+      ? introducedCurrentBandWords
+      : introducedVocabulary.length >= 4
+      ? introducedVocabulary
+      : currentLevelWords.slice(0, Math.min(currentLevelWords.length, 4));
   const activeCheckpoint =
     activeCheckpointId === null
       ? null
@@ -243,14 +252,6 @@ export default function VocabularyLearning({
 
     updateState({ currentVocabIndex: Math.max(0, aiVocabulary.length - 1) });
   }, [hasAIVocabulary, appState.currentVocabIndex, aiVocabulary.length, updateState]);
-
-  // Check if we should show quiz
-  useEffect(() => {
-    // Show quiz every 3-4 words (randomly between 3-4)
-    if (consecutiveWords >= wordsBeforeQuiz && !isQuizMode && !currentItemLearned) {
-      setIsQuizMode(true);
-    }
-  }, [consecutiveWords, wordsBeforeQuiz, isQuizMode, currentItemLearned]);
 
   useEffect(() => {
     const stripCodeFence = (text: string) => text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim();
@@ -389,6 +390,16 @@ export default function VocabularyLearning({
     isGuestMode,
   ]);
 
+  const moveToNextWordOrComplete = () => {
+    if (appState.currentVocabIndex < aiVocabulary.length - 1) {
+      updateState({
+        currentVocabIndex: appState.currentVocabIndex + 1,
+      });
+    } else {
+      setShowLevelCompleteModal(true);
+    }
+  };
+
   const advanceToNextWord = () => {
     if (!hasAIVocabulary) {
       return;
@@ -404,6 +415,8 @@ export default function VocabularyLearning({
       setShowOutOfBatteriesModal(true);
       return;
     }
+
+    let nextConsecutiveWords = consecutiveWords;
 
     // Add to learned words if not already learned
     if (isNewDiscovery) {
@@ -428,6 +441,8 @@ export default function VocabularyLearning({
             : [lessonBackpackItem, ...prev.backpackItems],
         };
       });
+      nextConsecutiveWords = consecutiveWords + 1;
+      setConsecutiveWords(nextConsecutiveWords);
 
       const nextLearnedCount = Math.min(VOCABULARY_PACK_WORD_COUNT, learnedInCurrentCycle + 1);
       const reachedCheckpoint = VOCAB_LEVEL_CHECKPOINTS.find((checkpoint) => checkpoint.target === nextLearnedCount);
@@ -440,18 +455,18 @@ export default function VocabularyLearning({
       updateState((prev) => ({
         totalXP: prev.totalXP + 2,
       }));
+      setConsecutiveWords(0);
+      nextConsecutiveWords = 0;
     }
 
-    setConsecutiveWords((prev) => prev + 1);
-
-    // Move to next or go to sentence page
-    if (appState.currentVocabIndex < aiVocabulary.length - 1) {
-      updateState({
-        currentVocabIndex: appState.currentVocabIndex + 1,
-      });
-    } else {
-      setShowLevelCompleteModal(true);
+    const shouldStartQuiz = isNewDiscovery && nextConsecutiveWords >= wordsBeforeQuiz;
+    if (shouldStartQuiz) {
+      setQuizWord(currentItem);
+      setIsQuizMode(true);
+      return;
     }
+
+    moveToNextWordOrComplete();
   };
 
   const handleNext = () => {
@@ -490,16 +505,18 @@ export default function VocabularyLearning({
     
     // Reset quiz mode and counter
     setIsQuizMode(false);
+    setQuizWord(null);
     setConsecutiveWords(0);
     setWordsBeforeQuiz(getQuizIntervalForBand(currentDifficultyBand));
     
     // Move to next word after quiz
-    advanceToNextWord();
+    moveToNextWordOrComplete();
   };
 
   const handlePrevious = () => {
     setConsecutiveWords(0);
     setIsQuizMode(false);
+    setQuizWord(null);
 
     if (appState.currentVocabIndex > 0) {
       updateState({
@@ -607,8 +624,8 @@ export default function VocabularyLearning({
           ) : isQuizMode ? (
             // Quiz Mode
             <Quiz
-              currentWord={displayedItem}
-              allWords={currentLevelWords}
+              currentWord={quizWord || displayedItem}
+              allWords={quizWordPool}
               onAnswer={handleQuizAnswer}
               targetLanguage={appState.targetLanguage || 'Hiligaynon'}
               nativeLanguage={appState.nativeLanguage || 'English'}
@@ -781,7 +798,10 @@ export default function VocabularyLearning({
                 className="sm:col-span-1"
               >
                 <button
-                  onClick={() => setIsQuizMode(true)}
+                  onClick={() => {
+                    setQuizWord(currentItem);
+                    setIsQuizMode(true);
+                  }}
                   className="w-full rounded-2xl border border-[#56b8e8] bg-[#173b52] px-6 py-4 text-sm font-bold uppercase tracking-[0.08em] text-[#c9efff] transition hover:border-[#7ed6ff]"
                 >
                   Quiz Me
