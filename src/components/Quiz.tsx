@@ -247,17 +247,6 @@ export default function Quiz({
 
   const handleSelect = (wordId: string) => {
     if (showResult) return; // Prevent multiple selections
-
-    const selectedWord = options.find((option) => option.id === wordId);
-    if (selectedWord && typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(selectedWord.nativeWord);
-      utterance.lang = 'fil-PH';
-      utterance.rate = 0.85;
-      utterance.pitch = 0.75;
-      utterance.volume = 1.0;
-      window.speechSynthesis.speak(utterance);
-    }
     
     setSelectedAnswer(wordId);
     setShowResult(true);
