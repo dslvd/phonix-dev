@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { VocabularyItem } from '../data/vocabulary';
 import Card from './Card';
@@ -67,6 +67,7 @@ export default function Quiz({
   const [challengeText, setChallengeText] = useState('');
   const [correctText, setCorrectText] = useState('');
   const [incorrectText, setIncorrectText] = useState('');
+  const answerTimeoutRef = useRef<number | null>(null);
 
   const challengeLines = [
     'What is this in Hiligaynon?',
@@ -224,6 +225,10 @@ export default function Quiz({
 
     return () => {
       cancelled = true;
+      if (answerTimeoutRef.current !== null) {
+        window.clearTimeout(answerTimeoutRef.current);
+        answerTimeoutRef.current = null;
+      }
     };
   }, [currentWord.id, currentWord.nativeWord, currentWord.englishWord, currentWord.category, currentWord.difficulty, currentWord.emoji, targetLanguage, nativeLanguage, allWords, useAI, difficultyBand, levelStage]);
 
@@ -247,8 +252,13 @@ export default function Quiz({
     const isCorrect = wordId === currentWord.id;
     
     // Delay to show result before moving to next
-    setTimeout(() => {
+    if (answerTimeoutRef.current !== null) {
+      window.clearTimeout(answerTimeoutRef.current);
+    }
+
+    answerTimeoutRef.current = window.setTimeout(() => {
       onAnswer(isCorrect);
+      answerTimeoutRef.current = null;
     }, 1500);
   };
 

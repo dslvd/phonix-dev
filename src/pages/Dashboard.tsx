@@ -1,8 +1,7 @@
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { Page, AppState } from '../App';
-import { VocabularyItem } from '../data/vocabulary';
-import { vocabularyData } from '../data/vocabulary';
+import { VocabularyItem, sentenceData, vocabularyData } from '../data/vocabulary';
 import { usePremium } from '../lib/usePremium';
 import {
   fetchAIVocabulary,
@@ -235,82 +234,102 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
   const advancedCount = advancedWords.length || 8;
 
   const totalWords = beginnerCount + intermediateCount + advancedCount;
-  const roadmapNodeTemplates = [
+
+  const warmUpTarget = Math.min(totalWords, 6);
+  const wordBuilderTarget = Math.min(totalWords, 12);
+  const phraseBuilderTarget = Math.min(totalWords, 18);
+  const sentencePhaseTarget = Math.max(3, Math.min(sentenceData.length, 6));
+  const sentenceMasteryTarget = Math.max(sentencePhaseTarget, Math.min(sentenceData.length, 10));
+
+  const vocabularyProgress = Math.min(appState.learnedWords.length, totalWords);
+  const sentenceProgress = Math.min(appState.sentenceAnswersInCycle, sentenceData.length);
+  const quizProgress = Math.min(appState.quizAnswersInCycle, 15);
+
+  const roadmapNodes = [
     {
-      title: 'Starter Nest',
+      title: 'Warm Up 1',
       icon: '🐣',
       description: levelDescriptions.Beginner,
-      hint: 'Warm up',
+      hint: 'Phase 1 · Vocabulary',
       tone: 'from-[#FF9126] to-[#ffb35a]',
+      page: 'vocabulary' as Page,
+      progress: Math.min(vocabularyProgress, warmUpTarget),
+      total: warmUpTarget,
+      unlocked: true,
+      buttonText: 'Start Warm Up',
     },
     {
-      title: 'Word Garden',
+      title: 'Word Builder 2',
       icon: '🌱',
-      description: `${levelDescriptions.Beginner} Use short bursts to collect more words.`,
-      hint: 'Word builder',
+      description: `${levelDescriptions.Beginner} Add more core words with confidence.`,
+      hint: 'Phase 1 · Vocabulary',
       tone: 'from-[#56b8e8] to-[#2f9de4]',
+      page: 'vocabulary' as Page,
+      progress: Math.max(0, Math.min(vocabularyProgress - warmUpTarget, wordBuilderTarget - warmUpTarget)),
+      total: Math.max(1, wordBuilderTarget - warmUpTarget),
+      unlocked: vocabularyProgress >= warmUpTarget,
+      buttonText: 'Start Word Builder 2',
     },
     {
-      title: 'Phrase Bridge',
+      title: 'Phrase Builder 3',
       icon: '🌉',
-      description: `${levelDescriptions.Intermediate} Start combining what you know.`,
-      hint: 'Sentence prep',
+      description: `${levelDescriptions.Intermediate} Connect words into stronger phrase flow.`,
+      hint: 'Phase 1 · Vocabulary',
       tone: 'from-[#7ed6ff] to-[#56b8e8]',
+      page: 'vocabulary' as Page,
+      progress: Math.max(0, Math.min(vocabularyProgress - wordBuilderTarget, phraseBuilderTarget - wordBuilderTarget)),
+      total: Math.max(1, phraseBuilderTarget - wordBuilderTarget),
+      unlocked: vocabularyProgress >= wordBuilderTarget,
+      buttonText: 'Start Phrase Builder 3',
     },
     {
-      title: 'Scan Quest',
-      icon: '🧩',
-      description: 'Use camera scan and upload tools to collect new words.',
-      hint: 'Explorer mode',
-      tone: 'from-[#ff8e6d] to-[#ffb86b]',
-    },
-    {
-      title: 'Talk Trail',
-      icon: '💬',
-      description: 'Practice speaking with guided sentence learning.',
-      hint: 'Speak up',
+      title: 'Sentence Practice 1',
+      icon: '🧠',
+      description: 'Phase 2 begins. Use fill-in-the-blank sentence training.',
+      hint: 'Phase 2 · Sentence Practice',
       tone: 'from-[#ffd166] to-[#ff9f43]',
+      page: 'sentence' as Page,
+      progress: Math.min(sentenceProgress, sentencePhaseTarget),
+      total: sentencePhaseTarget,
+      unlocked: vocabularyProgress >= phraseBuilderTarget,
+      buttonText: 'Start Sentence Practice',
     },
     {
-      title: 'Sentence Sky',
-      icon: '🪂',
-      description: 'Unlock advanced structures and stronger language confidence.',
-      hint: 'Challenge zone',
+      title: 'Sentence Practice 2',
+      icon: '💬',
+      description: 'Strengthen grammar and speed with tougher sentence rounds.',
+      hint: 'Phase 2 · Sentence Practice',
       tone: 'from-[#c8a4ff] to-[#8f66db]',
+      page: 'sentence' as Page,
+      progress: Math.max(0, Math.min(sentenceProgress - sentencePhaseTarget, sentenceMasteryTarget - sentencePhaseTarget)),
+      total: Math.max(1, sentenceMasteryTarget - sentencePhaseTarget),
+      unlocked: vocabularyProgress >= phraseBuilderTarget && sentenceProgress >= sentencePhaseTarget,
+      buttonText: 'Continue Sentence Practice',
     },
     {
-      title: 'Champion Star',
+      title: 'Master Checkpoint',
       icon: '🏆',
-      description: 'Finish the full road and keep progressing for mastery.',
-      hint: 'Final boss',
+      description: 'Review words, pass quizzes, and lock in full-cycle mastery.',
+      hint: 'Final Phase · Mastery',
       tone: 'from-[#FF9126] to-[#ffd166]',
+      page: 'dashboard' as Page,
+      progress: Math.min(3, [vocabularyProgress >= totalWords, sentenceProgress >= sentenceMasteryTarget, quizProgress >= 15].filter(Boolean).length),
+      total: 3,
+      unlocked: vocabularyProgress >= phraseBuilderTarget,
+      buttonText: 'Open Dashboard',
     },
   ];
 
-  const roadmapTileCount = Math.max(12, Math.ceil(appState.learnedWords.length / 3) + 8);
-  const roadmapNodes = Array.from({ length: roadmapTileCount }, (_, index) => {
-    const template = roadmapNodeTemplates[index % roadmapNodeTemplates.length];
-    const stageNumber = index + 1;
-    const stageSize = Math.max(3, Math.ceil(totalWords / 8));
-    const total = Math.max(stageSize, Math.min(totalWords + stageNumber * 2, stageSize + Math.floor(index / 2)));
-    const rawProgress = Math.min(appState.learnedWords.length, Math.min(totalWords + stageNumber * 2, (index + 1) * stageSize));
-    const progress = Math.min(total, rawProgress);
-    const unlockedByThreshold = appState.learnedWords.length >= Math.max(0, index * Math.floor(stageSize * 0.8));
-    const unlocked = index === 0 || progress >= total || unlockedByThreshold;
-
-    return {
-      ...template,
-      title: `${template.title} ${stageNumber}`,
-      hint: `${template.hint} ${stageNumber}`,
-      progress,
-      total,
-      unlocked,
-    };
-  });
-
   const activeRoadmapIndex = roadmapNodes.findIndex((node) => node.unlocked && node.progress < node.total);
   const roadmapFocusIndex = activeRoadmapIndex === -1 ? roadmapNodes.length - 1 : activeRoadmapIndex;
-  const seasonedProgress = Math.min(100, Math.round((appState.learnedWords.length / totalWords) * 100));
+  const seasonedProgress = Math.min(
+    100,
+    Math.round(
+      ((Math.min(vocabularyProgress, totalWords) + Math.min(sentenceProgress, sentenceData.length)) /
+        Math.max(totalWords + sentenceData.length, 1)) *
+        100
+    )
+  );
 
   return (
     <div className="theme-page min-h-screen px-4 py-5 text-slate-100 lg:px-6">
@@ -390,94 +409,82 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
                   <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#FAC775]">Adventure Map</p>
                   <h3 className="theme-title mt-1 font-baloo text-3xl font-bold">Your learning journey</h3>
                 </div>
-                <p className="theme-muted text-sm font-semibold">Follow the path, clear levels, and keep your streak alive.</p>
+                <p className="theme-muted text-sm font-semibold">Simple levels with clear progress and actions.</p>
               </div>
 
-              <div className="relative mx-auto max-w-4xl">
-                <div className="absolute left-5 top-6 h-[calc(100%-3rem)] w-1 rounded-full bg-gradient-to-b from-[#FF9126] via-[#56b8e8] to-[#c8a4ff] opacity-35 sm:left-1/2 sm:-translate-x-1/2" />
+              <div className="mx-auto max-w-3xl space-y-3">
+                {roadmapNodes.map((node, index) => {
+                  const completion = Math.max(0, Math.min(100, Math.round((node.progress / node.total) * 100)));
+                  const isCurrent = index === roadmapFocusIndex;
+                  const isCompleted = node.progress >= node.total;
+                  const statusText = !node.unlocked ? 'Locked' : isCompleted ? 'Completed' : isCurrent ? 'Play now' : 'Ready';
 
-                <div className="space-y-4 sm:space-y-6">
-                  {roadmapNodes.map((node, index) => {
-                    const completion = Math.max(0, Math.min(100, Math.round((node.progress / node.total) * 100)));
-                    const isCurrent = index === roadmapFocusIndex;
-                    const isOdd = index % 2 === 1;
-                    const isCompleted = node.progress >= node.total;
-                    const statusText = !node.unlocked ? 'Locked' : isCompleted ? 'Completed' : isCurrent ? 'Play now' : 'Unlocked';
-                    const statusClass = !node.unlocked
-                      ? 'theme-muted'
-                      : isCompleted
-                      ? 'text-[#7fe6b3]'
-                      : isCurrent
-                      ? 'text-[#ffd166]'
-                      : 'text-[#7ed6ff]';
+                  return (
+                    <motion.div
+                      key={node.title}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className={`theme-surface-soft rounded-2xl border p-4 sm:p-5 ${isCurrent ? 'ring-2 ring-[#56b8e8]/35' : ''} ${
+                        node.unlocked ? '' : 'opacity-75'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3 sm:gap-4">
+                        <button
+                          onClick={node.unlocked ? () => navigate(node.page) : undefined}
+                          disabled={!node.unlocked}
+                          className={`mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full border text-xl sm:h-12 sm:w-12 ${
+                            node.unlocked ? `bg-gradient-to-br ${node.tone} border-white/20 text-white` : 'theme-lock-button cursor-not-allowed'
+                          }`}
+                          aria-label={node.title}
+                        >
+                          {node.unlocked ? node.icon : '🔒'}
+                        </button>
 
-                    return (
-                      <motion.div
-                        key={node.title}
-                        initial={{ opacity: 0, y: 16, scale: 0.98 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        transition={{ delay: index * 0.08 }}
-                        className={`relative flex items-start gap-4 sm:gap-6 ${isOdd ? 'sm:flex-row-reverse' : ''}`}
-                      >
-                        <div className="relative z-10 flex w-10 shrink-0 justify-center sm:w-16">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <p className="theme-muted text-[11px] font-bold uppercase tracking-[0.14em]">{node.hint}</p>
+                            <span
+                              className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${
+                                !node.unlocked
+                                  ? 'theme-lock-button'
+                                  : isCompleted
+                                  ? 'border-green-400/50 bg-green-500/15 text-green-300'
+                                  : isCurrent
+                                  ? 'border-[#56b8e8]/50 bg-[#56b8e8]/15 text-[#9fdbff]'
+                                  : 'border-[color:var(--theme-border)] theme-muted'
+                              }`}
+                            >
+                              {statusText}
+                            </span>
+                          </div>
+
+                          <h4 className="theme-title mt-1 font-baloo text-2xl font-bold">{node.title}</h4>
+                          <p className="theme-text-soft mt-1 text-sm font-semibold leading-6">{node.description}</p>
+
+                          <div className="mt-3 h-2 overflow-hidden rounded-full bg-[color:var(--theme-border)]">
+                            <div className={`h-full rounded-full bg-gradient-to-r ${node.tone}`} style={{ width: `${completion}%` }} />
+                          </div>
+
+                          <div className="mt-3 flex items-center justify-between gap-2 text-xs font-semibold">
+                            <p className="theme-muted">{node.progress}/{node.total} completed</p>
+                            <p className="theme-muted">Level {index + 1}/{roadmapNodes.length}</p>
+                          </div>
+
                           <button
-                            onClick={node.unlocked ? () => navigate('vocabulary') : undefined}
-                            className={`flex h-10 w-10 items-center justify-center rounded-full border-4 text-lg shadow-lg transition sm:h-16 sm:w-16 sm:text-3xl ${
-                              node.unlocked
-                                ? `bg-gradient-to-br ${node.tone} border-white/70 text-white hover:scale-105`
-                                : 'theme-lock-button cursor-not-allowed'
+                            onClick={node.unlocked ? () => navigate(node.page) : undefined}
+                            disabled={!node.unlocked}
+                            className={`mt-3 w-full rounded-xl border px-3 py-2 text-xs font-bold uppercase tracking-[0.08em] transition ${
+                              node.unlocked ? 'theme-nav-button hover:border-[#56b8e8]' : 'theme-lock-button cursor-not-allowed'
                             }`}
-                            aria-label={node.title}
                           >
-                            {node.unlocked ? node.icon : '🔒'}
+                            {node.unlocked ? (isCurrent ? node.buttonText : 'Practice Again') : 'Locked'}
                           </button>
                         </div>
-
-                        <div className={`flex-1 ${isOdd ? 'sm:pr-12' : 'sm:pl-12'}`}>
-                          <div className={`theme-surface-soft rounded-3xl border p-4 sm:p-5 ${isCurrent ? 'ring-2 ring-[#56b8e8]' : ''}`}>
-                            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                              <div>
-                                <p className="theme-muted text-[11px] font-bold uppercase tracking-[0.16em]">{node.hint}</p>
-                                <h4 className="theme-title mt-1 font-baloo text-2xl font-bold">{node.title}</h4>
-                                <p className="theme-text-soft mt-2 text-sm font-semibold leading-7">{node.description}</p>
-                              </div>
-                              <div className="rounded-full border border-[color:var(--theme-border)] px-3 py-1.5 text-right">
-                                <p className="theme-muted text-[11px] font-bold uppercase tracking-[0.08em]">Level</p>
-                                <p className="theme-title font-baloo text-lg font-bold">{index + 1}/{roadmapNodes.length}</p>
-                              </div>
-                            </div>
-
-                            <div className="mt-4 h-2 overflow-hidden rounded-full bg-[color:var(--theme-border)]">
-                              <div
-                                className={`h-full rounded-full bg-gradient-to-r ${node.tone}`}
-                                style={{ width: `${completion}%` }}
-                              />
-                            </div>
-
-                            <div className="mt-3 flex items-center justify-between text-xs font-semibold">
-                              <p className="theme-muted">{node.progress}/{node.total} completed</p>
-                              <p className={`font-bold ${statusClass}`}>{statusText}</p>
-                            </div>
-
-                            <div className="mt-3">
-                              <button
-                                onClick={node.unlocked ? () => navigate('vocabulary') : undefined}
-                                disabled={!node.unlocked}
-                                className={`w-full rounded-xl border px-3 py-2 text-xs font-bold uppercase tracking-[0.08em] transition ${
-                                  node.unlocked
-                                    ? 'theme-nav-button hover:border-[#56b8e8]'
-                                    : 'theme-lock-button cursor-not-allowed'
-                                }`}
-                              >
-                                {node.unlocked ? (isCurrent ? 'Start Level' : 'Practice Again') : 'Locked'}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </div>
             </div>
           </section>
