@@ -16,8 +16,17 @@ function normalizeLang(value: unknown, fallback: string) {
   return input || fallback;
 }
 
-function getPairKey(targetLanguage: string, nativeLanguage: string) {
-  return `${targetLanguage.toLowerCase()}::${nativeLanguage.toLowerCase()}`;
+function normalizeLevelCycle(value: unknown) {
+  const raw = Number(value);
+  if (!Number.isFinite(raw)) {
+    return 0;
+  }
+
+  return Math.max(0, Math.floor(raw));
+}
+
+function getPairKey(targetLanguage: string, nativeLanguage: string, levelCycle: number) {
+  return `${targetLanguage.toLowerCase()}::${nativeLanguage.toLowerCase()}::level-${levelCycle}`;
 }
 
 function parseUpdatedAtMillis(value: unknown): number {
@@ -316,6 +325,7 @@ export default async function handler(req: any, res: any) {
   try {
     const targetLanguage = normalizeLang(req.body?.targetLanguage, 'Hiligaynon');
     const nativeLanguage = normalizeLang(req.body?.nativeLanguage, 'English');
+    const levelCycle = normalizeLevelCycle(req.body?.levelCycle);
     const prompt = String(req.body?.prompt || '').trim();
     const refresh = !!req.body?.refresh;
 
@@ -324,7 +334,7 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
-    const pairKey = getPairKey(targetLanguage, nativeLanguage);
+    const pairKey = getPairKey(targetLanguage, nativeLanguage, levelCycle);
 
     await ensureTable();
 
