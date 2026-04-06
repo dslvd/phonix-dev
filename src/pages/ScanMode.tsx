@@ -5,7 +5,6 @@ import mammoth from 'mammoth';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import NavigationHeader from '../components/NavigationHeader';
-import EnergyBar from '../components/EnergyBar';
 import { Page, AppState, BackpackItem, UpdateStateFn } from '../App';
 import { usePremium } from '../lib/usePremium';
 
@@ -1014,6 +1013,9 @@ const translateManualText = async () => {
         showStats={true}
         streakCount={appState.currentStreak}
         starCount={appState.stars}
+        batteryCurrent={appState.batteriesRemaining}
+        batteryMax={5}
+        isPremium={premium.isPremium}
       />
 
       <div className="mx-auto mt-6 max-w-7xl p-4 lg:px-8">
@@ -1030,22 +1032,6 @@ const translateManualText = async () => {
           <p className="theme-muted font-semibold">
             Point your camera at text or a document to translate instantly!
           </p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2 }}
-          className="mb-6"
-        >
-          <Card className="theme-surface-soft border-2">
-            <EnergyBar
-              current={appState.batteriesRemaining}
-              max={5}
-              isPremium={premium.isPremium}
-              onUpgrade={() => setShowUpgradeModal(true)}
-            />
-          </Card>
         </motion.div>
 
         <div className="grid gap-6 xl:grid-cols-[1.15fr_0.95fr]">
@@ -1302,7 +1288,11 @@ const translateManualText = async () => {
                         {/* ✅ YOUR NEW BLOCK */}
                         <div className="flex flex-col gap-1">
                           <div className="flex items-start justify-between gap-2">
-                            <p className="max-h-64 overflow-y-auto break-words whitespace-pre-wrap pr-1 text-lg font-bold leading-8 text-primary">
+                            <p
+                              onClick={() => scanResult.translatedText && speakText(scanResult.translatedText)}
+                              className="max-h-64 cursor-pointer overflow-y-auto break-words whitespace-pre-wrap pr-1 text-lg font-bold leading-8 text-primary"
+                              title="Tap to hear pronunciation"
+                            >
                               {scanResult.translatedText || '—'}
                             </p>
 
@@ -1371,7 +1361,11 @@ const translateManualText = async () => {
                         {item.detectedText}
                       </p>
                       <div className="flex items-start justify-between gap-2">
-                        <p className="flex-1 break-words whitespace-pre-wrap text-lg font-bold text-primary">
+                        <p
+                          onClick={() => item.translatedText && speakText(item.translatedText)}
+                          className="flex-1 cursor-pointer break-words whitespace-pre-wrap text-lg font-bold text-primary"
+                          title="Tap to hear pronunciation"
+                        >
                           {item.translatedText}
                         </p>
                         <button

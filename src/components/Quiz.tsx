@@ -26,6 +26,8 @@ interface AIQuizPayload {
   }>;
 }
 
+const aiQuizCache = new Map<string, AIQuizPayload>();
+
 const stripCodeFence = (text: string) => text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim();
 
 const parseAIQuizPayload = (rawText: string): AIQuizPayload | null => {
@@ -107,11 +109,70 @@ export default function Quiz({
       setOptions(localOptions);
     };
 
+    const applyAIOptions = (payload: AIQuizPayload) => {
+      if (!payload?.options || payload.options.length !== 4) {
+        return false;
+      }
+
+      const normalized = payload.options.map((option, index) => {
+        const nativeWord = (option.nativeWord || '').trim();
+        const isCorrect = !!option.isCorrect || nativeWord.toLowerCase() === currentWord.nativeWord.toLowerCase();
+
+        return {
+          id: isCorrect ? currentWord.id : `ai-${currentWord.id}-${index}`,
+          nativeWord: isCorrect ? currentWord.nativeWord : nativeWord,
+          englishWord: (option.englishWord || currentWord.englishWord).trim() || currentWord.englishWord,
+          category: currentWord.category,
+          emoji: (option.emoji || currentWord.emoji).trim() || currentWord.emoji,
+          difficulty: currentWord.difficulty,
+        } satisfies VocabularyItem;
+      });
+
+      const uniqueNativeWords = new Set(normalized.map((item) => item.nativeWord.toLowerCase()));
+      const correctCount = normalized.filter((item) => item.id === currentWord.id).length;
+
+      if (uniqueNativeWords.size < 4 || correctCount !== 1) {
+        return false;
+      }
+
+      setOptions(normalized.sort(() => Math.random() - 0.5));
+      if (payload.question?.trim()) {
+        setChallengeText(payload.question.trim());
+      }
+      if (payload.correctFeedback?.trim()) {
+        setCorrectText(payload.correctFeedback.trim());
+      }
+      if (payload.incorrectFeedback?.trim()) {
+        setIncorrectText(payload.incorrectFeedback.trim());
+      }
+
+      return true;
+    };
+
     let cancelled = false;
 
+    // Always render quiz options immediately so users can answer without waiting for AI.
+    setLocalOptions();
+
+    const quizCacheKey = [
+      currentWord.id,
+      targetLanguage,
+      nativeLanguage,
+      difficultyBand || currentWord.difficulty,
+      Math.max(1, Math.min(5, levelStage)),
+    ].join('|');
+
+    const cachedPayload = aiQuizCache.get(quizCacheKey);
+    if (cachedPayload) {
+      applyAIOptions(cachedPayload);
+    }
+
     const buildAIQuiz = async () => {
+      if (!useAI) {
+        return;
+      }
+
       if (typeof navigator !== 'undefined' && !navigator.onLine) {
-        setLocalOptions();
         return;
       }
 
@@ -168,47 +229,20 @@ export default function Quiz({
         const data = await response.json();
         const payload = parseAIQuizPayload(String(data?.text || ''));
 
-        if (!payload?.options || payload.options.length !== 4) {
+        if (!payload) {
           throw new Error('ai-quiz-invalid-options');
         }
 
-        const normalized = payload.options.map((option, index) => {
-          const nativeWord = (option.nativeWord || '').trim();
-          const isCorrect = !!option.isCorrect || nativeWord.toLowerCase() === currentWord.nativeWord.toLowerCase();
-
-          return {
-            id: isCorrect ? currentWord.id : `ai-${currentWord.id}-${index}`,
-            nativeWord: isCorrect ? currentWord.nativeWord : nativeWord,
-            englishWord: (option.englishWord || currentWord.englishWord).trim() || currentWord.englishWord,
-            category: currentWord.category,
-            emoji: (option.emoji || currentWord.emoji).trim() || currentWord.emoji,
-            difficulty: currentWord.difficulty,
-          } satisfies VocabularyItem;
-        });
-
-        const uniqueNativeWords = new Set(normalized.map((item) => item.nativeWord.toLowerCase()));
-        const correctCount = normalized.filter((item) => item.id === currentWord.id).length;
-
-        if (uniqueNativeWords.size < 4 || correctCount !== 1) {
-          throw new Error('ai-quiz-invalid-uniqueness');
-        }
+        aiQuizCache.set(quizCacheKey, payload);
 
         if (!cancelled) {
-          setOptions(normalized.sort(() => Math.random() - 0.5));
-          if (payload.question?.trim()) {
-            setChallengeText(payload.question.trim());
-          }
-          if (payload.correctFeedback?.trim()) {
-            setCorrectText(payload.correctFeedback.trim());
-          }
-          if (payload.incorrectFeedback?.trim()) {
-            setIncorrectText(payload.incorrectFeedback.trim());
+          const applied = applyAIOptions(payload);
+          if (!applied) {
+            throw new Error('ai-quiz-invalid-uniqueness');
           }
         }
       } catch {
-        if (!cancelled) {
-          setLocalOptions();
-        }
+        // Keep instant local options when AI quiz generation is unavailable.
       }
     };
 
@@ -221,6 +255,17 @@ export default function Quiz({
 
   const handleSelect = (wordId: string) => {
     if (showResult) return; // Prevent multiple selections
+
+    const selectedWord = options.find((option) => option.id === wordId);
+    if (selectedWord && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(selectedWord.nativeWord);
+      utterance.lang = 'fil-PH';
+      utterance.rate = 0.85;
+      utterance.pitch = 0.75;
+      utterance.volume = 1.0;
+      window.speechSynthesis.speak(utterance);
+    }
     
     setSelectedAnswer(wordId);
     setShowResult(true);

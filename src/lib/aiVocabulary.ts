@@ -23,6 +23,7 @@ const LEVEL_COUNTS: Record<Difficulty, number> = {
   advanced: 7,
 };
 const LATEST_AI_VOCABULARY_CACHE_KEY = 'phonix-ai-vocabulary:latest';
+const PAIR_LATEST_CACHE_KEY_PREFIX = 'phonix-ai-vocabulary:pair-latest';
 const memoryCache = new Map<string, VocabularyItem[]>();
 const inFlightRequests = new Map<string, Promise<VocabularyItem[]>>();
 const LEVEL_PACK_SIZE = LEVEL_COUNTS.beginner + LEVEL_COUNTS.intermediate + LEVEL_COUNTS.advanced;
@@ -169,6 +170,9 @@ const enforceLevelCounts = (words: VocabularyItem[], levelCycle: number) => {
 export const getAIVocabularyCacheKey = (targetLanguage: string, nativeLanguage: string, levelCycle = 0) =>
   `phonix-ai-vocabulary:${(targetLanguage || 'hiligaynon').toLowerCase()}:${(nativeLanguage || 'english').toLowerCase()}:level-${normalizeLevelCycle(levelCycle)}`;
 
+const getPairLatestCacheKey = (targetLanguage: string, nativeLanguage: string) =>
+  `${PAIR_LATEST_CACHE_KEY_PREFIX}:${(targetLanguage || 'hiligaynon').toLowerCase()}:${(nativeLanguage || 'english').toLowerCase()}`;
+
 export const readCachedAIVocabulary = (targetLanguage: string, nativeLanguage: string, options: AIVocabularyOptions = {}): VocabularyItem[] => {
   if (typeof window === 'undefined') {
     return [];
@@ -195,6 +199,47 @@ export const readCachedAIVocabulary = (targetLanguage: string, nativeLanguage: s
   } catch {
     return [];
   }
+};
+
+export const readCachedAIVocabularyByPairLatest = (targetLanguage: string, nativeLanguage: string): VocabularyItem[] => {
+  if (typeof window === 'undefined') {
+    return [];
+  }
+
+  const pairLatestKey = getPairLatestCacheKey(targetLanguage, nativeLanguage);
+  const memory = memoryCache.get(pairLatestKey);
+  if (memory && memory.length > 0) {
+    return memory;
+  }
+
+  const raw = window.localStorage.getItem(pairLatestKey);
+  if (!raw) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as VocabularyItem[];
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+    memoryCache.set(pairLatestKey, parsed);
+    return parsed;
+  } catch {
+    return [];
+  }
+};
+
+export const readCachedAIVocabularyOrPairLatest = (
+  targetLanguage: string,
+  nativeLanguage: string,
+  options: AIVocabularyOptions = {}
+): VocabularyItem[] => {
+  const exact = readCachedAIVocabulary(targetLanguage, nativeLanguage, options);
+  if (exact.length > 0) {
+    return exact;
+  }
+
+  return readCachedAIVocabularyByPairLatest(targetLanguage, nativeLanguage);
 };
 
 export const readLatestCachedAIVocabulary = (): VocabularyItem[] => {
@@ -244,10 +289,13 @@ export const writeCachedAIVocabulary = (
   }
 
   const cacheKey = getAIVocabularyCacheKey(targetLanguage, nativeLanguage, options.levelCycle);
+  const pairLatestKey = getPairLatestCacheKey(targetLanguage, nativeLanguage);
   memoryCache.set(cacheKey, words);
+  memoryCache.set(pairLatestKey, words);
   memoryCache.set(LATEST_AI_VOCABULARY_CACHE_KEY, words);
 
   window.localStorage.setItem(cacheKey, JSON.stringify(words));
+  window.localStorage.setItem(pairLatestKey, JSON.stringify(words));
   window.localStorage.setItem(LATEST_AI_VOCABULARY_CACHE_KEY, JSON.stringify(words));
 };
 
@@ -274,42 +322,47 @@ export const fetchAIVocabulary = async (
     return memory;
   }
 
+  const pairLatest = readCachedAIVocabularyByPairLatest(targetLanguage, nativeLanguage);
+  if (pairLatest.length > 0) {
+    return pairLatest;
+  }
+
   const activeRequest = inFlightRequests.get(cacheKey);
   if (activeRequest) {
     return activeRequest;
   }
 
   const requestPromise = (async () => {
-  const prompt = [
-    'Generate a complete vocabulary list for a language-learning app.',
-    `Target language: ${targetLanguage || 'Hiligaynon'}.`,
-    `Learner native language: ${nativeLanguage || 'English'}.`,
-    `Current level cycle: ${levelCycle + 1}.`,
-    `Level focus theme: ${levelTheme}.`,
-    'Return STRICT JSON only with this shape:',
-    '{',
-    '  "words": [',
-    '    {',
-    '      "id": "string",',
-    '      "nativeWord": "string",',
-    '      "englishWord": "string",',
-    '      "category": "string",',
-    '      "emoji": "string",',
-    '      "difficulty": "beginner|intermediate|advanced"',
-    '    }',
-    '  ]',
-    '}',
-    'Rules:',
-    '1. Provide exactly 47 words total.',
-    '2. beginner must have exactly 20 words.',
-    '3. intermediate must have exactly 20 words.',
-    '4. advanced must have exactly 7 words.',
-    '5. Avoid duplicates in nativeWord and englishWord.',
-    '6. Keep words useful for daily conversation.',
-    '7. Make vocabulary clearly match the level focus theme.',
-    '8. Do not reuse the exact same set from previous levels.',
-    '9. Keep words kid-friendly, simple, and easy to learn.',
-  ].join('\n');
+    const prompt = [
+      'Generate a complete vocabulary list for a language-learning app.',
+      `Target language: ${targetLanguage || 'Hiligaynon'}.`,
+      `Learner native language: ${nativeLanguage || 'English'}.`,
+      `Current level cycle: ${levelCycle + 1}.`,
+      `Level focus theme: ${levelTheme}.`,
+      'Return STRICT JSON only with this shape:',
+      '{',
+      '  "words": [',
+      '    {',
+      '      "id": "string",',
+      '      "nativeWord": "string",',
+      '      "englishWord": "string",',
+      '      "category": "string",',
+      '      "emoji": "string",',
+      '      "difficulty": "beginner|intermediate|advanced"',
+      '    }',
+      '  ]',
+      '}',
+      'Rules:',
+      '1. Provide exactly 47 words total.',
+      '2. beginner must have exactly 20 words.',
+      '3. intermediate must have exactly 20 words.',
+      '4. advanced must have exactly 7 words.',
+      '5. Avoid duplicates in nativeWord and englishWord.',
+      '6. Keep words useful for daily conversation.',
+      '7. Make vocabulary clearly match the level focus theme.',
+      '8. Do not reuse the exact same set from previous levels.',
+      '9. Keep words kid-friendly, simple, and easy to learn.',
+    ].join('\n');
 
     const response = await fetch('/api/ai-vocabulary', {
       method: 'POST',
@@ -355,7 +408,7 @@ export const fetchAIVocabulary = async (
     }
 
     const finalized = enforceLevelCounts(normalized, levelCycle);
-    memoryCache.set(cacheKey, finalized);
+    writeCachedAIVocabulary(targetLanguage, nativeLanguage, finalized, { levelCycle });
     return finalized;
   })();
 
@@ -372,4 +425,9 @@ export const prefetchAIVocabulary = (targetLanguage: string, nativeLanguage: str
   void fetchAIVocabulary(targetLanguage, nativeLanguage, options).catch(() => {
     // Best-effort warmup only.
   });
+};
+
+export const prefetchAIVocabularyWindow = (targetLanguage: string, nativeLanguage: string, levelCycle: number) => {
+  prefetchAIVocabulary(targetLanguage, nativeLanguage, { levelCycle });
+  prefetchAIVocabulary(targetLanguage, nativeLanguage, { levelCycle: levelCycle + 1 });
 };

@@ -45,6 +45,20 @@ export default function VocabularyCollection({
   const targetLanguage = appState.targetLanguage || 'Hiligaynon';
   const nativeLanguage = appState.nativeLanguage || 'English';
 
+  const speakTargetText = (text: string) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'fil-PH';
+    utterance.rate = 0.85;
+    utterance.pitch = 0.75;
+    utterance.volume = 1.0;
+    window.speechSynthesis.speak(utterance);
+  };
+
   useEffect(() => {
     const cached = readCachedAIVocabulary(targetLanguage, nativeLanguage, { levelCycle });
     if (cached.length > 0) {
@@ -209,7 +223,13 @@ export default function VocabularyCollection({
                     >
                       {item.emoji}
                     </motion.div>
-                    <h3 className="mb-1 font-baloo text-xl font-bold text-primary">{item.nativeWord}</h3>
+                    <h3
+                      onClick={() => speakTargetText(item.nativeWord)}
+                      className="mb-1 cursor-pointer select-none font-baloo text-xl font-bold text-primary"
+                      title={`Tap to hear ${targetLanguage}`}
+                    >
+                      {item.nativeWord}
+                    </h3>
                     <p className="theme-muted text-sm font-semibold">{item.englishWord}</p>
                     <button
                       onClick={() => {

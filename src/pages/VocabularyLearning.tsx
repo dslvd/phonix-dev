@@ -2,17 +2,15 @@ import { motion } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
 import NavigationHeader from '../components/NavigationHeader';
 import Quiz from '../components/Quiz';
-import EnergyBar from '../components/EnergyBar';
 import { Page, AppState, BackpackItem, UpdateStateFn } from '../App';
-import { VocabularyItem } from '../data/vocabulary';
+import { sentenceData, VocabularyItem } from '../data/vocabulary';
 import { usePremium } from '../lib/usePremium';
 import {
   fetchAIVocabulary,
   getFiveStageLevel,
   getVocabularyLevelCycle,
-  getVocabularyLevelTheme,
-  prefetchAIVocabulary,
-  readCachedAIVocabulary,
+  prefetchAIVocabularyWindow,
+  readCachedAIVocabularyOrPairLatest,
   writeCachedAIVocabulary,
 } from '../lib/aiVocabulary';
 
@@ -22,6 +20,8 @@ interface VocabularyLearningProps {
   updateState: UpdateStateFn;
   premium: ReturnType<typeof usePremium>;
 }
+
+const QUIZ_GOAL_PER_CYCLE = 15;
 
 export default function VocabularyLearning({
   navigate,
@@ -51,26 +51,22 @@ export default function VocabularyLearning({
   const targetLanguage = appState.targetLanguage || 'Hiligaynon';
   const nativeLanguage = appState.nativeLanguage || 'English';
   const levelCycle = getVocabularyLevelCycle(appState.learnedWords.length);
-  const levelTheme = getVocabularyLevelTheme(levelCycle);
 
   const [isQuizMode, setIsQuizMode] = useState(false);
   const [wordsBeforeQuiz, setWordsBeforeQuiz] = useState(3); // Quiz every 3 words
   const [consecutiveWords, setConsecutiveWords] = useState(0);
   const [showOutOfBatteriesModal, setShowOutOfBatteriesModal] = useState(false);
   const previousLevelCycleRef = useRef(levelCycle);
+  const lastAutoSpokenWordIdRef = useRef<string | null>(null);
   const [aiVocabulary, setAiVocabulary] = useState<VocabularyItem[]>(() => {
-    return readCachedAIVocabulary(targetLanguage, nativeLanguage, { levelCycle });
+    return readCachedAIVocabularyOrPairLatest(targetLanguage, nativeLanguage, { levelCycle });
   });
   const [aiFlashcardItem, setAiFlashcardItem] = useState<VocabularyItem | null>(null);
 
   useEffect(() => {
-    const cached = readCachedAIVocabulary(targetLanguage, nativeLanguage, { levelCycle });
+    const cached = readCachedAIVocabularyOrPairLatest(targetLanguage, nativeLanguage, { levelCycle });
     if (cached.length > 0) {
       setAiVocabulary(cached);
-    }
-
-    if (isGuestMode) {
-      return;
     }
 
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
@@ -78,7 +74,7 @@ export default function VocabularyLearning({
     }
 
     setAiFlashcardItem(null);
-    prefetchAIVocabulary(targetLanguage, nativeLanguage, { levelCycle });
+    prefetchAIVocabularyWindow(targetLanguage, nativeLanguage, levelCycle);
 
     let cancelled = false;
 
@@ -109,7 +105,11 @@ export default function VocabularyLearning({
     }
 
     previousLevelCycleRef.current = levelCycle;
-    updateState({ currentVocabIndex: 0 });
+    updateState({
+      currentVocabIndex: 0,
+      quizAnswersInCycle: 0,
+      sentenceAnswersInCycle: 0,
+    });
   }, [levelCycle, updateState]);
 
   const learnedInCurrentCycle = appState.learnedWords.length % 47;
@@ -146,12 +146,13 @@ export default function VocabularyLearning({
       ? intermediateCount
       : advancedCount;
   const levelStage = getFiveStageLevel(bandProgress, bandTotal);
-  const difficultyLabel =
-    currentDifficultyBand === 'beginner'
-      ? 'Beginner'
-      : currentDifficultyBand === 'intermediate'
-      ? 'Intermediate'
-      : 'Advanced';
+  const totalLearningUnits = 47 + QUIZ_GOAL_PER_CYCLE + sentenceData.length;
+  const completedLearningUnits = Math.min(
+    totalLearningUnits,
+    learnedInCurrentCycle +
+      Math.min(appState.quizAnswersInCycle, QUIZ_GOAL_PER_CYCLE) +
+      Math.min(appState.sentenceAnswersInCycle, sentenceData.length)
+  );
 
   const fallbackItem: VocabularyItem = {
     id: 'ai-loading',
@@ -227,10 +228,6 @@ export default function VocabularyLearning({
     setAiFlashcardItem(null);
 
     if (!hasAIVocabulary) {
-      return;
-    }
-
-    if (isGuestMode) {
       return;
     }
 
@@ -322,7 +319,7 @@ export default function VocabularyLearning({
     isGuestMode,
   ]);
 
-  const handleNext = () => {
+  const advanceToNextWord = () => {
     if (!hasAIVocabulary) {
       return;
     }
@@ -379,6 +376,11 @@ export default function VocabularyLearning({
     }
   };
 
+  const handleNext = () => {
+    playAudio(currentItem.nativeWord, 'fil-PH');
+    advanceToNextWord();
+  };
+
   const handleQuizAnswer = (correct: boolean) => {
     // Award stars for correct answers
     if (correct) {
@@ -405,7 +407,7 @@ export default function VocabularyLearning({
     setWordsBeforeQuiz(Math.floor(Math.random() * 2) + 3); // Next quiz in 3-4 words
     
     // Move to next word after quiz
-    handleNext();
+    advanceToNextWord();
   };
 
   const handlePrevious = () => {
@@ -481,6 +483,19 @@ export default function VocabularyLearning({
     }
   };
 
+  useEffect(() => {
+    if (!hasAIVocabulary || isQuizMode) {
+      return;
+    }
+
+    if (lastAutoSpokenWordIdRef.current === currentItem.id) {
+      return;
+    }
+
+    lastAutoSpokenWordIdRef.current = currentItem.id;
+    playAudio(currentItem.nativeWord, 'fil-PH');
+  }, [hasAIVocabulary, isQuizMode, currentItem.id, currentItem.nativeWord]);
+
   return (
     <div className="theme-page min-h-screen flex flex-col">
       <NavigationHeader
@@ -488,38 +503,17 @@ export default function VocabularyLearning({
         onLogout={() => navigate('landing')}
         title="Vocabulary Learning"
         showProgress={true}
-        currentProgress={appState.currentVocabIndex + 1}
-        totalProgress={Math.max(aiVocabulary.length, 1)}
+        currentProgress={Math.max(0, completedLearningUnits)}
+        totalProgress={Math.max(totalLearningUnits, 1)}
+        batteryCurrent={appState.batteriesRemaining}
+        batteryMax={5}
+        isPremium={premium.isPremium}
       />
 
       {/* Main Content */}
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="max-w-lg w-full">
-          <motion.div
-            initial={{ opacity: 0, y: -12 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6"
-          >
-            <EnergyBar
-              current={appState.batteriesRemaining}
-              max={5}
-              isPremium={premium.isPremium}
-              onUpgrade={() => navigate('premium')}
-            />
-            {hasAIVocabulary && (
-              <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-center">
-                <span className="inline-flex items-center rounded-full border border-[#56b8e8] bg-[#143244] px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] text-[#a8dcf6]">
-                  Level Pack {levelCycle + 1}
-                </span>
-                <span className="inline-flex items-center rounded-full border border-[#7ed6ff] bg-[#173b52] px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] text-[#c9efff]">
-                  Theme: {levelTheme}
-                </span>
-                <span className="inline-flex items-center rounded-full border border-[#FF9126] bg-[#1d3443] px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] text-[#ffd7aa]">
-                  {difficultyLabel} Stage {levelStage}/5
-                </span>
-              </div>
-            )}
-          </motion.div>
+          <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} className="mb-6" />
 
           {!hasAIVocabulary ? (
             <motion.div
@@ -543,7 +537,7 @@ export default function VocabularyLearning({
               onAnswer={handleQuizAnswer}
               targetLanguage={appState.targetLanguage || 'Hiligaynon'}
               nativeLanguage={appState.nativeLanguage || 'English'}
-              useAI={!isGuestMode}
+              useAI={true}
               difficultyBand={currentDifficultyBand}
               levelStage={levelStage}
             />

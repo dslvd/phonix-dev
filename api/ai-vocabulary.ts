@@ -29,6 +29,10 @@ function getPairKey(targetLanguage: string, nativeLanguage: string, levelCycle: 
   return `${targetLanguage.toLowerCase()}::${nativeLanguage.toLowerCase()}::level-${levelCycle}`;
 }
 
+function getPairPrefix(targetLanguage: string, nativeLanguage: string) {
+  return `${targetLanguage.toLowerCase()}::${nativeLanguage.toLowerCase()}::`;
+}
+
 function parseUpdatedAtMillis(value: unknown): number {
   const text = String(value || '').trim();
   if (!text) {
@@ -130,6 +134,64 @@ async function readCachedFromD1(pairKey: string): Promise<{ text: string; provid
     provider: String(row.provider || 'cache'),
     updatedAt: parseUpdatedAtMillis(row.updated_at),
   };
+}
+
+async function readAnyPairCachedFromD1(
+  targetLanguage: string,
+  nativeLanguage: string
+): Promise<{ text: string; provider: string; updatedAt: number } | null> {
+  if (!hasD1Config()) {
+    return null;
+  }
+
+  const pairPrefix = `${getPairPrefix(targetLanguage, nativeLanguage)}%`;
+  const result = await runD1Query(
+    `SELECT payload_text, provider, updated_at
+     FROM ai_vocabulary_cache
+     WHERE pair_key LIKE ?1
+     ORDER BY updated_at DESC
+     LIMIT 1`,
+    [pairPrefix]
+  );
+
+  const rows = (result?.result?.[0]?.results || []) as Array<{
+    payload_text?: string;
+    provider?: string;
+    updated_at?: string;
+  }>;
+
+  if (rows.length === 0) {
+    return null;
+  }
+
+  const row = rows[0];
+  const text = String(row.payload_text || '').trim();
+  if (!text) {
+    return null;
+  }
+
+  return {
+    text,
+    provider: String(row.provider || 'cache-fallback'),
+    updatedAt: parseUpdatedAtMillis(row.updated_at),
+  };
+}
+
+function readAnyPairCachedFromMemory(targetLanguage: string, nativeLanguage: string) {
+  const pairPrefix = getPairPrefix(targetLanguage, nativeLanguage);
+  let latest: { text: string; provider: string; updatedAt: number } | null = null;
+
+  for (const [key, value] of memoryCache.entries()) {
+    if (!key.startsWith(pairPrefix)) {
+      continue;
+    }
+
+    if (!latest || value.updatedAt > latest.updatedAt) {
+      latest = value;
+    }
+  }
+
+  return latest;
 }
 
 async function writeCachedToD1(pairKey: string, text: string, provider: string) {
@@ -357,6 +419,22 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
+    const memPairFallback = readAnyPairCachedFromMemory(targetLanguage, nativeLanguage);
+    if (memPairFallback && !refresh) {
+      const isStale = Date.now() - memPairFallback.updatedAt > CACHE_TTL_MS;
+      void refreshPair(pairKey, prompt).catch(() => {
+        // Keep serving fallback cache if refresh fails.
+      });
+
+      res.status(200).json({
+        text: memPairFallback.text,
+        provider: memPairFallback.provider,
+        source: 'cache-fallback',
+        stale: isStale,
+      });
+      return;
+    }
+
     const d1Cached = await readCachedFromD1(pairKey);
     if (d1Cached && !refresh) {
       memoryCache.set(pairKey, d1Cached);
@@ -372,6 +450,24 @@ export default async function handler(req: any, res: any) {
         text: d1Cached.text,
         provider: d1Cached.provider,
         source: 'cache',
+        stale: isStale,
+      });
+      return;
+    }
+
+    const d1PairFallback = await readAnyPairCachedFromD1(targetLanguage, nativeLanguage);
+    if (d1PairFallback && !refresh) {
+      memoryCache.set(pairKey, d1PairFallback);
+      const isStale = Date.now() - d1PairFallback.updatedAt > CACHE_TTL_MS;
+
+      void refreshPair(pairKey, prompt).catch(() => {
+        // Keep serving fallback cache if refresh fails.
+      });
+
+      res.status(200).json({
+        text: d1PairFallback.text,
+        provider: d1PairFallback.provider,
+        source: 'cache-fallback',
         stale: isStale,
       });
       return;
