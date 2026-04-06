@@ -96,6 +96,23 @@
   --theme-summary-banner-text: #4b2d0d;
 }
 
+[data-theme='light'] .text-\[\#dff1ff\],
+[data-theme='light'] .text-\[\#cbe4f6\],
+[data-theme='light'] .text-\[\#8bb1c7\],
+[data-theme='light'] .text-slate-100 {
+  color: #1c3342 !important;
+}
+
+[data-theme='light'] .text-white {
+  color: #1c3342;
+}
+
+[data-theme='light'] .theme-page .bg-\[\#1a3242\] .text-\[\#cbe4f6\],
+[data-theme='light'] .theme-page .bg-\[\#122733\] .text-\[\#cbe4f6\],
+[data-theme='light'] .theme-page .bg-\[\#0f202a\] .text-\[\#dff1ff\] {
+  color: #dff1ff !important;
+}
+
 @layer base {
   html {
     background: var(--theme-bg-solid);
@@ -236,6 +253,32 @@
     background: var(--theme-summary-banner-bg);
     border-color: var(--theme-summary-banner-border);
     color: var(--theme-summary-banner-text);
+  }
+
+  .clean-ui .theme-surface,
+  .clean-ui .theme-surface-strong,
+  .clean-ui .theme-surface-soft {
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .clean-ui .theme-surface,
+  .clean-ui .theme-surface-strong {
+    border-width: 1px;
+  }
+
+  .clean-ui .theme-toggle {
+    backdrop-filter: none;
+    box-shadow: none;
+  }
+
+  .clean-ui [class*='backdrop-blur'] {
+    backdrop-filter: none !important;
+  }
+
+  .clean-ui .card-shadow,
+  .clean-ui .card-shadow-lg {
+    box-shadow: none !important;
   }
 
   .text-shadow {

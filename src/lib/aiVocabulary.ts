@@ -264,10 +264,14 @@ export const fetchAIVocabulary = async (
     '6. Keep words useful for daily conversation.',
   ].join('\n');
 
-    const response = await fetch('/api/ai', {
+    const response = await fetch('/api/ai-vocabulary', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify({
+        prompt,
+        targetLanguage,
+        nativeLanguage,
+      }),
     });
 
     if (!response.ok) {
@@ -275,6 +279,21 @@ export const fetchAIVocabulary = async (
     }
 
     const data = await response.json();
+    if (data?.stale) {
+      void fetch('/api/ai-vocabulary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt,
+          targetLanguage,
+          nativeLanguage,
+          refresh: true,
+        }),
+      }).catch(() => {
+        // Keep stale cache if async refresh fails.
+      });
+    }
+
     const payload = parsePayload(String(data?.text || ''));
     const rawWords = payload?.words || [];
 
@@ -298,4 +317,10 @@ export const fetchAIVocabulary = async (
   } finally {
     inFlightRequests.delete(cacheKey);
   }
+};
+
+export const prefetchAIVocabulary = (targetLanguage: string, nativeLanguage: string) => {
+  void fetchAIVocabulary(targetLanguage, nativeLanguage).catch(() => {
+    // Best-effort warmup only.
+  });
 };

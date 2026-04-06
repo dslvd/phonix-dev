@@ -3,13 +3,13 @@ import { motion } from 'framer-motion';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import NavigationHeader from '../components/NavigationHeader';
-import { Page, AppState } from '../App';
+import { Page, AppState, UpdateStateFn } from '../App';
 import { sentenceData } from '../data/vocabulary';
 
 interface SentenceLearningProps {
   navigate: (page: Page) => void;
   appState: AppState;
-  updateState: (updates: Partial<AppState>) => void;
+  updateState: UpdateStateFn;
 }
 
 export default function SentenceLearning({
@@ -24,8 +24,8 @@ export default function SentenceLearning({
     if (currentIndex < sentenceData.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
-      // Award a star for completing
-      updateState({ stars: appState.stars + 1 });
+      // Award completion rewards at the end of sentence practice.
+      updateState((prev) => ({ stars: prev.stars + 1, totalXP: prev.totalXP + 8 }));
       navigate('collection');
     }
   };
