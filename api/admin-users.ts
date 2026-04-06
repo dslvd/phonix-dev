@@ -1,8 +1,8 @@
-import { BATTERY_MAX } from '../src/lib/battery';
-
 const jsonHeaders = {
   'Content-Type': 'application/json',
 };
+
+const BATTERY_MAX = 10;
 
 declare const process: {
   env: Record<string, string | undefined>;
