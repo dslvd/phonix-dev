@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import { Page, AppState } from '../App';
+import { Page, AppState, UpdateStateFn } from '../App';
 import { VocabularyItem, sentenceData, vocabularyData } from '../data/vocabulary';
 import { usePremium } from '../lib/usePremium';
 import {
@@ -15,10 +15,11 @@ import { BATTERY_MAX, formatBatteryCountdown } from '../lib/battery';
 interface DashboardProps {
   navigate: (page: Page) => void;
   appState: AppState;
+  updateState: UpdateStateFn;
   premium: ReturnType<typeof usePremium>;
 }
 
-export default function Dashboard({ navigate, appState, premium }: DashboardProps) {
+export default function Dashboard({ navigate, appState, updateState, premium }: DashboardProps) {
   const levelCycle = getVocabularyLevelCycle(appState.learnedWords.length);
   const isGuestMode = (() => {
     if (typeof window === 'undefined') {
@@ -257,6 +258,7 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
       total: warmUpTarget,
       unlocked: true,
       buttonText: 'Start Warm Up',
+      startIndex: 0,
     },
     {
       title: 'Word Builder 2',
@@ -269,6 +271,7 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
       total: Math.max(1, wordBuilderTarget - warmUpTarget),
       unlocked: vocabularyProgress >= warmUpTarget,
       buttonText: 'Start Word Builder 2',
+      startIndex: warmUpTarget,
     },
     {
       title: 'Phrase Builder 3',
@@ -281,6 +284,7 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
       total: Math.max(1, phraseBuilderTarget - wordBuilderTarget),
       unlocked: vocabularyProgress >= wordBuilderTarget,
       buttonText: 'Start Phrase Builder 3',
+      startIndex: wordBuilderTarget,
     },
     {
       title: 'Sentence Practice 1',
@@ -293,6 +297,7 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
       total: sentencePhaseTarget,
       unlocked: vocabularyProgress >= phraseBuilderTarget,
       buttonText: 'Start Sentence Practice',
+      sentenceStartIndex: 0,
     },
     {
       title: 'Sentence Practice 2',
@@ -305,6 +310,7 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
       total: Math.max(1, sentenceMasteryTarget - sentencePhaseTarget),
       unlocked: vocabularyProgress >= phraseBuilderTarget && sentenceProgress >= sentencePhaseTarget,
       buttonText: 'Continue Sentence Practice',
+      sentenceStartIndex: sentencePhaseTarget,
     },
     {
       title: 'Master Checkpoint',
@@ -330,6 +336,24 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
         100
     )
   );
+
+  const openRoadmapNode = (node: (typeof roadmapNodes)[number]) => {
+    if (!node.unlocked) {
+      return;
+    }
+
+    if (node.page === 'vocabulary' && typeof node.startIndex === 'number') {
+      updateState({
+        currentVocabIndex: node.startIndex,
+      });
+    }
+
+    if (node.page === 'sentence' && typeof node.sentenceStartIndex === 'number' && typeof window !== 'undefined') {
+      window.sessionStorage.setItem('phonix-sentence-start-index', String(node.sentenceStartIndex));
+    }
+
+    navigate(node.page);
+  };
 
   return (
     <div className="theme-page min-h-screen px-4 py-5 text-slate-100 lg:px-6">
@@ -431,7 +455,7 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
                     >
                       <div className="flex items-start gap-3 sm:gap-4">
                         <button
-                          onClick={node.unlocked ? () => navigate(node.page) : undefined}
+                          onClick={node.unlocked ? () => openRoadmapNode(node) : undefined}
                           disabled={!node.unlocked}
                           className={`mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full border text-xl sm:h-12 sm:w-12 ${
                             node.unlocked ? `bg-gradient-to-br ${node.tone} border-white/20 text-white` : 'theme-lock-button cursor-not-allowed'
@@ -472,7 +496,7 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
                           </div>
 
                           <button
-                            onClick={node.unlocked ? () => navigate(node.page) : undefined}
+                            onClick={node.unlocked ? () => openRoadmapNode(node) : undefined}
                             disabled={!node.unlocked}
                             className={`mt-3 w-full rounded-xl border px-3 py-2 text-xs font-bold uppercase tracking-[0.08em] transition ${
                               node.unlocked ? 'theme-nav-button hover:border-[#56b8e8]' : 'theme-lock-button cursor-not-allowed'

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import Card from '../components/Card';
 import NavigationHeader from '../components/NavigationHeader';
@@ -16,12 +16,28 @@ export default function SentenceLearning({
   appState,
   updateState,
 }: SentenceLearningProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(() => {
+    if (typeof window === 'undefined') {
+      return 0;
+    }
+
+    const rawStartIndex = window.sessionStorage.getItem('phonix-sentence-start-index');
+    const parsed = Number.parseInt(rawStartIndex || '0', 10);
+    return Number.isFinite(parsed)
+      ? Math.max(0, Math.min(parsed, Math.max(0, sentenceData.length - 1)))
+      : 0;
+  });
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [isCorrectAnswer, setIsCorrectAnswer] = useState<boolean | null>(null);
   const [showLevelCompleteModal, setShowLevelCompleteModal] = useState(false);
   const currentSentence = sentenceData[currentIndex];
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.removeItem('phonix-sentence-start-index');
+    }
+  }, []);
 
   const question = useMemo(() => {
     const stopWords = new Set(['ang', 'sang', 'ako', 'si', 'sa', 'ni', 'kay', 'nga']);
