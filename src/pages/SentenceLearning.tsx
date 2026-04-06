@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import NavigationHeader from '../components/NavigationHeader';
 import { Page, AppState, UpdateStateFn } from '../App';
-import { sentenceData } from '../data/vocabulary';
+import { sentenceData, vocabularyData } from '../data/vocabulary';
 
 interface SentenceLearningProps {
   navigate: (page: Page) => void;
@@ -18,11 +18,61 @@ export default function SentenceLearning({
   updateState,
 }: SentenceLearningProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [showResult, setShowResult] = useState(false);
   const currentSentence = sentenceData[currentIndex];
 
+  const question = useMemo(() => {
+    const stopWords = new Set(['ang', 'sang', 'ako', 'si', 'sa', 'ni', 'kay', 'nga']);
+    const words = currentSentence.nativeSentence.split(/\s+/);
+    const cleanWords = words.map((word) => word.replace(/[^A-Za-zÀ-ÿ'-]/g, '').toLowerCase());
+
+    const candidateIndexes = cleanWords
+      .map((word, index) => ({ word, index }))
+      .filter(({ word }) => word.length > 2 && !stopWords.has(word))
+      .map(({ index }) => index);
+
+    const blankIndex = candidateIndexes.length > 0 ? candidateIndexes[0] : Math.max(0, words.length - 1);
+    const correctWord = words[blankIndex].replace(/[^A-Za-zÀ-ÿ'-]/g, '');
+
+    const distractors = vocabularyData
+      .map((item) => item.nativeWord)
+      .filter((word) => word.toLowerCase() !== correctWord.toLowerCase())
+      .slice(currentIndex, currentIndex + 30)
+      .filter((word, index, array) => array.findIndex((entry) => entry.toLowerCase() === word.toLowerCase()) === index)
+      .slice(0, 3);
+
+    while (distractors.length < 3) {
+      const fallback = vocabularyData[(distractors.length + currentIndex) % vocabularyData.length]?.nativeWord || 'Pulong';
+      if (fallback.toLowerCase() !== correctWord.toLowerCase()) {
+        distractors.push(fallback);
+      }
+    }
+
+    const options = [correctWord, ...distractors].sort((a, b) => {
+      const seed = (currentSentence.id + a + b).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      return seed % 3 === 0 ? -1 : 1;
+    });
+
+    const maskedWords = [...words];
+    maskedWords[blankIndex] = '_____';
+
+    return {
+      maskedSentence: maskedWords.join(' '),
+      correctWord,
+      options,
+    };
+  }, [currentSentence, currentIndex]);
+
   const handleNext = () => {
+    if (!showResult) {
+      return;
+    }
+
     if (currentIndex < sentenceData.length - 1) {
       setCurrentIndex(currentIndex + 1);
+      setSelectedOption(null);
+      setShowResult(false);
     } else {
       // Award completion rewards at the end of sentence practice.
       updateState((prev) => ({ stars: prev.stars + 1, totalXP: prev.totalXP + 8 }));
@@ -33,7 +83,24 @@ export default function SentenceLearning({
   const handlePrevious = () => {
     if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1);
+      setSelectedOption(null);
+      setShowResult(false);
     }
+  };
+
+  const handleOptionSelect = (option: string) => {
+    if (showResult) {
+      return;
+    }
+
+    const isCorrect = option.toLowerCase() === question.correctWord.toLowerCase();
+    setSelectedOption(option);
+    setShowResult(true);
+
+    updateState((prev) => ({
+      totalXP: prev.totalXP + (isCorrect ? 6 : 2),
+      stars: prev.stars + (isCorrect ? 1 : 0),
+    }));
   };
 
   const playAudio = (text: string, e?: React.MouseEvent<HTMLButtonElement>) => {
@@ -124,11 +191,11 @@ export default function SentenceLearning({
               {/* Native Sentence */}
               <div className="mb-8 rounded-2xl border border-[#304656] bg-[#122733] p-6">
                 <p className="mb-3 text-sm font-bold text-[#8bb1c7]">
-                  {appState.targetLanguage}:
+                  {appState.targetLanguage} Fill in the blank:
                 </p>
                 <div className="flex items-center justify-center gap-4">
                   <h2 className="font-baloo text-3xl md:text-4xl font-bold text-[#dff1ff] leading-relaxed">
-                    {currentSentence.nativeSentence}
+                    {question.maskedSentence}
                   </h2>
                   <button
                     onClick={(e) => playAudio(currentSentence.nativeSentence, e)}
@@ -142,7 +209,7 @@ export default function SentenceLearning({
               {/* English Translation */}
               <div className="rounded-2xl border border-[#304656] bg-[#0f202a] p-6 shadow-lg">
                 <p className="mb-3 text-sm font-bold text-[#8bb1c7]">
-                  {appState.nativeLanguage}:
+                  {appState.nativeLanguage} Hint:
                 </p>
                 <div className="flex items-center justify-center gap-4">
                   <h3 className="font-baloo text-3xl md:text-4xl font-bold text-secondary leading-relaxed">
@@ -156,6 +223,43 @@ export default function SentenceLearning({
                   </button>
                 </div>
               </div>
+
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                {question.options.map((option) => {
+                  const isCorrectOption = option.toLowerCase() === question.correctWord.toLowerCase();
+                  const isSelected = selectedOption?.toLowerCase() === option.toLowerCase();
+
+                  const stateClass = !showResult
+                    ? 'theme-nav-button hover:border-[#FF9126]'
+                    : isCorrectOption
+                    ? 'border border-green-500 bg-green-100 text-green-900'
+                    : isSelected
+                    ? 'border border-red-500 bg-red-100 text-red-900'
+                    : 'theme-nav-button opacity-70';
+
+                  return (
+                    <button
+                      key={option}
+                      onClick={() => handleOptionSelect(option)}
+                      disabled={showResult}
+                      className={`rounded-xl px-4 py-3 text-lg font-bold transition ${stateClass}`}
+                    >
+                      {option}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {showResult && (
+                <div className="mt-4 rounded-xl border border-[#304656] bg-[#173447] p-4">
+                  <p className="theme-title text-lg font-bold">
+                    {selectedOption?.toLowerCase() === question.correctWord.toLowerCase() ? 'Correct! Great job!' : 'Nice try!'}
+                  </p>
+                  <p className="theme-muted mt-1 font-semibold">
+                    Correct answer: {question.correctWord}
+                  </p>
+                </div>
+              )}
             </Card>
           </motion.div>
 
@@ -172,6 +276,7 @@ export default function SentenceLearning({
             <Button
               variant="primary"
               onClick={handleNext}
+              disabled={!showResult}
               className="flex-1"
             >
               {currentIndex === sentenceData.length - 1 ? 'Finish! 🎉' : 'Next →'}

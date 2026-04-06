@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import NavigationHeader from '../components/NavigationHeader';
 import Quiz from '../components/Quiz';
 import EnergyBar from '../components/EnergyBar';
@@ -57,6 +57,7 @@ export default function VocabularyLearning({
   const [wordsBeforeQuiz, setWordsBeforeQuiz] = useState(3); // Quiz every 3 words
   const [consecutiveWords, setConsecutiveWords] = useState(0);
   const [showOutOfBatteriesModal, setShowOutOfBatteriesModal] = useState(false);
+  const previousLevelCycleRef = useRef(levelCycle);
   const [aiVocabulary, setAiVocabulary] = useState<VocabularyItem[]>(() => {
     return readCachedAIVocabulary(targetLanguage, nativeLanguage, { levelCycle });
   });
@@ -103,12 +104,13 @@ export default function VocabularyLearning({
   }, [targetLanguage, nativeLanguage, isGuestMode, levelCycle]);
 
   useEffect(() => {
-    if (appState.currentVocabIndex === 0) {
+    if (previousLevelCycleRef.current === levelCycle) {
       return;
     }
 
+    previousLevelCycleRef.current = levelCycle;
     updateState({ currentVocabIndex: 0 });
-  }, [levelCycle, appState.currentVocabIndex, updateState]);
+  }, [levelCycle, updateState]);
 
   const learnedInCurrentCycle = appState.learnedWords.length % 47;
 
@@ -669,38 +671,54 @@ export default function VocabularyLearning({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="flex gap-4 mt-8"
+            className="mt-8"
           >
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="flex-1"
-            >
-              <button
-                onClick={handlePrevious}
-                disabled={appState.currentVocabIndex === 0}
-                className={`w-full py-4 px-6 rounded-2xl font-bold text-lg transition-all ${
-                  appState.currentVocabIndex === 0
-                    ? 'theme-lock-button cursor-not-allowed'
-                    : 'theme-nav-button border text-sm hover:border-[#FF9126] hover:shadow-lg'
-                }`}
+            <div className="grid gap-3 sm:grid-cols-3">
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="sm:col-span-1"
               >
-                ← Previous
-              </button>
-            </motion.div>
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="flex-1"
-            >
-              <button
-                onClick={handleNext}
-                className="w-full py-4 px-6 rounded-2xl font-bold text-lg bg-gradient-to-r from-[#FF9126] to-[#ffb35a] shadow-lg hover:shadow-2xl transition-all relative overflow-hidden group"
+                <button
+                  onClick={handlePrevious}
+                  disabled={appState.currentVocabIndex === 0}
+                  className={`w-full py-4 px-6 rounded-2xl font-bold text-lg transition-all ${
+                    appState.currentVocabIndex === 0
+                      ? 'theme-lock-button cursor-not-allowed'
+                      : 'theme-nav-button border text-sm hover:border-[#FF9126] hover:shadow-lg'
+                  }`}
+                >
+                  ← Previous
+                </button>
+              </motion.div>
+
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="sm:col-span-1"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-[#FF9126] to-[#FF9126] opacity-0 group-hover:opacity-100 transition-opacity" />
-                <span className="relative z-10 text-white transition-colors group-hover:text-[#fff3de]">Next →</span>
-              </button>
-            </motion.div>
+                <button
+                  onClick={() => setIsQuizMode(true)}
+                  className="w-full rounded-2xl border border-[#56b8e8] bg-[#173b52] px-6 py-4 text-sm font-bold uppercase tracking-[0.08em] text-[#c9efff] transition hover:border-[#7ed6ff]"
+                >
+                  Quiz Me
+                </button>
+              </motion.div>
+
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="sm:col-span-1"
+              >
+                <button
+                  onClick={handleNext}
+                  className="w-full py-4 px-6 rounded-2xl font-bold text-lg bg-gradient-to-r from-[#FF9126] to-[#ffb35a] shadow-lg hover:shadow-2xl transition-all relative overflow-hidden group"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#FF9126] to-[#FF9126] opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <span className="relative z-10 text-white transition-colors group-hover:text-[#fff3de]">Next →</span>
+                </button>
+              </motion.div>
+            </div>
           </motion.div>
 
           {/* Premium Progress Indicator */}
