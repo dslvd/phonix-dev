@@ -9,6 +9,8 @@ import { usePremium } from '../lib/usePremium';
 import {
   fetchAIVocabulary,
   getFiveStageLevel,
+  getVocabularyLevelCycle,
+  getVocabularyLevelTheme,
   prefetchAIVocabulary,
   readCachedAIVocabulary,
   writeCachedAIVocabulary,
@@ -48,18 +50,20 @@ export default function VocabularyLearning({
   })();
   const targetLanguage = appState.targetLanguage || 'Hiligaynon';
   const nativeLanguage = appState.nativeLanguage || 'English';
+  const levelCycle = getVocabularyLevelCycle(appState.learnedWords.length);
+  const levelTheme = getVocabularyLevelTheme(levelCycle);
 
   const [isQuizMode, setIsQuizMode] = useState(false);
   const [wordsBeforeQuiz, setWordsBeforeQuiz] = useState(3); // Quiz every 3 words
   const [consecutiveWords, setConsecutiveWords] = useState(0);
   const [showOutOfBatteriesModal, setShowOutOfBatteriesModal] = useState(false);
   const [aiVocabulary, setAiVocabulary] = useState<VocabularyItem[]>(() => {
-    return readCachedAIVocabulary(targetLanguage, nativeLanguage);
+    return readCachedAIVocabulary(targetLanguage, nativeLanguage, { levelCycle });
   });
   const [aiFlashcardItem, setAiFlashcardItem] = useState<VocabularyItem | null>(null);
 
   useEffect(() => {
-    const cached = readCachedAIVocabulary(targetLanguage, nativeLanguage);
+    const cached = readCachedAIVocabulary(targetLanguage, nativeLanguage, { levelCycle });
     if (cached.length > 0) {
       setAiVocabulary(cached);
     }
@@ -73,19 +77,19 @@ export default function VocabularyLearning({
     }
 
     setAiFlashcardItem(null);
-    prefetchAIVocabulary(targetLanguage, nativeLanguage);
+    prefetchAIVocabulary(targetLanguage, nativeLanguage, { levelCycle });
 
     let cancelled = false;
 
     const loadAIVocabulary = async () => {
       try {
-        const words = await fetchAIVocabulary(targetLanguage, nativeLanguage);
+        const words = await fetchAIVocabulary(targetLanguage, nativeLanguage, { levelCycle });
         if (cancelled) {
           return;
         }
 
         setAiVocabulary(words);
-        writeCachedAIVocabulary(targetLanguage, nativeLanguage, words);
+        writeCachedAIVocabulary(targetLanguage, nativeLanguage, words, { levelCycle });
       } catch {
         // Keep using cached AI words when provider is unavailable.
       }
@@ -96,11 +100,20 @@ export default function VocabularyLearning({
     return () => {
       cancelled = true;
     };
-  }, [targetLanguage, nativeLanguage, isGuestMode]);
+  }, [targetLanguage, nativeLanguage, isGuestMode, levelCycle]);
+
+  useEffect(() => {
+    if (appState.currentVocabIndex === 0) {
+      return;
+    }
+
+    updateState({ currentVocabIndex: 0 });
+  }, [levelCycle, appState.currentVocabIndex, updateState]);
+
+  const learnedInCurrentCycle = appState.learnedWords.length % 47;
 
   const currentLevelWords = (() => {
-    const learnedCount = appState.learnedWords.length;
-    const difficulty = learnedCount < 20 ? 'beginner' : learnedCount < 40 ? 'intermediate' : 'advanced';
+    const difficulty = learnedInCurrentCycle < 20 ? 'beginner' : learnedInCurrentCycle < 40 ? 'intermediate' : 'advanced';
     return aiVocabulary.filter((item) => item.difficulty === difficulty);
   })();
   const beginnerWords = aiVocabulary.filter((item) => item.difficulty === 'beginner');
@@ -111,7 +124,7 @@ export default function VocabularyLearning({
   const intermediateCount = intermediateWords.length || 20;
   const advancedCount = advancedWords.length || 7;
 
-  const learnedCount = appState.learnedWords.length;
+  const learnedCount = learnedInCurrentCycle;
   const currentDifficultyBand: 'beginner' | 'intermediate' | 'advanced' =
     learnedCount < beginnerCount
       ? 'beginner'
@@ -492,7 +505,13 @@ export default function VocabularyLearning({
               onUpgrade={() => navigate('premium')}
             />
             {hasAIVocabulary && (
-              <div className="mt-3 text-center">
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-center">
+                <span className="inline-flex items-center rounded-full border border-[#56b8e8] bg-[#143244] px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] text-[#a8dcf6]">
+                  Level Pack {levelCycle + 1}
+                </span>
+                <span className="inline-flex items-center rounded-full border border-[#7ed6ff] bg-[#173b52] px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] text-[#c9efff]">
+                  Theme: {levelTheme}
+                </span>
                 <span className="inline-flex items-center rounded-full border border-[#FF9126] bg-[#1d3443] px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] text-[#ffd7aa]">
                   {difficultyLabel} Stage {levelStage}/5
                 </span>
