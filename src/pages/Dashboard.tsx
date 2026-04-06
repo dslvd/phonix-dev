@@ -286,8 +286,9 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
     const template = roadmapNodeTemplates[index % roadmapNodeTemplates.length];
     const stageNumber = index + 1;
     const stageSize = Math.max(3, Math.ceil(totalWords / 8));
-    const progress = Math.min(appState.learnedWords.length, Math.min(totalWords + stageNumber * 2, (index + 1) * stageSize));
     const total = Math.max(stageSize, Math.min(totalWords + stageNumber * 2, stageSize + Math.floor(index / 2)));
+    const rawProgress = Math.min(appState.learnedWords.length, Math.min(totalWords + stageNumber * 2, (index + 1) * stageSize));
+    const progress = Math.min(total, rawProgress);
     const unlocked = appState.learnedWords.length >= Math.max(0, index * Math.floor(stageSize * 0.8));
 
     return {
@@ -390,7 +391,7 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
 
                 <div className="space-y-4 sm:space-y-6">
                   {roadmapNodes.map((node, index) => {
-                    const completion = Math.round((node.progress / node.total) * 100);
+                    const completion = Math.max(0, Math.min(100, Math.round((node.progress / node.total) * 100)));
                     const isCurrent = index === roadmapFocusIndex;
                     const isOdd = index % 2 === 1;
 
