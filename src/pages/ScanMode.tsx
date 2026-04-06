@@ -88,31 +88,49 @@ export default function ScanMode({ navigate, appState, updateState, premium }: S
       return;
     }
 
-    const cameras = await getCameras();
+    let stream: MediaStream | null = null;
 
-    if (cameras.length === 0) {
-      setError('No camera found. Please connect a camera and try again.');
-      setCameraLoading(false);
-      return;
+    try {
+      // Ask for camera permission with the simplest possible request first.
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+        audio: false,
+      });
+    } catch (basicError) {
+      const cameras = await getCameras();
+
+      if (cameras.length === 0) {
+        setError('No camera found. Please connect a camera and try again.');
+        setCameraLoading(false);
+        return;
+      }
+
+      const preferredCamera =
+        cameras.find(c =>
+          !c.label.toLowerCase().includes('phone') &&
+          !c.label.toLowerCase().includes('android') &&
+          !c.label.toLowerCase().includes('iphone') &&
+          !c.label.toLowerCase().includes('droid') &&
+          !c.label.toLowerCase().includes('obs') &&
+          !c.label.toLowerCase().includes('virtual')
+        ) || cameras[0];
+
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          deviceId: { exact: preferredCamera.deviceId },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+        audio: false,
+      });
     }
-    const preferredCamera =
-      cameras.find(c =>
-        !c.label.toLowerCase().includes('phone') &&
-        !c.label.toLowerCase().includes('android') &&
-        !c.label.toLowerCase().includes('iphone') &&
-        !c.label.toLowerCase().includes('droid') &&
-        !c.label.toLowerCase().includes('obs') &&
-        !c.label.toLowerCase().includes('virtual')
-      ) || cameras[0];
 
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        deviceId: { exact: preferredCamera.deviceId },
-        width: { ideal: 1280 },
-        height: { ideal: 720 },
-      },
-      audio: false,
-    });
+    if (!stream) {
+      throw new Error('Could not start camera stream.');
+    }
 
     streamRef.current = stream;
 
@@ -141,6 +159,23 @@ export default function ScanMode({ navigate, appState, updateState, premium }: S
     };
   } catch (err: any) {
     setCameraLoading(false);
+    const errorName = String(err?.name || '').toLowerCase();
+
+    if (errorName.includes('notallowed') || errorName.includes('permission')) {
+      setError('Camera permission was blocked. Please allow camera access in your browser and try again.');
+      return;
+    }
+
+    if (errorName.includes('notfound') || errorName.includes('devicesnotfound')) {
+      setError('No camera was found on this device.');
+      return;
+    }
+
+    if (errorName.includes('notreadable') || errorName.includes('trackstart')) {
+      setError('Your camera is busy or unavailable. Close other apps using the camera and try again.');
+      return;
+    }
+
     setError(`Camera error: ${err.message || 'Unknown error'}`);
   }
 };
