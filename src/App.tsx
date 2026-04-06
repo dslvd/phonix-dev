@@ -10,9 +10,11 @@ import VocabularyCollection from './pages/VocabularyCollection';
 import Profile from './pages/Profile';
 import Premium from './pages/Premium';
 import AdminDashboard from './pages/AdminDashboardPage';
+import Instructions from './pages/Instructions';
 import Mascot from './components/Mascot';
 import { usePremium } from './lib/usePremium';
 import { clearPremiumStatus } from './lib/premiumService';
+import { prefetchAIVocabulary } from './lib/aiVocabulary';
 
 type ThemeMode = 'dark' | 'light';
 
@@ -25,9 +27,22 @@ export type Page =
   | 'vocabulary'
   | 'sentence'
   | 'collection'
+  | 'instructions'
   | 'profile'
   | 'premium'
   | 'admin';
+
+export type BackpackSource = 'lesson' | 'scan' | 'upload' | 'manual';
+
+export interface BackpackItem {
+  id: string;
+  nativeText: string;
+  translatedText: string;
+  source: BackpackSource;
+  createdAt: string;
+  difficulty?: 'beginner' | 'intermediate' | 'advanced';
+  emoji?: string;
+}
 
 export interface AppState {
   nativeLanguage: string;
@@ -41,7 +56,14 @@ export interface AppState {
   totalXP: number;
   lastActiveDate: string;
   batteriesRemaining: number;
+  backpackItems: BackpackItem[];
 }
+
+export type UpdateStateAction =
+  | Partial<AppState>
+  | ((prev: AppState) => Partial<AppState>);
+
+export type UpdateStateFn = (updates: UpdateStateAction) => void;
 
 function createDefaultAppState(getTodayKey: () => string): AppState {
   return {
@@ -56,6 +78,7 @@ function createDefaultAppState(getTodayKey: () => string): AppState {
     totalXP: 0,
     lastActiveDate: getTodayKey(),
     batteriesRemaining: 5,
+    backpackItems: [],
   };
 }
 
@@ -109,6 +132,7 @@ function getInitialPage(): Page {
     'vocabulary',
     'sentence',
     'collection',
+    'instructions',
     'profile',
     'premium',
     'admin',
@@ -285,8 +309,11 @@ function App() {
     </div>
   );
 
-  const updateState = (updates: Partial<AppState>) => {
-    setAppState((prev) => ({ ...prev, ...updates }));
+  const updateState: UpdateStateFn = (updates) => {
+    setAppState((prev) => {
+      const nextUpdates = typeof updates === 'function' ? updates(prev) : updates;
+      return { ...prev, ...nextUpdates };
+    });
   };
 
   const resetAppState = () => {
@@ -404,7 +431,28 @@ function App() {
     };
   }, [appState, userKey, isGuestMode, hasHydratedFromCloud]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    if (!userKey || isGuestMode) {
+      return;
+    }
+
+    const targetLanguage = (appState.targetLanguage || '').trim();
+    const nativeLanguage = (appState.nativeLanguage || '').trim();
+
+    if (!targetLanguage || !nativeLanguage) {
+      return;
+    }
+
+    prefetchAIVocabulary(targetLanguage, nativeLanguage);
+  }, [appState.targetLanguage, appState.nativeLanguage, userKey, isGuestMode]);
+
   const showDesktopSidebar = currentPage === 'dashboard' || currentPage === 'admin';
+  const keepMainPanel = currentPage === 'dashboard';
+  const useCleanUi = currentPage !== 'dashboard';
   const shouldShowGlobalMascot = currentPage !== 'landing';
   const globalMascotMessage = (() => {
     const isFilipino = (appState.nativeLanguage || '').trim().toLowerCase() === 'filipino';
@@ -456,11 +504,12 @@ function App() {
       return scanMessages[appState.stars % scanMessages.length];
     }
 
-    return isFilipino ? 'Magtanong ka lang kung may kailangan ka.' : 'Ask me if you need help.';
+    return isFilipino ? 'Andito lang ako kung may kailangan ka!”' : 'I’m right here if you need anything!';
   })();
   const desktopNavItems: Array<{ label: string; icon: string; page: Page }> = [
     { label: 'Learn', icon: '🏠', page: 'dashboard' },
     { label: 'Backpack', icon: '🎒', page: 'collection' },
+    { label: 'Guide', icon: '📘', page: 'instructions' },
     { label: 'Scan', icon: '📸', page: 'scan' },
     { label: 'Premium', icon: '⭐', page: 'premium' }
   ];
@@ -488,7 +537,9 @@ function App() {
       case 'sentence':
         return <SentenceLearning navigate={navigate} appState={appState} updateState={updateState} />;
       case 'collection':
-        return <VocabularyCollection navigate={navigate} appState={appState} />;
+        return <VocabularyCollection navigate={navigate} appState={appState} updateState={updateState} />;
+      case 'instructions':
+        return <Instructions navigate={navigate} appState={appState} />;
       case 'profile':
         return isGuestMode
           ? <Landing navigate={navigate} resetAppState={resetAppState} />
@@ -506,7 +557,7 @@ function App() {
 
   if (isMobile) {
     return (
-      <div className="theme-page min-h-screen">
+      <div className={`theme-page min-h-screen ${useCleanUi ? 'clean-ui' : ''}`}>
         {renderPage()}
         <div className="fixed right-4 top-4 z-[70]">
           {themeToggle}
@@ -524,7 +575,7 @@ function App() {
   }
 
   return (
-    <div className={`${showDesktopSidebar ? 'theme-shell p-4' : 'theme-page p-6'} min-h-screen`}>
+    <div className={`${showDesktopSidebar ? 'theme-shell p-4' : 'theme-page p-6'} ${useCleanUi ? 'clean-ui' : ''} min-h-screen`}>
       {!showDesktopSidebar && (
         <div className="fixed right-6 top-6 z-[70]">
           {themeToggle}
@@ -573,11 +624,7 @@ function App() {
         )}
 
         <main
-          className={`min-w-0 overflow-hidden rounded-[28px] ${
-            showDesktopSidebar
-              ? 'theme-surface-strong border'
-              : 'theme-surface-strong border'
-          } ${showDesktopSidebar ? '' : 'w-full'}`}
+          className={`min-w-0 ${keepMainPanel ? 'overflow-hidden rounded-[28px] theme-surface-strong border' : 'w-full overflow-visible bg-transparent border-0 rounded-none shadow-none'} ${showDesktopSidebar ? '' : 'w-full'}`}
         >
           {renderPage()}
         </main>

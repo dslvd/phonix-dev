@@ -4,18 +4,20 @@ import Button from '../components/Button';
 import Card from '../components/Card';
 import ProgressBar from '../components/ProgressBar';
 import NavigationHeader from '../components/NavigationHeader';
-import { Page, AppState } from '../App';
+import { Page, AppState, BackpackItem } from '../App';
 import { VocabularyItem } from '../data/vocabulary';
 import { fetchAIVocabulary, readCachedAIVocabulary, writeCachedAIVocabulary } from '../lib/aiVocabulary';
 
 interface VocabularyCollectionProps {
   navigate: (page: Page) => void;
   appState: AppState;
+  updateState: (updates: Partial<AppState>) => void;
 }
 
 export default function VocabularyCollection({
   navigate,
   appState,
+  updateState,
 }: VocabularyCollectionProps) {
   const [showNoBatteryModal, setShowNoBatteryModal] = useState(false);
   const [aiVocabulary, setAiVocabulary] = useState<VocabularyItem[]>([]);
@@ -79,6 +81,33 @@ export default function VocabularyCollection({
   const learnedVocabulary = aiVocabulary.filter((item) =>
     appState.learnedWords.includes(item.id)
   );
+
+  useEffect(() => {
+    if (learnedVocabulary.length === 0) {
+      return;
+    }
+
+    const existingIds = new Set(appState.backpackItems.map((item) => item.id));
+    const missingLessonItems: BackpackItem[] = learnedVocabulary
+      .filter((item) => !existingIds.has(`lesson:${item.id}`))
+      .map((item) => ({
+        id: `lesson:${item.id}`,
+        nativeText: item.nativeWord,
+        translatedText: item.englishWord,
+        source: 'lesson',
+        createdAt: new Date().toISOString(),
+        difficulty: item.difficulty,
+        emoji: item.emoji,
+      }));
+
+    if (missingLessonItems.length === 0) {
+      return;
+    }
+
+    updateState({
+      backpackItems: [...missingLessonItems, ...appState.backpackItems],
+    });
+  }, [learnedVocabulary, appState.backpackItems, updateState]);
 
   return (
     <div className="theme-page min-h-screen pb-20 text-slate-100">

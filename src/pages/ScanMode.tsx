@@ -6,13 +6,13 @@ import Button from '../components/Button';
 import Card from '../components/Card';
 import NavigationHeader from '../components/NavigationHeader';
 import EnergyBar from '../components/EnergyBar';
-import { Page, AppState } from '../App';
+import { Page, AppState, BackpackItem, UpdateStateFn } from '../App';
 import { usePremium } from '../lib/usePremium';
 
 interface ScanModeProps {
   navigate: (page: Page) => void;
   appState: AppState;
-  updateState: (updates: Partial<AppState>) => void;
+  updateState: UpdateStateFn;
   premium: ReturnType<typeof usePremium>;
 }
 
@@ -36,6 +36,25 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
 const cleanOCRText = (text: string) => text.replace(/\s+/g, ' ').trim();
 
 export default function ScanMode({ navigate, appState, updateState, premium }: ScanModeProps) {
+  const isGuestMode = (() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    const rawUser = window.localStorage.getItem('user');
+    if (!rawUser) {
+      return false;
+    }
+
+    try {
+      const user = JSON.parse(rawUser) as { name?: string; email?: string };
+      const name = (user.name || '').trim().toLowerCase();
+      const email = (user.email || '').trim();
+      return name === 'guest' || email.length === 0;
+    } catch {
+      return false;
+    }
+  })();
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraLoading, setCameraLoading] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
@@ -44,6 +63,7 @@ export default function ScanMode({ navigate, appState, updateState, premium }: S
   const [savedScans, setSavedScans] = useState<ScanResult[]>([]);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showQuickTips, setShowQuickTips] = useState(true);
+  const [showLoginRequiredModal, setShowLoginRequiredModal] = useState(false);
   const [manualText, setManualText] = useState('');
   const [selectedFileName, setSelectedFileName] = useState('');
 
@@ -72,12 +92,23 @@ export default function ScanMode({ navigate, appState, updateState, premium }: S
       return;
     }
 
-    updateState({
-      batteriesRemaining: Math.max(0, appState.batteriesRemaining - 1),
-    });
+    updateState((prev) => ({
+      batteriesRemaining: Math.max(0, prev.batteriesRemaining - 1),
+    }));
+  };
+
+  const requireLoginForAI = () => {
+    if (!isGuestMode) {
+      return true;
+    }
+
+    setShowLoginRequiredModal(true);
+    setError('Log in to use AI scan, file upload, and manual translation.');
+    return false;
   };
 
   const startCamera = async () => {
+  if (!requireLoginForAI()) return;
   try {
     setError(null);
     setCameraLoading(true);
@@ -403,7 +434,7 @@ const extractPdfText = async (file: File) => {
     const page = await pdf.getPage(pageNumber);
     const textContent = await page.getTextContent();
     const pageText = textContent.items
-      .map((item) => ('str' in item ? item.str : ''))
+      .map((item) => ('str' in item && typeof item.str === 'string' ? item.str : ''))
       .join(' ');
 
     pageTexts.push(pageText);
@@ -419,6 +450,7 @@ const extractDocxText = async (file: File) => {
 };
 
 const handleUploadClick = () => {
+  if (!requireLoginForAI()) return;
   setError(null);
   fileInputRef.current?.click();
 };
@@ -534,6 +566,7 @@ const handleFileSelected = async (event: ChangeEvent<HTMLInputElement>) => {
 };
 
 const captureAndAnalyze = async () => {
+  if (!requireLoginForAI()) return;
   if (!videoRef.current || !canvasRef.current || !guideBoxRef.current) return;
   if (!canUseBatteryAction()) return;
 
@@ -639,6 +672,7 @@ const captureAndAnalyze = async () => {
 };
 
 const translateManualText = async () => {
+  if (!requireLoginForAI()) return;
   if (!manualText.trim()) {
     setError('Type text first, then translate.');
     return;
@@ -702,20 +736,48 @@ const translateManualText = async () => {
 };
 
   const saveScan = () => {
+    if (!requireLoginForAI()) return;
     if (!scanResult) return;
 
     setSavedScans((prev) => [scanResult, ...prev]);
 
-    if (!appState.learnedWords.includes(scanResult.translatedText)) {
-      updateState({
-        learnedWords: [...appState.learnedWords, scanResult.translatedText],
-        stars: appState.stars + 1,
-        totalXP: appState.totalXP + 12,
+    const source =
+      scanResult.confidence === 'manual'
+        ? 'manual'
+        : scanResult.confidence === 'upload'
+          ? 'upload'
+          : 'scan';
+    const backpackId = `${source}:${scanResult.detectedText.trim().toLowerCase()}=>${scanResult.translatedText
+      .trim()
+      .toLowerCase()}`;
+    const backpackItem: BackpackItem = {
+      id: backpackId,
+      nativeText: scanResult.translatedText.trim(),
+      translatedText: scanResult.detectedText.trim(),
+      source,
+      createdAt: new Date().toISOString(),
+      emoji: source === 'upload' ? '📄' : source === 'manual' ? '⌨️' : '📸',
+    };
+
+    if (!appState.backpackItems.find((item) => item.id === backpackId)) {
+      updateState((prev) => {
+        const existingBackpackItem = prev.backpackItems.find((item) => item.id === backpackId);
+        if (existingBackpackItem) {
+          return {
+            totalXP: prev.totalXP + 3,
+          };
+        }
+
+        return {
+          stars: prev.stars + 1,
+          totalXP: prev.totalXP + 12,
+          backpackItems: [backpackItem, ...prev.backpackItems],
+        };
       });
     } else {
-      updateState({
-        totalXP: appState.totalXP + 3,
-      });
+      updateState((prev) => ({
+        totalXP: prev.totalXP + 3,
+      }));
     }
 
     setScanResult(null);
@@ -792,7 +854,7 @@ const translateManualText = async () => {
           transition={{ delay: 0.2 }}
           className="mb-6"
         >
-          <Card className="theme-surface-soft border-2 backdrop-blur-xl">
+          <Card className="theme-surface-soft border-2">
             <EnergyBar
               current={appState.batteriesRemaining}
               max={5}
@@ -1187,12 +1249,58 @@ const translateManualText = async () => {
       </AnimatePresence>
 
       <AnimatePresence>
+        {showLoginRequiredModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            onClick={() => setShowLoginRequiredModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 16 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 16 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md"
+            >
+              <Card className="theme-surface border p-6 text-center">
+                <div className="text-6xl leading-none">🔐</div>
+                <h3 className="theme-title mt-3 font-baloo text-3xl font-bold">Log in to continue</h3>
+                <p className="theme-muted mt-2 font-semibold">
+                  AI features like scan, upload, and smart translation are available to logged-in users.
+                </p>
+                <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                  <button
+                    onClick={() => {
+                      setShowLoginRequiredModal(false);
+                      navigate('landing');
+                    }}
+                    className="flex-1 rounded-xl border-b-4 border-[#FF9126] bg-[#FF9126] px-4 py-3 font-bold text-[#4a2a00]"
+                  >
+                    Log In
+                  </button>
+                  <button
+                    onClick={() => setShowLoginRequiredModal(false)}
+                    className="theme-nav-button flex-1 rounded-xl border px-4 py-3 font-bold"
+                  >
+                    Stay in Guest Mode
+                  </button>
+                </div>
+              </Card>
+            </motion.div>
+          </motion.div>
+        )}
+
+      </AnimatePresence>
+
+      <AnimatePresence>
         {showUpgradeModal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
             onClick={() => setShowUpgradeModal(false)}
           >
             <motion.div
