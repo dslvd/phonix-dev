@@ -102,8 +102,11 @@ export default function VocabularyLearning({
   const levelCycle = getVocabularyLevelCycle(appState.learnedWords.length);
 
   const [isQuizMode, setIsQuizMode] = useState(false);
+  const [isReviewMode, setIsReviewMode] = useState(false);
   const [quizWord, setQuizWord] = useState<VocabularyItem | null>(null);
   const [quizPoolSnapshot, setQuizPoolSnapshot] = useState<VocabularyItem[]>([]);
+  const [reviewWords, setReviewWords] = useState<VocabularyItem[]>([]);
+  const [pendingQuizWord, setPendingQuizWord] = useState<VocabularyItem | null>(null);
   const [wordsBeforeQuiz, setWordsBeforeQuiz] = useState(3);
   const [consecutiveWords, setConsecutiveWords] = useState(0);
   const [showOutOfBatteriesModal, setShowOutOfBatteriesModal] = useState(false);
@@ -171,6 +174,9 @@ export default function VocabularyLearning({
     setQuizMastery({});
     setLastQuizWordId(null);
     setQuizSessionKey(0);
+    setIsReviewMode(false);
+    setReviewWords([]);
+    setPendingQuizWord(null);
     shownCheckpointIdsRef.current = new Set();
     setActiveCheckpointId(null);
   }, [levelCycle, updateState]);
@@ -406,6 +412,12 @@ export default function VocabularyLearning({
     setQuizPoolSnapshot([]);
   };
 
+  const clearReviewState = () => {
+    setIsReviewMode(false);
+    setReviewWords([]);
+    setPendingQuizWord(null);
+  };
+
   const buildQuizPoolSnapshot = (baseWord: VocabularyItem) => {
     const sourcePool = quizWordPool.length > 0 ? quizWordPool : currentLevelWords;
     const deduped = sourcePool.filter(
@@ -419,7 +431,21 @@ export default function VocabularyLearning({
     return [baseWord, ...deduped];
   };
 
+  const buildReviewSnapshot = (focusWord: VocabularyItem) => {
+    const recentWords = introducedVocabulary.slice(-Math.max(wordsBeforeQuiz, 3));
+    const deduped = recentWords.filter(
+      (item, index, array) => array.findIndex((entry) => entry.id === item.id) === index
+    );
+
+    if (deduped.some((item) => item.id === focusWord.id)) {
+      return deduped;
+    }
+
+    return [...deduped, focusWord].slice(-Math.max(wordsBeforeQuiz, 3));
+  };
+
   const startQuizSession = (word: VocabularyItem) => {
+    clearReviewState();
     setQuizWord(word);
     setQuizPoolSnapshot(buildQuizPoolSnapshot(word));
     setLastQuizWordId(word.id);
@@ -427,7 +453,14 @@ export default function VocabularyLearning({
     setIsQuizMode(true);
   };
 
-  const startSmartQuizSession = (excludeWordIds: string[] = []) => {
+  const startReviewSession = (word: VocabularyItem) => {
+    clearQuizState();
+    setPendingQuizWord(word);
+    setReviewWords(buildReviewSnapshot(word));
+    setIsReviewMode(true);
+  };
+
+  const startSmartReviewSession = (excludeWordIds: string[] = []) => {
     const selectedWord = pickNextQuizWord({
       candidates: quizWordPool,
       state: quizMastery,
@@ -440,7 +473,7 @@ export default function VocabularyLearning({
       return false;
     }
 
-    startQuizSession(selectedWord);
+    startReviewSession(selectedWord);
     return true;
   };
 
@@ -515,7 +548,7 @@ export default function VocabularyLearning({
 
     const shouldStartQuiz = isNewDiscovery && nextConsecutiveWords >= wordsBeforeQuiz;
     if (shouldStartQuiz) {
-      const started = startSmartQuizSession([currentItem.id, nextItem?.id || '']);
+      const started = startSmartReviewSession([currentItem.id, nextItem?.id || '']);
       if (started) {
         return;
       }
@@ -580,6 +613,7 @@ export default function VocabularyLearning({
   const handlePrevious = () => {
     setConsecutiveWords(0);
     clearQuizState();
+    clearReviewState();
 
     if (appState.currentVocabIndex > 0) {
       updateState({
@@ -683,6 +717,69 @@ export default function VocabularyLearning({
               <p className="theme-muted mt-2 text-sm font-semibold">
                 The AI vocabulary set is loading now. This starts as soon as the request is ready.
               </p>
+            </motion.div>
+          ) : isReviewMode ? (
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="theme-surface rounded-3xl border p-8 shadow-2xl"
+            >
+              <div className="text-center">
+                <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#ffd166] to-[#ff9126] px-5 py-2 text-sm font-bold uppercase tracking-[0.08em] text-[#4a2a00]">
+                  Review First
+                </div>
+                <h2 className="theme-title mt-4 font-baloo text-4xl font-bold">Remember These Words</h2>
+                <p className="theme-muted mt-2 text-sm font-semibold">
+                  Quick recap before the next quiz challenge.
+                </p>
+              </div>
+
+              <div className="mt-6 grid gap-3">
+                {reviewWords.map((word) => (
+                  <div
+                    key={word.id}
+                    className={`theme-surface-soft flex items-center justify-between rounded-2xl border px-5 py-4 ${
+                      pendingQuizWord?.id === word.id ? 'ring-2 ring-[#56b8e8]/35' : ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="text-5xl leading-none">{word.emoji}</div>
+                      <div>
+                        <p className="theme-title font-baloo text-3xl font-bold">{word.nativeWord}</p>
+                        <p className="theme-muted text-sm font-semibold">{word.englishWord}</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => playAudio(word.nativeWord, 'fil-PH', e)}
+                      className="theme-nav-button flex h-11 w-11 items-center justify-center rounded-full border text-xl shadow-sm transition hover:border-[#FF9126]"
+                      title={`Play ${word.nativeWord}`}
+                      aria-label={`Play ${word.nativeWord}`}
+                    >
+                      🔊
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-8 grid gap-3 sm:grid-cols-2">
+                <button
+                  onClick={clearReviewState}
+                  className="theme-nav-button rounded-2xl border px-6 py-4 text-sm font-bold uppercase tracking-[0.08em]"
+                >
+                  Back to Cards
+                </button>
+                <button
+                  onClick={() => {
+                    if (pendingQuizWord) {
+                      startQuizSession(pendingQuizWord);
+                    }
+                  }}
+                  className="rounded-2xl bg-gradient-to-r from-[#FF9126] to-[#ffb35a] px-6 py-4 text-sm font-bold uppercase tracking-[0.08em] text-white shadow-lg"
+                >
+                  Start Quiz
+                </button>
+              </div>
             </motion.div>
           ) : isQuizMode ? (
             // Quiz Mode
@@ -863,9 +960,9 @@ export default function VocabularyLearning({
               >
                 <button
                   onClick={() => {
-                    const started = startSmartQuizSession([currentItem.id]);
+                    const started = startSmartReviewSession([currentItem.id]);
                     if (!started) {
-                      startQuizSession(currentItem);
+                      startReviewSession(currentItem);
                     }
                   }}
                   className="w-full rounded-2xl border border-[#56b8e8] bg-[#173b52] px-6 py-4 text-sm font-bold uppercase tracking-[0.08em] text-[#c9efff] transition hover:border-[#7ed6ff]"
