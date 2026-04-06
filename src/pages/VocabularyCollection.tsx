@@ -6,7 +6,7 @@ import ProgressBar from '../components/ProgressBar';
 import NavigationHeader from '../components/NavigationHeader';
 import { Page, AppState, BackpackItem } from '../App';
 import { VocabularyItem } from '../data/vocabulary';
-import { fetchAIVocabulary, readCachedAIVocabulary, writeCachedAIVocabulary } from '../lib/aiVocabulary';
+import { fetchAIVocabulary, getVocabularyLevelCycle, readCachedAIVocabulary, writeCachedAIVocabulary } from '../lib/aiVocabulary';
 
 interface VocabularyCollectionProps {
   navigate: (page: Page) => void;
@@ -19,6 +19,7 @@ export default function VocabularyCollection({
   appState,
   updateState,
 }: VocabularyCollectionProps) {
+  const levelCycle = getVocabularyLevelCycle(appState.learnedWords.length);
   const [showNoBatteryModal, setShowNoBatteryModal] = useState(false);
   const [aiVocabulary, setAiVocabulary] = useState<VocabularyItem[]>([]);
   const isGuestMode = (() => {
@@ -45,7 +46,7 @@ export default function VocabularyCollection({
   const nativeLanguage = appState.nativeLanguage || 'English';
 
   useEffect(() => {
-    const cached = readCachedAIVocabulary(targetLanguage, nativeLanguage);
+    const cached = readCachedAIVocabulary(targetLanguage, nativeLanguage, { levelCycle });
     if (cached.length > 0) {
       setAiVocabulary(cached);
     }
@@ -58,12 +59,12 @@ export default function VocabularyCollection({
 
     const refreshWords = async () => {
       try {
-        const words = await fetchAIVocabulary(targetLanguage, nativeLanguage);
+        const words = await fetchAIVocabulary(targetLanguage, nativeLanguage, { levelCycle });
         if (cancelled) {
           return;
         }
         setAiVocabulary(words);
-        writeCachedAIVocabulary(targetLanguage, nativeLanguage, words);
+        writeCachedAIVocabulary(targetLanguage, nativeLanguage, words, { levelCycle });
       } catch {
         // Keep cached AI vocabulary when provider is unavailable.
       }
@@ -74,7 +75,7 @@ export default function VocabularyCollection({
     return () => {
       cancelled = true;
     };
-  }, [targetLanguage, nativeLanguage]);
+  }, [targetLanguage, nativeLanguage, levelCycle]);
 
   const totalWords = aiVocabulary.length || 47;
 

@@ -14,7 +14,7 @@ import Instructions from './pages/Instructions';
 import Mascot from './components/Mascot';
 import { usePremium } from './lib/usePremium';
 import { clearPremiumStatus } from './lib/premiumService';
-import { prefetchAIVocabulary } from './lib/aiVocabulary';
+import { getVocabularyLevelCycle, prefetchAIVocabulary } from './lib/aiVocabulary';
 
 type ThemeMode = 'dark' | 'light';
 
@@ -447,8 +447,9 @@ function App() {
       return;
     }
 
-    prefetchAIVocabulary(targetLanguage, nativeLanguage);
-  }, [appState.targetLanguage, appState.nativeLanguage, userKey, isGuestMode]);
+    const levelCycle = getVocabularyLevelCycle(appState.learnedWords.length);
+    prefetchAIVocabulary(targetLanguage, nativeLanguage, { levelCycle });
+  }, [appState.targetLanguage, appState.nativeLanguage, appState.learnedWords.length, userKey, isGuestMode]);
 
   const showDesktopSidebar = currentPage === 'dashboard' || currentPage === 'admin';
   const keepMainPanel = currentPage === 'dashboard';
