@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import NavigationHeader from '../components/NavigationHeader';
 import { Page, AppState, UpdateStateFn } from '../App';
 import { usePremium } from '../lib/usePremium';
-import { formatBatteryCountdown } from '../lib/battery';
+import { BATTERY_MAX, formatBatteryCountdown } from '../lib/battery';
 
 interface ProfileProps {
   navigate: (page: Page) => void;
@@ -180,8 +180,8 @@ export default function Profile({ navigate, appState, updateState, premium }: Pr
                   {premium.isPremium
                     ? '∞ Unlimited Batteries'
                     : appState.batteryResetAt
-                    ? `${appState.batteriesRemaining} / 5 · ${formatBatteryCountdown(appState.batteryResetAt)}`
-                    : `${appState.batteriesRemaining} / 5 batteries`}
+                    ? `${appState.batteriesRemaining} / ${BATTERY_MAX} · ${formatBatteryCountdown(appState.batteryResetAt)}`
+                    : `${appState.batteriesRemaining} / ${BATTERY_MAX} batteries`}
                 </p>
               </div>
 

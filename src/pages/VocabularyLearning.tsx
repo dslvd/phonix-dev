@@ -14,7 +14,8 @@ import {
   writeCachedAIVocabulary,
   VOCABULARY_PACK_WORD_COUNT,
 } from '../lib/aiVocabulary';
-import { spendBattery } from '../lib/battery';
+import { BATTERY_MAX, spendBattery } from '../lib/battery';
+import { pickNextQuizWord, QuizMasteryState, recordQuizOutcome } from '../lib/quizMastery';
 
 interface VocabularyLearningProps {
   navigate: (page: Page) => void;
@@ -102,11 +103,16 @@ export default function VocabularyLearning({
 
   const [isQuizMode, setIsQuizMode] = useState(false);
   const [quizWord, setQuizWord] = useState<VocabularyItem | null>(null);
+  const [quizPoolSnapshot, setQuizPoolSnapshot] = useState<VocabularyItem[]>([]);
   const [wordsBeforeQuiz, setWordsBeforeQuiz] = useState(3);
   const [consecutiveWords, setConsecutiveWords] = useState(0);
   const [showOutOfBatteriesModal, setShowOutOfBatteriesModal] = useState(false);
   const [showLevelCompleteModal, setShowLevelCompleteModal] = useState(false);
   const [activeCheckpointId, setActiveCheckpointId] = useState<string | null>(null);
+  const [quizRound, setQuizRound] = useState(0);
+  const [quizMastery, setQuizMastery] = useState<QuizMasteryState>({});
+  const [lastQuizWordId, setLastQuizWordId] = useState<string | null>(null);
+  const [quizSessionKey, setQuizSessionKey] = useState(0);
   const previousLevelCycleRef = useRef(levelCycle);
   const shownCheckpointIdsRef = useRef<Set<string>>(new Set());
   const [aiVocabulary, setAiVocabulary] = useState<VocabularyItem[]>(() => {
@@ -161,6 +167,10 @@ export default function VocabularyLearning({
       quizAnswersInCycle: 0,
       sentenceAnswersInCycle: 0,
     });
+    setQuizRound(0);
+    setQuizMastery({});
+    setLastQuizWordId(null);
+    setQuizSessionKey(0);
     shownCheckpointIdsRef.current = new Set();
     setActiveCheckpointId(null);
   }, [levelCycle, updateState]);
@@ -390,6 +400,50 @@ export default function VocabularyLearning({
     isGuestMode,
   ]);
 
+  const clearQuizState = () => {
+    setIsQuizMode(false);
+    setQuizWord(null);
+    setQuizPoolSnapshot([]);
+  };
+
+  const buildQuizPoolSnapshot = (baseWord: VocabularyItem) => {
+    const sourcePool = quizWordPool.length > 0 ? quizWordPool : currentLevelWords;
+    const deduped = sourcePool.filter(
+      (item, index, array) => array.findIndex((entry) => entry.id === item.id) === index
+    );
+
+    if (deduped.some((item) => item.id === baseWord.id)) {
+      return deduped;
+    }
+
+    return [baseWord, ...deduped];
+  };
+
+  const startQuizSession = (word: VocabularyItem) => {
+    setQuizWord(word);
+    setQuizPoolSnapshot(buildQuizPoolSnapshot(word));
+    setLastQuizWordId(word.id);
+    setQuizSessionKey((previous) => previous + 1);
+    setIsQuizMode(true);
+  };
+
+  const startSmartQuizSession = (excludeWordIds: string[] = []) => {
+    const selectedWord = pickNextQuizWord({
+      candidates: quizWordPool,
+      state: quizMastery,
+      round: quizRound,
+      excludeWordIds,
+      lastQuizWordId,
+    });
+
+    if (!selectedWord) {
+      return false;
+    }
+
+    startQuizSession(selectedWord);
+    return true;
+  };
+
   const moveToNextWordOrComplete = () => {
     if (appState.currentVocabIndex < aiVocabulary.length - 1) {
       updateState({
@@ -461,9 +515,10 @@ export default function VocabularyLearning({
 
     const shouldStartQuiz = isNewDiscovery && nextConsecutiveWords >= wordsBeforeQuiz;
     if (shouldStartQuiz) {
-      setQuizWord(currentItem);
-      setIsQuizMode(true);
-      return;
+      const started = startSmartQuizSession([currentItem.id, nextItem?.id || '']);
+      if (started) {
+        return;
+      }
     }
 
     moveToNextWordOrComplete();
@@ -474,6 +529,14 @@ export default function VocabularyLearning({
   };
 
   const handleQuizAnswer = (correct: boolean) => {
+    const answeredWord = quizWord || displayedItem;
+    const applyQuizOutcome = () => {
+      setQuizMastery((previous) =>
+        recordQuizOutcome(previous, answeredWord.id, correct, quizRound)
+      );
+      setQuizRound((previous) => previous + 1);
+    };
+
     // Award stars for correct answers
     if (correct) {
       updateState((prev) => ({
@@ -494,6 +557,7 @@ export default function VocabularyLearning({
       }));
 
       if (nextBatteryState.batteriesRemaining === 0) {
+        applyQuizOutcome();
         setIsQuizMode(false);
         setConsecutiveWords(0);
         setShowOutOfBatteriesModal(true);
@@ -504,8 +568,8 @@ export default function VocabularyLearning({
     }
     
     // Reset quiz mode and counter
-    setIsQuizMode(false);
-    setQuizWord(null);
+    applyQuizOutcome();
+    clearQuizState();
     setConsecutiveWords(0);
     setWordsBeforeQuiz(getQuizIntervalForBand(currentDifficultyBand));
     
@@ -515,8 +579,7 @@ export default function VocabularyLearning({
 
   const handlePrevious = () => {
     setConsecutiveWords(0);
-    setIsQuizMode(false);
-    setQuizWord(null);
+    clearQuizState();
 
     if (appState.currentVocabIndex > 0) {
       updateState({
@@ -597,7 +660,7 @@ export default function VocabularyLearning({
         currentProgress={Math.max(0, completedLearningUnits)}
         totalProgress={Math.max(totalLearningUnits, 1)}
         batteryCurrent={appState.batteriesRemaining}
-        batteryMax={5}
+        batteryMax={BATTERY_MAX}
         batteryResetAt={appState.batteryResetAt}
         isPremium={premium.isPremium}
       />
@@ -624,8 +687,9 @@ export default function VocabularyLearning({
           ) : isQuizMode ? (
             // Quiz Mode
             <Quiz
+              key={quizSessionKey}
               currentWord={quizWord || displayedItem}
-              allWords={quizWordPool}
+              allWords={quizPoolSnapshot.length > 0 ? quizPoolSnapshot : quizWordPool}
               onAnswer={handleQuizAnswer}
               targetLanguage={appState.targetLanguage || 'Hiligaynon'}
               nativeLanguage={appState.nativeLanguage || 'English'}
@@ -799,8 +863,10 @@ export default function VocabularyLearning({
               >
                 <button
                   onClick={() => {
-                    setQuizWord(currentItem);
-                    setIsQuizMode(true);
+                    const started = startSmartQuizSession([currentItem.id]);
+                    if (!started) {
+                      startQuizSession(currentItem);
+                    }
                   }}
                   className="w-full rounded-2xl border border-[#56b8e8] bg-[#173b52] px-6 py-4 text-sm font-bold uppercase tracking-[0.08em] text-[#c9efff] transition hover:border-[#7ed6ff]"
                 >

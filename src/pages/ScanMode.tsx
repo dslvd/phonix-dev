@@ -7,7 +7,7 @@ import Card from '../components/Card';
 import NavigationHeader from '../components/NavigationHeader';
 import { Page, AppState, BackpackItem, UpdateStateFn } from '../App';
 import { usePremium } from '../lib/usePremium';
-import { spendBattery } from '../lib/battery';
+import { BATTERY_MAX, spendBattery } from '../lib/battery';
 
 interface ScanModeProps {
   navigate: (page: Page) => void;
@@ -1026,7 +1026,7 @@ const translateManualText = async () => {
         streakCount={appState.currentStreak}
         starCount={appState.stars}
         batteryCurrent={appState.batteriesRemaining}
-        batteryMax={5}
+        batteryMax={BATTERY_MAX}
         batteryResetAt={appState.batteryResetAt}
         isPremium={premium.isPremium}
       />
@@ -1530,7 +1530,7 @@ const translateManualText = async () => {
                   </h2>
 
                   <p className="mb-6 text-lg text-[#cbe4f6]">
-                    Free learners get 5 batteries, and every lesson mistake removes 1. Upgrade to <strong>Unlimited Batteries</strong> for stress-free practice!
+                    Free learners get {BATTERY_MAX} batteries, and every lesson mistake removes 1. Upgrade to <strong>Unlimited Batteries</strong> for stress-free practice!
                   </p>
 
                   <div className="theme-surface-soft mb-6 rounded-xl border p-4">
