@@ -79,7 +79,6 @@ export default function VocabularyLearning({
   const [showOutOfBatteriesModal, setShowOutOfBatteriesModal] = useState(false);
   const [showLevelCompleteModal, setShowLevelCompleteModal] = useState(false);
   const previousLevelCycleRef = useRef(levelCycle);
-  const lastAutoSpokenWordIdRef = useRef<string | null>(null);
   const [aiVocabulary, setAiVocabulary] = useState<VocabularyItem[]>(() => {
     return readCachedAIVocabularyOrPairLatest(targetLanguage, nativeLanguage, { levelCycle });
   });
@@ -413,7 +412,6 @@ export default function VocabularyLearning({
   };
 
   const handleNext = () => {
-    playAudio(currentItem.nativeWord, 'fil-PH');
     advanceToNextWord();
   };
 
@@ -528,19 +526,6 @@ export default function VocabularyLearning({
       alert('Audio playback not supported in this browser. Try Chrome or Safari.');
     }
   };
-
-  useEffect(() => {
-    if (!hasAIVocabulary || isQuizMode) {
-      return;
-    }
-
-    if (lastAutoSpokenWordIdRef.current === currentItem.id) {
-      return;
-    }
-
-    lastAutoSpokenWordIdRef.current = currentItem.id;
-    playAudio(currentItem.nativeWord, 'fil-PH');
-  }, [hasAIVocabulary, isQuizMode, currentItem.id, currentItem.nativeWord]);
 
   return (
     <div className="theme-page min-h-screen flex flex-col">
@@ -660,12 +645,19 @@ export default function VocabularyLearning({
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: 0.3, type: 'spring' }}
-                      onClick={(e) => playAudio(displayedItem.nativeWord, 'fil-PH', e)}
-                      className="cursor-pointer select-none font-baloo text-6xl font-bold bg-gradient-to-r from-[#FF9126] to-[#FF9126] bg-clip-text text-transparent"
-                      title="Tap to hear pronunciation"
+                      className="select-none font-baloo text-6xl font-bold bg-gradient-to-r from-[#FF9126] to-[#FF9126] bg-clip-text text-transparent"
                     >
                       {displayedItem.nativeWord}
                     </motion.h2>
+                    <button
+                      type="button"
+                      onClick={(e) => playAudio(displayedItem.nativeWord, 'fil-PH', e)}
+                      className="theme-nav-button flex h-12 w-12 items-center justify-center rounded-full border text-xl shadow-md transition hover:border-[#FF9126] hover:shadow-lg"
+                      title={`Play ${appState.targetLanguage} pronunciation`}
+                      aria-label={`Play ${appState.targetLanguage} pronunciation`}
+                    >
+                      🔊
+                    </button>
                   </div>
                 </div>
 
@@ -680,13 +672,20 @@ export default function VocabularyLearning({
                     <p className="theme-muted mb-2 text-xs font-bold uppercase tracking-wider">
                       {appState.nativeLanguage}
                     </p>
-                    <h3
-                      onClick={(e) => playAudio(displayedItem.englishWord, 'en-US', e)}
-                      className="theme-title cursor-pointer select-none font-baloo text-5xl font-bold"
-                      title="Tap to hear pronunciation"
-                    >
-                      {displayedItem.englishWord}
-                    </h3>
+                    <div className="flex items-center justify-between gap-4">
+                      <h3 className="theme-title select-none font-baloo text-5xl font-bold">
+                        {displayedItem.englishWord}
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={(e) => playAudio(displayedItem.englishWord, 'en-US', e)}
+                        className="theme-nav-button flex h-12 w-12 shrink-0 items-center justify-center rounded-full border text-xl shadow-md transition hover:border-[#56b8e8] hover:shadow-lg"
+                        title={`Play ${appState.nativeLanguage} pronunciation`}
+                        aria-label={`Play ${appState.nativeLanguage} pronunciation`}
+                      >
+                        🔊
+                      </button>
+                    </div>
                   </div>
                 </motion.div>
 
