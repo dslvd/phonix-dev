@@ -2,6 +2,10 @@ const jsonHeaders = {
   'Content-Type': 'application/json',
 };
 
+declare const process: {
+  env: Record<string, string | undefined>;
+};
+
 function stripDataUrlPrefix(image: string) {
   return image.replace(/^data:image\/[a-zA-Z0-9.+-]+;base64,/, '').trim();
 }

@@ -2,6 +2,10 @@ const jsonHeaders = {
   'Content-Type': 'application/json',
 };
 
+declare const process: {
+  env: Record<string, string | undefined>;
+};
+
 async function callGeminiVision(image: string, targetLanguage: string, apiKey: string) {
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
