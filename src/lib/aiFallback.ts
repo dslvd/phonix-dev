@@ -146,14 +146,16 @@ function buildAssistantPrompt(
     .join('\n');
 
   return [
-    'You are a concise Filipino language tutor.',
+    'You are a warm, concise Filipino language tutor and app guide.',
     `The target language is ${targetLanguage}.`,
     `The learner's preferred response language is ${responseLanguage}.`,
     'Answer naturally, briefly, and clearly.',
+    'Sound like a supportive human teacher, not a dictionary or robot.',
     'Do not use emojis.',
     `For normal conversation and app guidance, respond in ${responseLanguage}.`,
     'If the user asks about what to do in the app, answer using the current page context.',
     'Be conversational when the user is chatting casually.',
+    'When teaching a word or phrase, prefer a natural short explanation or hint over a stiff formula.',
     `When the user asks for a translation, translate it clearly and briefly, but keep the explanation in ${responseLanguage}.`,
     'For translation questions, prefer short natural replies such as "You can say pwerta." or "\"Ano ini?\" means \"What is this?\""',
     `Do not switch away from ${responseLanguage} unless the user explicitly asks for another language or asks for a translation example.`,
@@ -222,7 +224,7 @@ export function generateFallbackAIAnswer(
     return reply('You can say "Salamat."', 'Puwede mong sabihin ang "Salamat."');
   }
 
-  if (
+  const asksAboutBattery =
     normalizedQuery.includes('buy battery') ||
     normalizedQuery.includes('get battery') ||
     normalizedQuery.includes('more battery') ||
@@ -230,11 +232,41 @@ export function generateFallbackAIAnswer(
     normalizedQuery.includes('magka-battery') ||
     normalizedQuery.includes('paano magka-battery') ||
     normalizedQuery.includes('ubos ang battery') ||
-    normalizedQuery.includes('walang battery')
-  ) {
+    normalizedQuery.includes('walang battery') ||
+    normalizedQuery.includes('recharge') ||
+    normalizedQuery.includes('rechargable') ||
+    normalizedQuery.includes('rechargeable') ||
+    normalizedQuery.includes('refill') ||
+    normalizedQuery.includes('charge again') ||
+    normalizedQuery.includes('come back') ||
+    normalizedQuery.includes('nagre-recharge') ||
+    normalizedQuery.includes('nag rerecharge') ||
+    normalizedQuery.includes('nagri-recharge') ||
+    normalizedQuery.includes('bumabalik ang battery') ||
+    normalizedQuery.includes('bumabalik ba ang battery');
+
+  if (asksAboutBattery) {
+    const normalizedContext = normalize(pageContext);
+    const hasUnlimited = normalizedContext.includes('premium user') || normalizedContext.includes('unlimited batteries');
+    const hasCountdown = normalizedContext.includes('battery refill timer');
+
+    if (hasUnlimited) {
+      return reply(
+        'You already have unlimited batteries with Premium, so you can keep learning anytime.',
+        'May unlimited batteries ka na sa Premium, kaya puwede kang magpatuloy kahit kailan.'
+      );
+    }
+
+    if (hasCountdown) {
+      return reply(
+        'Yes. Free batteries recharge automatically after a short wait. If you want to keep going right away, open Premium for unlimited batteries.',
+        'Oo. Ang libreng batteries ay kusang nagre-recharge pagkatapos ng kaunting hintay. Kung gusto mong magpatuloy agad, buksan ang Premium para sa unlimited batteries.'
+      );
+    }
+
     return reply(
-      'Open the Premium page if you want more batteries right away. Premium gives you unlimited batteries.',
-      'Buksan ang Premium page kung gusto mo ng battery agad. Ang premium ay may unlimited batteries.'
+      'Yes. Free batteries recharge automatically after a while. If you want more right away, open the Premium page for unlimited batteries.',
+      'Oo. Ang libreng batteries ay kusang nagre-recharge pagkalipas ng ilang oras. Kung gusto mo ng dagdag agad, buksan ang Premium page para sa unlimited batteries.'
     );
   }
 

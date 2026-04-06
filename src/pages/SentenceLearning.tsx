@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import Card from '../components/Card';
 import NavigationHeader from '../components/NavigationHeader';
+import Mascot from '../components/Mascot';
 import { Page, AppState, UpdateStateFn } from '../App';
 import { sentenceData, vocabularyData } from '../data/vocabulary';
 
@@ -210,6 +211,28 @@ export default function SentenceLearning({
     playAudio(spokenSentence, e);
   };
 
+  const responseLanguage = appState.nativeLanguage || 'English';
+  const sentenceMascotMessage =
+    responseLanguage.trim().toLowerCase() === 'filipino'
+      ? 'Pwede akong magbigay ng clue sa pangungusap na ito.'
+      : 'I can give clues for this sentence.';
+
+  const sentencePageContext = [
+    'Current page: sentence practice.',
+    `Target language: ${appState.targetLanguage || 'Hiligaynon'}.`,
+    `Response language: ${responseLanguage}.`,
+    `Current masked sentence: ${question.maskedSentence}.`,
+    `Correct hidden word: ${question.correctWord}.`,
+    `English hint sentence: ${currentSentence.englishSentence}.`,
+    `Current sentence options: ${question.options.join(', ')}.`,
+    showResult
+      ? `The learner has already answered. Selected option: ${selectedOption || 'none'}.`
+      : 'The learner has not answered yet.',
+    'This page is a quiz/fill-in-the-blank practice. Never reveal the exact hidden answer directly unless the learner has already answered and asks for an explanation.',
+    'If the learner asks for help before answering, provide only clues, grammar hints, elimination help, or meaning hints.',
+    'If the learner asks how the page works, explain that they choose the missing word, then check the answer.',
+  ].join('\n');
+
   return (
     <div className="theme-page min-h-screen flex flex-col text-slate-100">
       <NavigationHeader
@@ -390,6 +413,13 @@ export default function SentenceLearning({
           </div>
         </div>
       )}
+
+      <Mascot
+        message={sentenceMascotMessage}
+        animation="float"
+        responseLanguage={responseLanguage}
+        pageContext={sentencePageContext}
+      />
     </div>
   );
 }
