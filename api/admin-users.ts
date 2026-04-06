@@ -87,8 +87,54 @@ function parseDisplayName(stateJson: string, userKey: string) {
   }
 }
 
+function getTodayKey() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function buildResetState(userKey: string, displayName: string) {
+  return {
+    displayName: displayName.trim() || userKey.split('@')[0] || 'Player',
+    nativeLanguage: '',
+    targetLanguage: '',
+    mode: null,
+    currentVocabIndex: 0,
+    learnedWords: [],
+    quizAnswersInCycle: 0,
+    sentenceAnswersInCycle: 0,
+    stars: 0,
+    currentStreak: 1,
+    longestStreak: 1,
+    totalXP: 0,
+    lastActiveDate: getTodayKey(),
+    batteriesRemaining: 5,
+    batteryResetAt: null,
+    backpackItems: [],
+  };
+}
+
+async function resetUserHistory(userKey: string) {
+  const selectResult = await runD1Query(
+    'SELECT state_json FROM user_app_state WHERE user_key = ?1 LIMIT 1',
+    [userKey]
+  );
+
+  const existingRow = (selectResult?.result?.[0]?.results || []) as Array<{ state_json?: string }>;
+  const stateJson = String(existingRow[0]?.state_json || '{}');
+  const displayName = parseDisplayName(stateJson, userKey);
+  const resetState = buildResetState(userKey, displayName);
+
+  await runD1Query(
+    `INSERT INTO user_app_state (user_key, state_json, updated_at)
+     VALUES (?1, ?2, datetime('now'))
+     ON CONFLICT(user_key) DO UPDATE SET
+       state_json = excluded.state_json,
+       updated_at = datetime('now')`,
+    [userKey, JSON.stringify(resetState)]
+  );
+}
+
 export default async function handler(req: any, res: any) {
-  if (req.method !== 'GET' && req.method !== 'DELETE') {
+  if (req.method !== 'GET' && req.method !== 'DELETE' && req.method !== 'PATCH') {
     res.status(405).json({ error: 'Method not allowed' });
     return;
   }
@@ -143,6 +189,12 @@ export default async function handler(req: any, res: any) {
     const userKey = String(req.body?.userKey || '').trim().toLowerCase();
     if (!userKey) {
       res.status(400).json({ error: 'userKey is required' });
+      return;
+    }
+
+    if (req.method === 'PATCH') {
+      await resetUserHistory(userKey);
+      res.status(200).json({ ok: true });
       return;
     }
 
