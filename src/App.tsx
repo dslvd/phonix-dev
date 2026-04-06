@@ -558,7 +558,39 @@ function App() {
   const showDesktopSidebar = currentPage === 'dashboard' || currentPage === 'admin';
   const keepMainPanel = currentPage === 'dashboard';
   const useCleanUi = currentPage !== 'dashboard';
-  const shouldShowGlobalMascot = !['landing', 'setup', 'mode', 'scan'].includes(currentPage);
+  const shouldShowGlobalMascot = !['landing', 'setup', 'mode', 'scan', 'vocabulary', 'sentence'].includes(currentPage);
+  const globalMascotPageContext = (() => {
+    const batteryLine = premium.isPremium
+      ? 'Battery system: Premium user. Unlimited batteries are active.'
+      : appState.batteryResetAt
+      ? `Battery system: Free user. Current batteries ${appState.batteriesRemaining}/${BATTERY_MAX}. Battery refill timer is active until ${appState.batteryResetAt}. Free batteries refill automatically after 3 hours when empty.`
+      : `Battery system: Free user. Current batteries ${appState.batteriesRemaining}/${BATTERY_MAX}. Free batteries refill automatically after 3 hours when empty.`;
+
+    const pageGuidance: Record<Page, string> = {
+      landing: 'Help the learner understand login, guest mode, and how to start.',
+      setup: 'Help the learner choose response language and target language.',
+      mode: 'Help the learner choose a mode and explain what each mode does.',
+      dashboard: 'Help the learner with roadmap progress, lesson flow, batteries, XP, streaks, stars, and Premium.',
+      scan: 'Help the learner with scanning, attachments, translations, and battery usage.',
+      vocabulary: 'Help the learner with the current word and lesson flow.',
+      sentence: 'Help the learner with the current sentence and clue-based practice.',
+      collection: 'Help the learner review saved words and understand backpack features.',
+      instructions: 'Help the learner understand how the app works.',
+      profile: 'Help the learner with profile settings, language settings, and Premium.',
+      premium: 'Help the learner understand Premium benefits, especially unlimited batteries.',
+      admin: 'Help the admin understand dashboard actions and user management.',
+    };
+
+    return [
+      `Current page: ${currentPage}.`,
+      pageGuidance[currentPage],
+      batteryLine,
+      `Current XP: ${appState.totalXP}.`,
+      `Current stars: ${appState.stars}.`,
+      `Current streak: ${appState.currentStreak}.`,
+      'If the learner asks whether batteries are rechargeable, explain that free batteries refill automatically after 3 hours when empty, and Premium gives unlimited batteries.',
+    ].join(' ');
+  })();
   const globalMascotMessage = (() => {
     const isFilipino = (appState.nativeLanguage || '').trim().toLowerCase() === 'filipino';
     const vocabularyMessages = isFilipino
@@ -607,6 +639,12 @@ function App() {
 
     if (currentPage === 'scan') {
       return scanMessages[appState.stars % scanMessages.length];
+    }
+
+    if (currentPage === 'dashboard') {
+      return isFilipino
+        ? 'Magtanong ka tungkol sa batteries, XP, streak, o susunod mong lesson.'
+        : 'Ask me about batteries, XP, streaks, or your next lesson.';
     }
 
     return isFilipino ? 'Andito lang ako kung may kailangan ka!' : 'I’m right here if you need anything!';
@@ -670,7 +708,7 @@ function App() {
             message={globalMascotMessage}
             animation="float"
             responseLanguage={appState.nativeLanguage || 'English'}
-            pageContext={`Current page: ${currentPage}. Help the learner with quick, actionable guidance for this screen.`}
+            pageContext={globalMascotPageContext}
           />
         )}
       </div>
@@ -741,7 +779,7 @@ function App() {
           message={globalMascotMessage}
           animation="float"
           responseLanguage={appState.nativeLanguage || 'English'}
-          pageContext={`Current page: ${currentPage}. Help the learner with quick, actionable guidance for this screen.`}
+          pageContext={globalMascotPageContext}
         />
       )}
     </div>

@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
 import NavigationHeader from '../components/NavigationHeader';
 import Quiz from '../components/Quiz';
+import Mascot from '../components/Mascot';
 import { Page, AppState, BackpackItem, UpdateStateFn } from '../App';
 import { sentenceData, VocabularyItem } from '../data/vocabulary';
 import { usePremium } from '../lib/usePremium';
@@ -740,6 +741,55 @@ export default function VocabularyLearning({
     }
   };
 
+  const mascotMessage = (() => {
+    if (isQuizMode) {
+      return nativeLanguage.trim().toLowerCase() === 'filipino'
+        ? 'Pwede akong magbigay ng clue, hindi sagot.'
+        : 'I can give a clue, not the answer.';
+    }
+
+    if (isReviewMode) {
+      return nativeLanguage.trim().toLowerCase() === 'filipino'
+        ? 'Handa ka na ba? I-review muna natin ito.'
+        : 'Ready? Let’s review these first.';
+    }
+
+    return nativeLanguage.trim().toLowerCase() === 'filipino'
+      ? 'Magtanong ka tungkol sa word o clue.'
+      : 'Ask me about the word or clues.';
+  })();
+
+  const vocabularyPageContext = [
+    `Current page: vocabulary lesson.`,
+    `Target language: ${targetLanguage}.`,
+    `Response language: ${nativeLanguage}.`,
+    `Current flashcard word: ${displayedItem.nativeWord} = ${displayedItem.englishWord}.`,
+    `Current category: ${displayedItem.category}.`,
+    `Current difficulty band: ${currentDifficultyBand}.`,
+    `Current batteries: ${appState.batteriesRemaining}/${BATTERY_MAX}.`,
+    premium.isPremium
+      ? 'Learner has premium and unlimited batteries.'
+      : 'Learner is free tier. Mistakes can reduce batteries and premium unlocks unlimited batteries.',
+    isQuizMode
+      ? `Learner is in quiz mode right now. Quiz word is ${quizWord?.nativeWord || displayedItem.nativeWord} = ${
+          quizWord?.englishWord || displayedItem.englishWord
+        }. Never reveal the exact answer. Give only clues, hints, elimination help, pronunciation help, or category guidance.`
+      : 'Learner is not in quiz mode. You may teach normally and explain the current word clearly.',
+    isReviewMode
+      ? `Learner is reviewing these words before quiz: ${reviewWords
+          .map((word) => `${word.nativeWord}=${word.englishWord}`)
+          .join(', ')}.`
+      : '',
+    isPracticeQuizSession
+      ? 'Quiz Me mode is active. This is a review session over discovered words with mastery repeats.'
+      : 'Normal lesson flow is active.',
+    'If asked about batteries, explain that mistakes can drain batteries and premium gives unlimited batteries.',
+    'If asked directly for a quiz answer, refuse and give a clue instead.',
+    'If asked how the lesson works, explain flashcards first, then review, then quiz.',
+  ]
+    .filter(Boolean)
+    .join('\n');
+
   return (
     <div className="theme-page min-h-screen flex flex-col">
       <NavigationHeader
@@ -1199,6 +1249,13 @@ export default function VocabularyLearning({
           </div>
         </div>
       )}
+
+      <Mascot
+        message={mascotMessage}
+        animation="float"
+        responseLanguage={nativeLanguage}
+        pageContext={vocabularyPageContext}
+      />
     </div>
   );
 }
