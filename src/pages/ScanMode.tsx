@@ -1,5 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, type ChangeEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import * as pdfjsLib from 'pdfjs-dist';
+import mammoth from 'mammoth';
 import Button from '../components/Button';
 import Card from '../components/Card';
 import NavigationHeader from '../components/NavigationHeader';
@@ -26,6 +28,11 @@ interface ScanApiResponse {
   confidence?: string;
 }
 
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.mjs',
+  import.meta.url
+).toString();
+
 const cleanOCRText = (text: string) => text.replace(/\s+/g, ' ').trim();
 
 export default function ScanMode({ navigate, appState, updateState, premium }: ScanModeProps) {
@@ -36,12 +43,39 @@ export default function ScanMode({ navigate, appState, updateState, premium }: S
   const [error, setError] = useState<string | null>(null);
   const [savedScans, setSavedScans] = useState<ScanResult[]>([]);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showQuickTips, setShowQuickTips] = useState(true);
   const [manualText, setManualText] = useState('');
+  const [selectedFileName, setSelectedFileName] = useState('');
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const guideBoxRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const canUseBatteryAction = () => {
+    if (premium.isPremium) {
+      return true;
+    }
+
+    if (appState.batteriesRemaining <= 0) {
+      setShowUpgradeModal(true);
+      setError('No batteries left. Upgrade to premium to continue scanning and translating.');
+      return false;
+    }
+
+    return true;
+  };
+
+  const spendBatteryIfNeeded = () => {
+    if (premium.isPremium) {
+      return;
+    }
+
+    updateState({
+      batteriesRemaining: Math.max(0, appState.batteriesRemaining - 1),
+    });
+  };
 
   const startCamera = async () => {
   try {
@@ -309,8 +343,164 @@ const scanTextWithVision = async (image: string, targetLanguage: string) => {
   }
 };
 
+const readFileAsDataUrl = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(new Error(`Could not read ${file.name}`));
+    reader.readAsDataURL(file);
+  });
+
+const readFileAsText = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(new Error(`Could not read ${file.name}`));
+    reader.readAsText(file);
+  });
+
+const extractPdfText = async (file: File) => {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
+  const pageTexts: string[] = [];
+
+  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+    const page = await pdf.getPage(pageNumber);
+    const textContent = await page.getTextContent();
+    const pageText = textContent.items
+      .map((item) => ('str' in item ? item.str : ''))
+      .join(' ');
+
+    pageTexts.push(pageText);
+  }
+
+  return cleanOCRText(pageTexts.join(' '));
+};
+
+const extractDocxText = async (file: File) => {
+  const arrayBuffer = await file.arrayBuffer();
+  const result = await mammoth.extractRawText({ arrayBuffer });
+  return cleanOCRText(result.value || '');
+};
+
+const handleUploadClick = () => {
+  setError(null);
+  fileInputRef.current?.click();
+};
+
+const processUploadedFile = async (file: File) => {
+  const targetLanguage = appState.targetLanguage || 'Hiligaynon';
+  const normalizedType = file.type.toLowerCase();
+  const lowerName = file.name.toLowerCase();
+  const isImage = normalizedType.startsWith('image/');
+  const isTextFile =
+    normalizedType.startsWith('text/') ||
+    lowerName.endsWith('.txt') ||
+    lowerName.endsWith('.md');
+  const isPdf = normalizedType === 'application/pdf' || lowerName.endsWith('.pdf');
+  const isDocx =
+    normalizedType ===
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+    lowerName.endsWith('.docx');
+  const isLegacyDoc = normalizedType === 'application/msword' || lowerName.endsWith('.doc');
+
+  if (isLegacyDoc) {
+    throw new Error('Old .doc files are not supported yet. Please save the document as .docx or PDF first.');
+  }
+
+  if (!isImage && !isTextFile && !isPdf && !isDocx) {
+    throw new Error('Supported uploads are images, PDF, DOCX, TXT, and MD files.');
+  }
+
+  if (isImage) {
+    const image = await readFileAsDataUrl(file);
+    return scanTextWithVision(image, targetLanguage);
+  }
+
+  const sourceText = isPdf
+    ? await extractPdfText(file)
+    : isDocx
+      ? await extractDocxText(file)
+      : cleanOCRText(await readFileAsText(file));
+
+  if (!sourceText) {
+    throw new Error('This file is empty or has no readable text.');
+  }
+
+  let translatedText = '';
+
+  try {
+    const response = await fetch('/api/scan-translate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        sourceText,
+        targetLanguage,
+      }),
+    });
+
+    const data = (await response.json().catch(() => null)) as ScanApiResponse & { error?: string } | null;
+
+    if (!response.ok) {
+      throw new Error(data?.error || `File translation failed (${response.status})`);
+    }
+
+    translatedText = (data?.translatedText || '').trim();
+  } catch (serverError) {
+    console.warn('Server file translate route unavailable, trying browser Gemini fallback.', serverError);
+    translatedText = await translateTextWithGemini(sourceText, targetLanguage);
+  }
+
+  if (!translatedText) {
+    throw new Error('Translation is empty');
+  }
+
+  return {
+    detectedText: sourceText,
+    translatedText,
+    confidence: 'upload',
+  } satisfies ScanApiResponse;
+};
+
+const handleFileSelected = async (event: ChangeEvent<HTMLInputElement>) => {
+  const file = event.target.files?.[0];
+
+  if (!file) return;
+
+  if (!canUseBatteryAction()) {
+    event.target.value = '';
+    return;
+  }
+
+  setSelectedFileName(file.name);
+  setIsScanning(true);
+  setError(null);
+
+  try {
+    const result = await processUploadedFile(file);
+
+    setScanResult({
+      detectedText: result.detectedText,
+      translatedText: result.translatedText,
+      confidence: result.confidence || 'upload',
+    });
+
+    spendBatteryIfNeeded();
+    playSuccessSound();
+  } catch (err) {
+    console.error('Upload scan error:', err);
+    setError(err instanceof Error ? err.message : 'Failed to scan uploaded file.');
+  } finally {
+    event.target.value = '';
+    setIsScanning(false);
+  }
+};
+
 const captureAndAnalyze = async () => {
   if (!videoRef.current || !canvasRef.current || !guideBoxRef.current) return;
+  if (!canUseBatteryAction()) return;
 
   setIsScanning(true);
   setError(null);
@@ -403,6 +593,7 @@ const captureAndAnalyze = async () => {
       confidence: result.confidence || 'vision',
     });
 
+    spendBatteryIfNeeded();
     playSuccessSound();
   } catch (err) {
     console.error('Scan error:', err);
@@ -417,6 +608,8 @@ const translateManualText = async () => {
     setError('Type text first, then translate.');
     return;
   }
+
+  if (!canUseBatteryAction()) return;
 
   try {
     setIsScanning(true);
@@ -463,6 +656,8 @@ const translateManualText = async () => {
       translatedText: translatedText.trim(),
       confidence: 'manual',
     });
+
+    spendBatteryIfNeeded();
   } catch (err) {
     console.error('Manual translate error:', err);
     setError(err instanceof Error ? err.message : 'Translation is temporarily unavailable. Please try again in a few seconds.');
@@ -540,7 +735,7 @@ const translateManualText = async () => {
         starCount={appState.stars}
       />
 
-      <div className="mx-auto mt-6 max-w-4xl p-4">
+      <div className="mx-auto mt-6 max-w-7xl p-4 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -572,14 +767,22 @@ const translateManualText = async () => {
           </Card>
         </motion.div>
 
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 xl:grid-cols-[1.15fr_0.95fr]">
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
             className="space-y-4"
           >
-            <Card className="theme-surface relative min-h-[380px] border">
+            <Card className="theme-surface relative min-h-[380px] border p-5">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,.pdf,.doc,.docx,.txt,.md,text/plain,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                onChange={handleFileSelected}
+                className="hidden"
+              />
+
               <div className="relative h-[260px] overflow-hidden rounded-lg bg-gray-900 sm:h-[290px]">
                 <video
                   ref={videoRef}
@@ -647,7 +850,7 @@ const translateManualText = async () => {
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <div
                         ref={guideBoxRef}
-                        className="border-4 border-white border-dashed rounded-lg w-[420px] h-[120px] opacity-80"
+                        className="h-[74%] w-[96%] max-h-[320px] max-w-[900px] rounded-lg border-4 border-dashed border-white opacity-80"
                       />
                     </div>
                   </>
@@ -674,6 +877,31 @@ const translateManualText = async () => {
                 </motion.div>
               )}
 
+              <div className="mt-5 rounded-2xl border border-[#56b8e8]/30 bg-gradient-to-br from-[#56b8e8]/10 to-[#56b8e8]/5 p-5">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h4 className="theme-title font-baloo text-xl font-bold">Upload File</h4>
+                    <p className="theme-muted mt-1 max-w-md text-sm font-semibold leading-7">
+                      Upload an image, PDF, DOCX, or text file, then scan and translate it instantly.
+                    </p>
+                    {selectedFileName && (
+                      <p className="mt-2 inline-flex rounded-full bg-white/60 px-3 py-1 text-sm font-semibold text-primary dark:bg-white/10">
+                        Selected: {selectedFileName}
+                      </p>
+                    )}
+                  </div>
+
+                  <Button
+                    variant="secondary"
+                    onClick={handleUploadClick}
+                    disabled={isScanning}
+                    className="w-full sm:min-w-[190px] sm:w-auto"
+                  >
+                    {isScanning ? 'Processing...' : 'Upload File'}
+                  </Button>
+                </div>
+              </div>
+
               {error && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}
@@ -690,6 +918,7 @@ const translateManualText = async () => {
                         <li>Hold the camera steady</li>
                         <li>Use good lighting for documents</li>
                         <li>Keep text centered and readable</li>
+                        <li>For uploads, use an image, PDF, DOCX, TXT, or MD file</li>
                       </ul>
                       <Button
                         variant="primary"
@@ -706,29 +935,33 @@ const translateManualText = async () => {
               <canvas ref={canvasRef} className="hidden" />
             </Card>
 
-            <Card className="theme-surface-soft border">
-              <h4 className="theme-title mb-2 flex items-center gap-2 font-baloo text-lg font-bold">
-                <span>💡</span>
-                Quick Tips
-              </h4>
-              <ul className="theme-text-soft space-y-2 text-sm font-semibold">
-                <li className="flex gap-2">
-                  <span>✨</span>
-                  <span>Use good lighting for documents</span>
-                </li>
-                <li className="flex gap-2">
-                  <span>📄</span>
-                  <span>Keep text inside the center guide box</span>
-                </li>
-                <li className="flex gap-2">
-                  <span>📷</span>
-                  <span>Hold the camera steady before scanning</span>
-                </li>
-                <li className="flex gap-2">
-                  <span>🔊</span>
-                  <span>Tap the speaker icon to hear the translation</span>
-                </li>
-              </ul>
+            <Card className="theme-surface-soft border p-5">
+              <h3 className="theme-title mb-3 flex items-center gap-2 font-baloo text-xl font-bold">
+                <span>⌨️</span>
+                Manual Text Translate
+              </h3>
+              <p className="theme-muted mb-4 text-sm font-semibold leading-7">
+                If camera OCR is slow or unclear, type the text manually and translate it instantly.
+              </p>
+
+              <div className="flex flex-col gap-3">
+                <textarea
+                  value={manualText}
+                  onChange={(e) => setManualText(e.target.value)}
+                  placeholder="Type or paste text here..."
+                  rows={6}
+                  className="theme-surface min-h-[180px] w-full resize-none rounded-2xl border-2 px-4 py-4 font-semibold outline-none transition-all focus:border-[#56b8e8]"
+                />
+
+                <Button
+                  variant="secondary"
+                  onClick={translateManualText}
+                  disabled={isScanning}
+                  className="w-full"
+                >
+                  {isScanning ? '⏳ Translating...' : '⚡ Translate Text'}
+                </Button>
+              </div>
             </Card>
           </motion.div>
 
@@ -745,20 +978,25 @@ const translateManualText = async () => {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.8, y: -20 }}
                 >
-                  <Card className="theme-surface border">
-                    <div className="text-center">
+                  <Card className="theme-surface border p-5">
+                    <div>
+                      <div className="text-center">
                       <div className="text-5xl mb-3 leading-none flex items-center justify-center">✨</div>
                       <h3 className="theme-title mb-2 font-baloo text-2xl font-bold">
                         Translation Ready!
                       </h3>
 
-                      <p className="theme-muted mb-3 text-xs font-bold uppercase tracking-[0.2em]">
-                        {scanResult.confidence === 'manual' ? 'Manual Input' : 'Camera OCR'}
+                      <p className="theme-muted mb-4 text-xs font-bold uppercase tracking-[0.2em]">
+                        {scanResult.confidence === 'manual'
+                          ? 'Manual Input'
+                          : scanResult.confidence === 'upload'
+                            ? 'Uploaded File'
+                            : 'Camera OCR'}
                       </p>
 
-                      <div className="theme-surface-soft mb-4 rounded-lg border p-4 text-left">
+                      <div className="theme-surface-soft mb-4 rounded-2xl border p-4 text-left">
                         <p className="theme-muted mb-1 font-semibold">Detected Text:</p>
-                        <p className="theme-title mb-4 break-words whitespace-pre-wrap text-lg font-bold">
+                        <p className="theme-title mb-4 max-h-40 overflow-y-auto break-words whitespace-pre-wrap pr-1 text-sm font-semibold leading-7">
                           {scanResult.detectedText}
                         </p>
 
@@ -769,7 +1007,7 @@ const translateManualText = async () => {
                         {/* ✅ YOUR NEW BLOCK */}
                         <div className="flex flex-col gap-1">
                           <div className="flex items-start justify-between gap-2">
-                            <p className="text-2xl font-bold text-primary">
+                            <p className="max-h-64 overflow-y-auto break-words whitespace-pre-wrap pr-1 text-lg font-bold leading-8 text-primary">
                               {scanResult.translatedText || '—'}
                             </p>
 
@@ -801,43 +1039,16 @@ const translateManualText = async () => {
                         <Button variant="success" onClick={saveScan} className="flex-1">
                           💾 Save to Collection
                         </Button>
-                        <Button variant="outline" onClick={() => setScanResult(null)}>
+                        <Button variant="outline" onClick={() => setScanResult(null)} className="min-w-[84px]">
                           ✖️
                         </Button>
                       </div>
+                    </div>
                     </div>
                   </Card>
                 </motion.div>
               )}
             </AnimatePresence>
-
-            <Card className="theme-surface-soft min-h-[380px] border-2">
-              <h3 className="theme-title mb-3 flex items-center gap-2 font-baloo text-xl font-bold">
-                <span>⌨️</span>
-                Manual Text Translate
-              </h3>
-              <p className="theme-muted mb-3 text-sm font-semibold">
-                If camera OCR is slow or unclear, type the text manually and translate it instantly.
-              </p>
-
-              <div className="flex flex-col gap-3">
-                <textarea
-                  value={manualText}
-                  onChange={(e) => setManualText(e.target.value)}
-                  placeholder="Type or paste text here..."
-                  rows={4}
-                  className="theme-surface w-full resize-none rounded-2xl border-2 px-4 py-3 font-semibold outline-none transition-all focus:border-[#56b8e8]"
-                />
-
-                <Button
-                  variant="secondary"
-                  onClick={translateManualText}
-                  disabled={isScanning}
-                >
-                  {isScanning ? '⏳ Translating...' : '⚡ Translate Text'}
-                </Button>
-              </div>
-            </Card>
 
             <Card className="theme-surface border">
               <h3 className="theme-title mb-3 flex items-center gap-2 font-baloo text-xl font-bold">
@@ -894,6 +1105,51 @@ const translateManualText = async () => {
           </motion.div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {showQuickTips && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 16, scale: 0.96 }}
+            className="fixed bottom-24 right-4 z-40 w-[min(360px,calc(100vw-2rem))] lg:bottom-6 lg:right-6"
+          >
+            <Card className="theme-surface-soft border shadow-2xl">
+              <div className="mb-3 flex items-start justify-between gap-3">
+                <h4 className="theme-title flex items-center gap-2 font-baloo text-lg font-bold">
+                  <span>💡</span>
+                  Quick Tips
+                </h4>
+                <button
+                  onClick={() => setShowQuickTips(false)}
+                  className="theme-muted rounded-full px-2 py-1 text-sm font-bold transition hover:text-primary"
+                  aria-label="Close quick tips"
+                >
+                  x
+                </button>
+              </div>
+              <ul className="theme-text-soft space-y-2 text-sm font-semibold">
+                <li className="flex gap-2">
+                  <span>✨</span>
+                  <span>Use good lighting for documents</span>
+                </li>
+                <li className="flex gap-2">
+                  <span>📄</span>
+                  <span>Keep text inside the center guide box</span>
+                </li>
+                <li className="flex gap-2">
+                  <span>📷</span>
+                  <span>Hold the camera steady before scanning</span>
+                </li>
+                <li className="flex gap-2">
+                  <span>🔊</span>
+                  <span>Tap the speaker icon to hear the translation</span>
+                </li>
+              </ul>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {showUpgradeModal && (
