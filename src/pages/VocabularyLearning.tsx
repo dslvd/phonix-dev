@@ -12,6 +12,7 @@ import {
   prefetchAIVocabularyWindow,
   readCachedAIVocabularyOrPairLatest,
   writeCachedAIVocabulary,
+  VOCABULARY_PACK_WORD_COUNT,
 } from '../lib/aiVocabulary';
 import { spendBattery } from '../lib/battery';
 
@@ -114,7 +115,7 @@ export default function VocabularyLearning({
     });
   }, [levelCycle, updateState]);
 
-  const learnedInCurrentCycle = appState.learnedWords.length % 47;
+  const learnedInCurrentCycle = appState.learnedWords.length % VOCABULARY_PACK_WORD_COUNT;
 
   const currentLevelWords = (() => {
     const difficulty = learnedInCurrentCycle < 20 ? 'beginner' : learnedInCurrentCycle < 40 ? 'intermediate' : 'advanced';
@@ -148,7 +149,7 @@ export default function VocabularyLearning({
       ? intermediateCount
       : advancedCount;
   const levelStage = getFiveStageLevel(bandProgress, bandTotal);
-  const totalLearningUnits = 47 + QUIZ_GOAL_PER_CYCLE + sentenceData.length;
+  const totalLearningUnits = VOCABULARY_PACK_WORD_COUNT + QUIZ_GOAL_PER_CYCLE + sentenceData.length;
   const completedLearningUnits = Math.min(
     totalLearningUnits,
     learnedInCurrentCycle +

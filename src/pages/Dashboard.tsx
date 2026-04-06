@@ -4,7 +4,13 @@ import { Page, AppState } from '../App';
 import { VocabularyItem } from '../data/vocabulary';
 import { vocabularyData } from '../data/vocabulary';
 import { usePremium } from '../lib/usePremium';
-import { fetchAIVocabulary, getVocabularyLevelCycle, readCachedAIVocabulary, writeCachedAIVocabulary } from '../lib/aiVocabulary';
+import {
+  fetchAIVocabulary,
+  getVocabularyLevelCycle,
+  readCachedAIVocabulary,
+  writeCachedAIVocabulary,
+  VOCABULARY_PACK_WORD_COUNT,
+} from '../lib/aiVocabulary';
 import { formatBatteryCountdown } from '../lib/battery';
 
 interface DashboardProps {
@@ -54,7 +60,7 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
     const nativeLanguage = appState.nativeLanguage || 'English';
 
     if (isGuestMode) {
-      setAiVocabulary(vocabularyData.slice(0, 47));
+      setAiVocabulary(vocabularyData.slice(0, VOCABULARY_PACK_WORD_COUNT));
       return;
     }
 
@@ -226,7 +232,7 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
 
   const beginnerCount = beginnerWords.length || 20;
   const intermediateCount = intermediateWords.length || 20;
-  const advancedCount = advancedWords.length || 7;
+  const advancedCount = advancedWords.length || 8;
 
   const totalWords = beginnerCount + intermediateCount + advancedCount;
   const roadmapNodeTemplates = [

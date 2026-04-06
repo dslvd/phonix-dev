@@ -6,7 +6,13 @@ import ProgressBar from '../components/ProgressBar';
 import NavigationHeader from '../components/NavigationHeader';
 import { Page, AppState, BackpackItem } from '../App';
 import { VocabularyItem } from '../data/vocabulary';
-import { fetchAIVocabulary, getVocabularyLevelCycle, readCachedAIVocabulary, writeCachedAIVocabulary } from '../lib/aiVocabulary';
+import {
+  fetchAIVocabulary,
+  getVocabularyLevelCycle,
+  readCachedAIVocabulary,
+  writeCachedAIVocabulary,
+  VOCABULARY_PACK_WORD_COUNT,
+} from '../lib/aiVocabulary';
 
 interface VocabularyCollectionProps {
   navigate: (page: Page) => void;
@@ -91,7 +97,7 @@ export default function VocabularyCollection({
     };
   }, [targetLanguage, nativeLanguage, levelCycle]);
 
-  const totalWords = aiVocabulary.length || 47;
+  const totalWords = aiVocabulary.length || VOCABULARY_PACK_WORD_COUNT;
 
   const learnedVocabulary = aiVocabulary.filter((item) =>
     appState.learnedWords.includes(item.id)
