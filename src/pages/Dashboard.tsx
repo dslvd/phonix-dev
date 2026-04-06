@@ -5,6 +5,7 @@ import { VocabularyItem } from '../data/vocabulary';
 import { vocabularyData } from '../data/vocabulary';
 import { usePremium } from '../lib/usePremium';
 import { fetchAIVocabulary, getVocabularyLevelCycle, readCachedAIVocabulary, writeCachedAIVocabulary } from '../lib/aiVocabulary';
+import { formatBatteryCountdown } from '../lib/battery';
 
 interface DashboardProps {
   navigate: (page: Page) => void;
@@ -38,7 +39,7 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
   const showRightRail = !isGuestMode || !hasLoggedInUser;
   const [aiVocabulary, setAiVocabulary] = useState<VocabularyItem[]>([]);
   const [leaderboardEntries, setLeaderboardEntries] = useState<
-    Array<{ rank: number; userKey: string; totalXP: number; stars: number; learnedWords: number; currentStreak: number }>
+    Array<{ rank: number; userKey: string; displayName: string; totalXP: number; stars: number; learnedWords: number; currentStreak: number }>
   >([]);
 
   const defaultLevelDescriptions: Record<'Beginner' | 'Intermediate' | 'Advanced', string> = {
@@ -469,6 +470,7 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
                           (window.localStorage.getItem('user') || '')
                             .toLowerCase()
                             .includes(entry.userKey.toLowerCase());
+                        const leaderboardName = (entry.displayName || entry.userKey.split('@')[0] || 'Player').trim();
 
                         return (
                           <div
@@ -478,7 +480,7 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
                             }`}
                           >
                             <div>
-                              <p className="theme-title text-sm font-bold">#{entry.rank} {entry.userKey.split('@')[0]}</p>
+                              <p className="theme-title text-sm font-bold">#{entry.rank} {leaderboardName}</p>
                               <p className="theme-muted text-xs font-semibold">
                                 {entry.learnedWords} words • {entry.stars} stars • 🔥 {entry.currentStreak}
                               </p>
@@ -520,7 +522,11 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
                     <div className="theme-surface-soft rounded-xl border p-3">
                       <p className="theme-muted text-xs font-bold uppercase tracking-[0.12em]">Batteries</p>
                       <p className="mt-1 font-baloo text-[1.85rem] leading-none font-bold text-[#ffb86b]">
-                        {premium.isPremium ? '∞ Unlimited Batteries' : `${appState.batteriesRemaining} / 5 batteries`}
+                        {premium.isPremium
+                          ? '∞ Unlimited Batteries'
+                          : appState.batteryResetAt
+                          ? `${appState.batteriesRemaining} / 5 · ${formatBatteryCountdown(appState.batteryResetAt)}`
+                          : `${appState.batteriesRemaining} / 5 batteries`}
                       </p>
                     </div>
 

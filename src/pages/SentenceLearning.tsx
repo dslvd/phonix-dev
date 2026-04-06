@@ -20,6 +20,7 @@ export default function SentenceLearning({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
+  const [showLevelCompleteModal, setShowLevelCompleteModal] = useState(false);
   const currentSentence = sentenceData[currentIndex];
 
   const question = useMemo(() => {
@@ -76,7 +77,7 @@ export default function SentenceLearning({
     } else {
       // Award completion rewards at the end of sentence practice.
       updateState((prev) => ({ stars: prev.stars + 1, totalXP: prev.totalXP + 8 }));
-      navigate('collection');
+      setShowLevelCompleteModal(true);
     }
   };
 
@@ -310,6 +311,38 @@ export default function SentenceLearning({
           </div>
         </div>
       </div>
+
+      {showLevelCompleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="max-w-md w-full rounded-3xl border-4 border-primary bg-white p-8 text-center shadow-2xl">
+            <div className="mb-4 flex items-center justify-center text-7xl leading-none">🎉</div>
+            <h3 className="font-baloo text-3xl font-bold text-gray-800">Sentence Level Complete!</h3>
+            <p className="mt-3 text-gray-600 font-semibold">
+              Great job finishing sentence practice. Want to review the words you learned? Check your Backpack.
+            </p>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <button
+                onClick={() => {
+                  setShowLevelCompleteModal(false);
+                  navigate('collection');
+                }}
+                className="flex-1 rounded-2xl bg-gradient-to-r from-primary to-secondary px-6 py-4 font-bold text-white shadow-lg"
+              >
+                See Backpack
+              </button>
+              <button
+                onClick={() => {
+                  setShowLevelCompleteModal(false);
+                  navigate('dashboard');
+                }}
+                className="flex-1 rounded-2xl bg-gray-100 px-6 py-4 font-bold text-gray-700"
+              >
+                Back to Dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

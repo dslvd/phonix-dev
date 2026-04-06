@@ -7,6 +7,7 @@ import Card from '../components/Card';
 import NavigationHeader from '../components/NavigationHeader';
 import { Page, AppState, BackpackItem, UpdateStateFn } from '../App';
 import { usePremium } from '../lib/usePremium';
+import { spendBattery } from '../lib/battery';
 
 interface ScanModeProps {
   navigate: (page: Page) => void;
@@ -87,7 +88,7 @@ export default function ScanMode({ navigate, appState, updateState, premium }: S
 
     if (appState.batteriesRemaining <= 0) {
       setShowUpgradeModal(true);
-      setError('No batteries left. Upgrade to premium to continue scanning and translating.');
+      setError('Out of Batteries! Every mistake costs 1 battery. Upgrade to premium for unlimited batteries, or come back later and keep practicing.');
       return false;
     }
 
@@ -99,9 +100,20 @@ export default function ScanMode({ navigate, appState, updateState, premium }: S
       return;
     }
 
-    updateState((prev) => ({
-      batteriesRemaining: Math.max(0, prev.batteriesRemaining - 1),
-    }));
+    updateState((prev) => {
+      const nextBatteryState = spendBattery(
+        {
+          batteriesRemaining: prev.batteriesRemaining,
+          batteryResetAt: prev.batteryResetAt,
+        },
+        1
+      );
+
+      return {
+        batteriesRemaining: nextBatteryState.batteriesRemaining,
+        batteryResetAt: nextBatteryState.batteryResetAt,
+      };
+    });
   };
 
   const requireLoginForAI = () => {
@@ -1015,6 +1027,7 @@ const translateManualText = async () => {
         starCount={appState.stars}
         batteryCurrent={appState.batteriesRemaining}
         batteryMax={5}
+        batteryResetAt={appState.batteryResetAt}
         isPremium={premium.isPremium}
       />
 

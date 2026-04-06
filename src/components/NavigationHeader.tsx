@@ -1,4 +1,6 @@
 import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { formatBatteryCountdown } from '../lib/battery';
 
 interface NavigationHeaderProps {
   onBack?: () => void;
@@ -10,6 +12,7 @@ interface NavigationHeaderProps {
   totalProgress?: number;
   batteryCurrent?: number;
   batteryMax?: number;
+  batteryResetAt?: string | null;
   isPremium?: boolean;
   showStats?: boolean;
   streakCount?: number;
@@ -26,11 +29,14 @@ export default function NavigationHeader({
   totalProgress = 0,
   batteryCurrent,
   batteryMax,
+  batteryResetAt,
   isPremium = false,
   showStats = true,
   streakCount = 0,
   starCount = 0,
 }: NavigationHeaderProps) {
+  const [now, setNow] = useState(() => Date.now());
+
   const storedStats = (() => {
     if (typeof window === 'undefined') {
       return { streakCount: 0, starCount: 0 };
@@ -54,6 +60,16 @@ export default function NavigationHeader({
 
   const displayStreakCount = streakCount || storedStats.streakCount;
   const displayStarCount = starCount || storedStats.starCount;
+
+  useEffect(() => {
+    if (typeof batteryResetAt !== 'string' || isPremium) {
+      return;
+    }
+
+    setNow(Date.now());
+    const intervalId = window.setInterval(() => setNow(Date.now()), 60000);
+    return () => window.clearInterval(intervalId);
+  }, [batteryResetAt, isPremium]);
 
   return (
     <div className="theme-surface-strong sticky inset-x-0 top-0 z-50 w-full border-b">
@@ -92,7 +108,13 @@ export default function NavigationHeader({
         {typeof batteryCurrent === 'number' && typeof batteryMax === 'number' && (
           <div className="theme-nav-button flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-bold">
             <span>{isPremium ? '🔋' : batteryCurrent <= 0 ? '🪫' : '🔋'}</span>
-            <span>{isPremium ? '∞' : `${batteryCurrent}/${batteryMax}`}</span>
+            <span>
+              {isPremium
+                ? '∞'
+                : batteryResetAt && batteryCurrent < batteryMax
+                ? `${batteryCurrent}/${batteryMax} · ${formatBatteryCountdown(batteryResetAt, now)}`
+                : `${batteryCurrent}/${batteryMax}`}
+            </span>
           </div>
         )}
 
