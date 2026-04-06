@@ -634,7 +634,7 @@ function App() {
       case 'mode':
         return <ModeSelection navigate={navigate} updateState={updateState} />;
       case 'dashboard':
-        return <Dashboard navigate={navigate} appState={appState} premium={premium}/>;
+        return <Dashboard navigate={navigate} appState={appState} updateState={updateState} premium={premium}/>;
       case 'scan':
         return <ScanMode navigate={navigate} appState={appState} updateState={updateState} premium={premium}/>;
       case 'vocabulary':
