@@ -116,6 +116,7 @@ export default function VocabularyLearning({
   const [quizMastery, setQuizMastery] = useState<QuizMasteryState>({});
   const [lastQuizWordId, setLastQuizWordId] = useState<string | null>(null);
   const [quizSessionKey, setQuizSessionKey] = useState(0);
+  const [isPracticeQuizSession, setIsPracticeQuizSession] = useState(false);
   const previousLevelCycleRef = useRef(levelCycle);
   const shownCheckpointIdsRef = useRef<Set<string>>(new Set());
   const [aiVocabulary, setAiVocabulary] = useState<VocabularyItem[]>(() => {
@@ -174,6 +175,7 @@ export default function VocabularyLearning({
     setQuizMastery({});
     setLastQuizWordId(null);
     setQuizSessionKey(0);
+    setIsPracticeQuizSession(false);
     setIsReviewMode(false);
     setReviewWords([]);
     setPendingQuizWord(null);
@@ -418,8 +420,19 @@ export default function VocabularyLearning({
     setPendingQuizWord(null);
   };
 
-  const buildQuizPoolSnapshot = (baseWord: VocabularyItem) => {
-    const sourcePool = quizWordPool.length > 0 ? quizWordPool : currentLevelWords;
+  const exitPracticeQuizSession = () => {
+    setIsPracticeQuizSession(false);
+    clearQuizState();
+    clearReviewState();
+  };
+
+  const buildQuizPoolSnapshot = (baseWord: VocabularyItem, sourcePoolOverride?: VocabularyItem[]) => {
+    const sourcePool =
+      sourcePoolOverride && sourcePoolOverride.length > 0
+        ? sourcePoolOverride
+        : quizWordPool.length > 0
+        ? quizWordPool
+        : currentLevelWords;
     const deduped = sourcePool.filter(
       (item, index, array) => array.findIndex((entry) => entry.id === item.id) === index
     );
@@ -431,8 +444,9 @@ export default function VocabularyLearning({
     return [baseWord, ...deduped];
   };
 
-  const buildReviewSnapshot = (focusWord: VocabularyItem) => {
-    const recentWords = introducedVocabulary.slice(-Math.max(wordsBeforeQuiz, 3));
+  const buildReviewSnapshot = (focusWord: VocabularyItem, sourceWords?: VocabularyItem[]) => {
+    const reviewSource = sourceWords && sourceWords.length > 0 ? sourceWords : introducedVocabulary;
+    const recentWords = reviewSource.slice(-Math.max(wordsBeforeQuiz, 3));
     const deduped = recentWords.filter(
       (item, index, array) => array.findIndex((entry) => entry.id === item.id) === index
     );
@@ -444,25 +458,49 @@ export default function VocabularyLearning({
     return [...deduped, focusWord].slice(-Math.max(wordsBeforeQuiz, 3));
   };
 
-  const startQuizSession = (word: VocabularyItem) => {
+  const startQuizSession = (word: VocabularyItem, sourcePoolOverride?: VocabularyItem[]) => {
     clearReviewState();
     setQuizWord(word);
-    setQuizPoolSnapshot(buildQuizPoolSnapshot(word));
+    setQuizPoolSnapshot(buildQuizPoolSnapshot(word, sourcePoolOverride));
     setLastQuizWordId(word.id);
     setQuizSessionKey((previous) => previous + 1);
     setIsQuizMode(true);
   };
 
-  const startReviewSession = (word: VocabularyItem) => {
+  const startReviewSession = (word: VocabularyItem, sourceWords?: VocabularyItem[]) => {
     clearQuizState();
     setPendingQuizWord(word);
-    setReviewWords(buildReviewSnapshot(word));
+    setReviewWords(buildReviewSnapshot(word, sourceWords));
     setIsReviewMode(true);
   };
 
-  const startSmartReviewSession = (excludeWordIds: string[] = []) => {
+  const startSmartReviewSession = (
+    excludeWordIds: string[] = [],
+    candidatePool: VocabularyItem[] = quizWordPool
+  ) => {
+    const exclude = new Set(excludeWordIds);
+    const availableWords = candidatePool.filter((item) => !exclude.has(item.id));
+
+    if (availableWords.length === 0) {
+      return false;
+    }
+
+    const shuffledWords = [...availableWords].sort(() => Math.random() - 0.5);
+    const selectedWord =
+      shuffledWords.find((item) => item.id !== lastQuizWordId) ||
+      shuffledWords[0];
+
+    if (!selectedWord) {
+      return false;
+    }
+
+    startReviewSession(selectedWord, candidatePool);
+    return true;
+  };
+
+  const startSmartPracticeQuizSession = (candidatePool: VocabularyItem[], excludeWordIds: string[] = []) => {
     const selectedWord = pickNextQuizWord({
-      candidates: quizWordPool,
+      candidates: candidatePool,
       state: quizMastery,
       round: quizRound,
       excludeWordIds,
@@ -473,7 +511,7 @@ export default function VocabularyLearning({
       return false;
     }
 
-    startReviewSession(selectedWord);
+    startQuizSession(selectedWord, candidatePool);
     return true;
   };
 
@@ -563,12 +601,6 @@ export default function VocabularyLearning({
 
   const handleQuizAnswer = (correct: boolean) => {
     const answeredWord = quizWord || displayedItem;
-    const applyQuizOutcome = () => {
-      setQuizMastery((previous) =>
-        recordQuizOutcome(previous, answeredWord.id, correct, quizRound)
-      );
-      setQuizRound((previous) => previous + 1);
-    };
 
     // Award stars for correct answers
     if (correct) {
@@ -590,7 +622,12 @@ export default function VocabularyLearning({
       }));
 
       if (nextBatteryState.batteriesRemaining === 0) {
-        applyQuizOutcome();
+        if (isPracticeQuizSession) {
+          setQuizMastery((previous) =>
+            recordQuizOutcome(previous, answeredWord.id, correct, quizRound)
+          );
+          setQuizRound((previous) => previous + 1);
+        }
         setIsQuizMode(false);
         setConsecutiveWords(0);
         setShowOutOfBatteriesModal(true);
@@ -601,10 +638,30 @@ export default function VocabularyLearning({
     }
     
     // Reset quiz mode and counter
-    applyQuizOutcome();
+    if (isPracticeQuizSession) {
+      setQuizMastery((previous) =>
+        recordQuizOutcome(previous, answeredWord.id, correct, quizRound)
+      );
+      setQuizRound((previous) => previous + 1);
+    }
     clearQuizState();
     setConsecutiveWords(0);
     setWordsBeforeQuiz(getQuizIntervalForBand(currentDifficultyBand));
+
+    if (isPracticeQuizSession) {
+      const practicePool =
+        introducedVocabulary.length >= 2
+          ? introducedVocabulary
+          : introducedVocabulary.length === 1
+          ? introducedVocabulary
+          : [currentItem];
+
+      const restarted = startSmartPracticeQuizSession(practicePool, [answeredWord.id]);
+      if (!restarted) {
+        setIsPracticeQuizSession(false);
+      }
+      return;
+    }
     
     // Move to next word after quiz
     moveToNextWordOrComplete();
@@ -612,8 +669,7 @@ export default function VocabularyLearning({
 
   const handlePrevious = () => {
     setConsecutiveWords(0);
-    clearQuizState();
-    clearReviewState();
+    exitPracticeQuizSession();
 
     if (appState.currentVocabIndex > 0) {
       updateState({
@@ -764,15 +820,25 @@ export default function VocabularyLearning({
 
               <div className="mt-8 grid gap-3 sm:grid-cols-2">
                 <button
-                  onClick={clearReviewState}
+                  onClick={() => {
+                    if (isPracticeQuizSession) {
+                      exitPracticeQuizSession();
+                      return;
+                    }
+
+                    clearReviewState();
+                  }}
                   className="theme-nav-button rounded-2xl border px-6 py-4 text-sm font-bold uppercase tracking-[0.08em]"
                 >
-                  Back to Cards
+                  {isPracticeQuizSession ? 'Exit Quiz Me' : 'Back to Cards'}
                 </button>
                 <button
                   onClick={() => {
                     if (pendingQuizWord) {
-                      startQuizSession(pendingQuizWord);
+                      startQuizSession(
+                        pendingQuizWord,
+                        isPracticeQuizSession && introducedVocabulary.length > 0 ? introducedVocabulary : undefined
+                      );
                     }
                   }}
                   className="rounded-2xl bg-gradient-to-r from-[#FF9126] to-[#ffb35a] px-6 py-4 text-sm font-bold uppercase tracking-[0.08em] text-white shadow-lg"
@@ -783,17 +849,29 @@ export default function VocabularyLearning({
             </motion.div>
           ) : isQuizMode ? (
             // Quiz Mode
-            <Quiz
-              key={quizSessionKey}
-              currentWord={quizWord || displayedItem}
-              allWords={quizPoolSnapshot.length > 0 ? quizPoolSnapshot : quizWordPool}
-              onAnswer={handleQuizAnswer}
-              targetLanguage={appState.targetLanguage || 'Hiligaynon'}
-              nativeLanguage={appState.nativeLanguage || 'English'}
-              useAI={true}
-              difficultyBand={currentDifficultyBand}
-              levelStage={levelStage}
-            />
+            <>
+              {isPracticeQuizSession && (
+                <div className="mb-4 flex justify-end">
+                  <button
+                    onClick={exitPracticeQuizSession}
+                    className="theme-nav-button rounded-2xl border px-4 py-2 text-xs font-bold uppercase tracking-[0.08em]"
+                  >
+                    Exit Quiz Me
+                  </button>
+                </div>
+              )}
+              <Quiz
+                key={quizSessionKey}
+                currentWord={quizWord || displayedItem}
+                allWords={quizPoolSnapshot.length > 0 ? quizPoolSnapshot : quizWordPool}
+                onAnswer={handleQuizAnswer}
+                targetLanguage={appState.targetLanguage || 'Hiligaynon'}
+                nativeLanguage={appState.nativeLanguage || 'English'}
+                useAI={true}
+                difficultyBand={currentDifficultyBand}
+                levelStage={levelStage}
+              />
+            </>
           ) : (
             // Regular Flashcard Mode
             <>
@@ -960,9 +1038,16 @@ export default function VocabularyLearning({
               >
                 <button
                   onClick={() => {
-                    const started = startSmartReviewSession([currentItem.id]);
+                    const practicePool =
+                      introducedVocabulary.length >= 2
+                        ? introducedVocabulary
+                        : introducedVocabulary.length === 1
+                        ? introducedVocabulary
+                        : [currentItem];
+                    setIsPracticeQuizSession(true);
+                    const started = startSmartPracticeQuizSession(practicePool);
                     if (!started) {
-                      startReviewSession(currentItem);
+                      startQuizSession(currentItem, practicePool);
                     }
                   }}
                   className="w-full rounded-2xl border border-[#56b8e8] bg-[#173b52] px-6 py-4 text-sm font-bold uppercase tracking-[0.08em] text-[#c9efff] transition hover:border-[#7ed6ff]"
