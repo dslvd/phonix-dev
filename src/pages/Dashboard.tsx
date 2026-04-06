@@ -4,7 +4,7 @@ import { Page, AppState } from '../App';
 import { VocabularyItem } from '../data/vocabulary';
 import { vocabularyData } from '../data/vocabulary';
 import { usePremium } from '../lib/usePremium';
-import { fetchAIVocabulary, readCachedAIVocabulary, writeCachedAIVocabulary } from '../lib/aiVocabulary';
+import { fetchAIVocabulary, getVocabularyLevelCycle, readCachedAIVocabulary, writeCachedAIVocabulary } from '../lib/aiVocabulary';
 
 interface DashboardProps {
   navigate: (page: Page) => void;
@@ -13,6 +13,7 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ navigate, appState, premium }: DashboardProps) {
+  const levelCycle = getVocabularyLevelCycle(appState.learnedWords.length);
   const isGuestMode = (() => {
     if (typeof window === 'undefined') {
       return false;
@@ -56,7 +57,7 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
       return;
     }
 
-    const cached = readCachedAIVocabulary(targetLanguage, nativeLanguage);
+    const cached = readCachedAIVocabulary(targetLanguage, nativeLanguage, { levelCycle });
     if (cached.length > 0) {
       setAiVocabulary(cached);
     }
@@ -69,12 +70,12 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
 
     const refreshAIVocabulary = async () => {
       try {
-        const words = await fetchAIVocabulary(targetLanguage, nativeLanguage);
+        const words = await fetchAIVocabulary(targetLanguage, nativeLanguage, { levelCycle });
         if (cancelled) {
           return;
         }
         setAiVocabulary(words);
-        writeCachedAIVocabulary(targetLanguage, nativeLanguage, words);
+        writeCachedAIVocabulary(targetLanguage, nativeLanguage, words, { levelCycle });
       } catch {
         // Keep cached AI vocabulary when provider is unavailable.
       }
@@ -85,7 +86,7 @@ export default function Dashboard({ navigate, appState, premium }: DashboardProp
     return () => {
       cancelled = true;
     };
-  }, [appState.targetLanguage, appState.nativeLanguage]);
+  }, [appState.targetLanguage, appState.nativeLanguage, isGuestMode, levelCycle]);
 
   useEffect(() => {
     setLevelDescriptions(defaultLevelDescriptions);
