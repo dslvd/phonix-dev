@@ -25,6 +25,33 @@ interface VocabularyLearningProps {
 
 const QUIZ_GOAL_PER_CYCLE = 15;
 
+const VOCAB_LEVEL_CHECKPOINTS = [
+  {
+    id: 'warm-up-1',
+    target: 6,
+    title: 'Warm Up 1 Complete!',
+    message: 'Great work. You cleared Warm Up 1 and unlocked Word Builder 2.',
+    cta: 'Start Word Builder 2',
+    unlocksSentencePhase: false,
+  },
+  {
+    id: 'word-builder-2',
+    target: 12,
+    title: 'Word Builder 2 Complete!',
+    message: 'Nice progress. You are ready for the next vocabulary challenge.',
+    cta: 'Continue to Level 3',
+    unlocksSentencePhase: false,
+  },
+  {
+    id: 'phrase-builder-3',
+    target: 18,
+    title: 'Level 3 Complete!',
+    message: 'Phase 2 is unlocked. You can jump into Sentence Practice now.',
+    cta: 'Keep Vocabulary Practice',
+    unlocksSentencePhase: true,
+  },
+] as const;
+
 const getQuizIntervalForBand = (band: 'beginner' | 'intermediate' | 'advanced') => {
   if (band === 'beginner') {
     return 3;
@@ -71,7 +98,9 @@ export default function VocabularyLearning({
   const [consecutiveWords, setConsecutiveWords] = useState(0);
   const [showOutOfBatteriesModal, setShowOutOfBatteriesModal] = useState(false);
   const [showLevelCompleteModal, setShowLevelCompleteModal] = useState(false);
+  const [activeCheckpointId, setActiveCheckpointId] = useState<string | null>(null);
   const previousLevelCycleRef = useRef(levelCycle);
+  const shownCheckpointIdsRef = useRef<Set<string>>(new Set());
   const lastAutoSpokenWordIdRef = useRef<string | null>(null);
   const [aiVocabulary, setAiVocabulary] = useState<VocabularyItem[]>(() => {
     return readCachedAIVocabularyOrPairLatest(targetLanguage, nativeLanguage, { levelCycle });
@@ -125,6 +154,8 @@ export default function VocabularyLearning({
       quizAnswersInCycle: 0,
       sentenceAnswersInCycle: 0,
     });
+    shownCheckpointIdsRef.current = new Set();
+    setActiveCheckpointId(null);
   }, [levelCycle, updateState]);
 
   const learnedInCurrentCycle = appState.learnedWords.length % VOCABULARY_PACK_WORD_COUNT;
@@ -190,6 +221,10 @@ export default function VocabularyLearning({
   const nextIndex = appState.currentVocabIndex + 1;
   const nextItem = nextIndex < aiVocabulary.length ? aiVocabulary[nextIndex] : null;
   const nextItemLearned = nextItem ? appState.learnedWords.includes(nextItem.id) : false;
+  const activeCheckpoint =
+    activeCheckpointId === null
+      ? null
+      : VOCAB_LEVEL_CHECKPOINTS.find((checkpoint) => checkpoint.id === activeCheckpointId) || null;
 
   useEffect(() => {
     if (!hasAIVocabulary) {
@@ -378,6 +413,14 @@ export default function VocabularyLearning({
             : [lessonBackpackItem, ...prev.backpackItems],
         };
       });
+
+      const nextLearnedCount = Math.min(VOCABULARY_PACK_WORD_COUNT, learnedInCurrentCycle + 1);
+      const reachedCheckpoint = VOCAB_LEVEL_CHECKPOINTS.find((checkpoint) => checkpoint.target === nextLearnedCount);
+      const checkpointKey = reachedCheckpoint ? `${levelCycle}:${reachedCheckpoint.id}` : null;
+      if (reachedCheckpoint && checkpointKey && !shownCheckpointIdsRef.current.has(checkpointKey)) {
+        shownCheckpointIdsRef.current.add(checkpointKey);
+        setActiveCheckpointId(reachedCheckpoint.id);
+      }
     } else {
       updateState((prev) => ({
         totalXP: prev.totalXP + 2,
@@ -837,6 +880,37 @@ export default function VocabularyLearning({
                 className="flex-1 rounded-2xl bg-gray-100 px-6 py-4 font-bold text-gray-700"
               >
                 Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeCheckpoint && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="max-w-md w-full rounded-3xl border-4 border-primary bg-white p-8 text-center shadow-2xl">
+            <div className="mb-4 flex items-center justify-center text-7xl leading-none">🏁</div>
+            <h3 className="font-baloo text-3xl font-bold text-gray-800">{activeCheckpoint.title}</h3>
+            <p className="mt-3 text-gray-600 font-semibold">{activeCheckpoint.message}</p>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              {activeCheckpoint.unlocksSentencePhase && (
+                <button
+                  onClick={() => {
+                    setActiveCheckpointId(null);
+                    navigate('sentence');
+                  }}
+                  className="flex-1 rounded-2xl bg-gradient-to-r from-primary to-secondary px-6 py-4 font-bold text-white shadow-lg"
+                >
+                  Start Sentence Practice
+                </button>
+              )}
+              <button
+                onClick={() => setActiveCheckpointId(null)}
+                className={`flex-1 rounded-2xl px-6 py-4 font-bold ${
+                  activeCheckpoint.unlocksSentencePhase ? 'bg-gray-100 text-gray-700' : 'bg-gradient-to-r from-primary to-secondary text-white shadow-lg'
+                }`}
+              >
+                {activeCheckpoint.cta}
               </button>
             </div>
           </div>

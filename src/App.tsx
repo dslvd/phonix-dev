@@ -609,7 +609,7 @@ function App() {
       return scanMessages[appState.stars % scanMessages.length];
     }
 
-    return isFilipino ? 'Andito lang ako kung may kailangan ka!”' : 'I’m right here if you need anything!';
+    return isFilipino ? 'Andito lang ako kung may kailangan ka!' : 'I’m right here if you need anything!';
   })();
   const desktopNavItems: Array<{ label: string; icon: string; page: Page }> = [
     { label: 'Learn', icon: '🏠', page: 'dashboard' },

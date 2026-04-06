@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import Button from '../components/Button';
 import Card from '../components/Card';
 import NavigationHeader from '../components/NavigationHeader';
 import { Page, AppState, UpdateStateFn } from '../App';
@@ -20,6 +19,7 @@ export default function SentenceLearning({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
+  const [isCorrectAnswer, setIsCorrectAnswer] = useState<boolean | null>(null);
   const [showLevelCompleteModal, setShowLevelCompleteModal] = useState(false);
   const currentSentence = sentenceData[currentIndex];
 
@@ -65,15 +65,12 @@ export default function SentenceLearning({
     };
   }, [currentSentence, currentIndex]);
 
-  const handleNext = () => {
-    if (!showResult) {
-      return;
-    }
-
+  const goToNextQuestion = () => {
     if (currentIndex < sentenceData.length - 1) {
       setCurrentIndex(currentIndex + 1);
       setSelectedOption(null);
       setShowResult(false);
+      setIsCorrectAnswer(null);
     } else {
       // Award completion rewards at the end of sentence practice.
       updateState((prev) => ({ stars: prev.stars + 1, totalXP: prev.totalXP + 8 }));
@@ -81,11 +78,20 @@ export default function SentenceLearning({
     }
   };
 
+  const handleNext = () => {
+    if (!showResult) {
+      return;
+    }
+
+    goToNextQuestion();
+  };
+
   const handlePrevious = () => {
     if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1);
       setSelectedOption(null);
       setShowResult(false);
+      setIsCorrectAnswer(null);
     }
   };
 
@@ -104,14 +110,31 @@ export default function SentenceLearning({
       window.speechSynthesis.speak(utterance);
     }
 
-    const isCorrect = option.toLowerCase() === question.correctWord.toLowerCase();
     setSelectedOption(option);
+  };
+
+  const handleCheckAnswer = () => {
+    if (showResult || !selectedOption) {
+      return;
+    }
+
+    const isCorrect = selectedOption.toLowerCase() === question.correctWord.toLowerCase();
     setShowResult(true);
+    setIsCorrectAnswer(isCorrect);
 
     updateState((prev) => ({
       totalXP: prev.totalXP + (isCorrect ? 6 : 2),
       stars: prev.stars + (isCorrect ? 1 : 0),
+      sentenceAnswersInCycle: Math.min(prev.sentenceAnswersInCycle + 1, sentenceData.length),
     }));
+  };
+
+  const handleSkip = () => {
+    if (showResult) {
+      return;
+    }
+
+    goToNextQuestion();
   };
 
   const playAudio = (text: string, e?: React.MouseEvent<HTMLButtonElement>) => {
@@ -178,70 +201,72 @@ export default function SentenceLearning({
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center p-4">
-        <div className="max-w-2xl w-full">
+      <div className="flex-1 px-4 pb-28 pt-5">
+        <div className="mx-auto w-full max-w-3xl">
           <motion.div
             key={currentSentence.id}
-            initial={{ opacity: 0, x: 100 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ type: 'spring', stiffness: 150 }}
+            initial={{ opacity: 0, y: 28 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 140 }}
           >
-            <Card className="text-center">
-              {/* Illustration */}
-              <motion.div
-                animate={{
-                  scale: [1, 1.05, 1],
-                  rotate: [0, 2, -2, 0],
-                }}
-                transition={{ duration: 3, repeat: Infinity }}
-                className="text-9xl mb-8 leading-none flex items-center justify-center"
-              >
-                {currentSentence.illustration}
-              </motion.div>
+            <Card className="rounded-[2rem] border p-6 sm:p-8">
+              <div className="text-center">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#c98fff]">New Sentence</p>
+                <h2 className="theme-title mt-2 font-baloo text-4xl font-bold sm:text-5xl">Complete This Sentence</h2>
+              </div>
 
-              {/* Native Sentence */}
-              <div className="mb-8 rounded-2xl border border-[#304656] bg-[#122733] p-6">
-                <p className="mb-3 text-sm font-bold text-[#8bb1c7]">
-                  {appState.targetLanguage} Fill in the blank:
-                </p>
-                <div className="flex items-center justify-center gap-4">
-                  <h2 className="font-baloo text-3xl md:text-4xl font-bold text-[#dff1ff] leading-relaxed">
-                    {question.maskedSentence}
-                  </h2>
-                  <button
-                    onClick={(e) => playAudio(currentSentence.nativeSentence, e)}
-                    className="bg-primary text-white p-4 rounded-full hover:scale-110 transition-transform flex-shrink-0"
-                  >
-                    🔊
-                  </button>
+              <div className="mt-6 flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:justify-center">
+                <motion.div
+                  animate={{
+                    y: [0, -6, 0],
+                    rotate: [0, 2, 0, -2, 0],
+                  }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                  className="text-8xl leading-none"
+                >
+                  {currentSentence.illustration}
+                </motion.div>
+                <div className="theme-surface-soft relative w-full max-w-xl rounded-2xl border px-5 py-4">
+                  <div className="absolute -left-2 top-4 h-3 w-3 rotate-45 border-l border-t border-[color:var(--theme-border)] bg-[color:var(--theme-surface-soft)]" />
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="theme-muted text-xs font-bold uppercase tracking-[0.1em]">{appState.targetLanguage} challenge</p>
+                      <p className="theme-title mt-2 font-baloo text-2xl font-bold leading-relaxed sm:text-3xl">
+                        {question.maskedSentence}
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => playAudio(currentSentence.nativeSentence, e)}
+                      className="rounded-full border border-[#56b8e8] bg-[#173b52] p-3 text-xl leading-none text-[#c9efff] transition hover:scale-105"
+                      aria-label="Play sentence audio"
+                    >
+                      🔊
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              {/* English Translation */}
-              <div className="rounded-2xl border border-[#304656] bg-[#0f202a] p-6 shadow-lg">
-                <p className="mb-3 text-sm font-bold text-[#8bb1c7]">
-                  {appState.nativeLanguage} Hint:
-                </p>
-                <div className="flex items-center justify-center gap-4">
-                  <h3 className="font-baloo text-3xl md:text-4xl font-bold text-secondary leading-relaxed">
-                    {currentSentence.englishSentence}
-                  </h3>
-                  <button
-                    onClick={(e) => playAudio(currentSentence.englishSentence, e)}
-                    className="bg-secondary text-white p-4 rounded-full hover:scale-110 transition-transform flex-shrink-0"
-                  >
-                    🔊
-                  </button>
-                </div>
+              <div className="mt-5 rounded-2xl border border-[color:var(--theme-border)] bg-[color:var(--theme-surface-soft)] px-5 py-4">
+                <p className="theme-muted text-xs font-bold uppercase tracking-[0.1em]">{appState.nativeLanguage} hint</p>
+                <p className="theme-title mt-2 font-semibold text-lg leading-relaxed sm:text-xl">{currentSentence.englishSentence}</p>
               </div>
 
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <div className="mt-6 rounded-2xl border border-dashed border-[color:var(--theme-border)] bg-[color:var(--theme-surface-soft)] px-5 py-4">
+                <p className="theme-muted text-xs font-bold uppercase tracking-[0.1em]">Your answer</p>
+                <p className="theme-title mt-2 min-h-8 font-baloo text-2xl font-bold">
+                  {selectedOption || '_____'}
+                </p>
+              </div>
+
+              <div className="mt-6 flex flex-wrap gap-3">
                 {question.options.map((option) => {
                   const isCorrectOption = option.toLowerCase() === question.correctWord.toLowerCase();
                   const isSelected = selectedOption?.toLowerCase() === option.toLowerCase();
 
                   const stateClass = !showResult
-                    ? 'theme-nav-button hover:border-[#FF9126]'
+                    ? isSelected
+                      ? 'border border-[#56b8e8] bg-[#173b52] text-[#d4efff]'
+                      : 'theme-nav-button hover:border-[#56b8e8]'
                     : isCorrectOption
                     ? 'border border-green-500 bg-green-100 text-green-900'
                     : isSelected
@@ -253,7 +278,7 @@ export default function SentenceLearning({
                       key={option}
                       onClick={() => handleOptionSelect(option)}
                       disabled={showResult}
-                      className={`rounded-xl px-4 py-3 text-lg font-bold transition ${stateClass}`}
+                      className={`rounded-xl border px-4 py-2.5 text-base font-bold transition disabled:cursor-not-allowed ${stateClass}`}
                     >
                       {option}
                     </button>
@@ -264,7 +289,7 @@ export default function SentenceLearning({
               {showResult && (
                 <div className="mt-4 rounded-xl border border-[#304656] bg-[#173447] p-4">
                   <p className="theme-title text-lg font-bold">
-                    {selectedOption?.toLowerCase() === question.correctWord.toLowerCase() ? 'Correct! Great job!' : 'Nice try!'}
+                    {isCorrectAnswer ? 'Correct! Great job!' : 'Nice try!'}
                   </p>
                   <p className="theme-muted mt-1 font-semibold">
                     Correct answer: {question.correctWord}
@@ -274,27 +299,6 @@ export default function SentenceLearning({
             </Card>
           </motion.div>
 
-          {/* Navigation Buttons */}
-          <div className="flex gap-4 mt-6">
-            <Button
-              variant="outline"
-              onClick={handlePrevious}
-              disabled={currentIndex === 0}
-              className="flex-1"
-            >
-              ← Previous
-            </Button>
-            <Button
-              variant="primary"
-              onClick={handleNext}
-              disabled={!showResult}
-              className="flex-1"
-            >
-              {currentIndex === sentenceData.length - 1 ? 'Finish! 🎉' : 'Next →'}
-            </Button>
-          </div>
-
-          {/* Progress Dots */}
           <div className="mt-4 flex justify-center gap-2">
             {sentenceData.map((_, index) => (
               <div
@@ -309,6 +313,28 @@ export default function SentenceLearning({
               />
             ))}
           </div>
+        </div>
+      </div>
+
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-[color:var(--theme-border)] bg-[color:var(--theme-bg-solid)]/95 px-4 py-3 backdrop-blur">
+        <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3">
+          <button
+            onClick={showResult ? handlePrevious : handleSkip}
+            className="theme-nav-button rounded-2xl border px-6 py-3 text-sm font-bold uppercase tracking-[0.08em]"
+          >
+            {showResult ? 'Previous' : 'Skip'}
+          </button>
+          <button
+            onClick={showResult ? handleNext : handleCheckAnswer}
+            disabled={!showResult && !selectedOption}
+            className={`rounded-2xl px-8 py-3 text-sm font-bold uppercase tracking-[0.08em] transition ${
+              !showResult && !selectedOption
+                ? 'theme-lock-button cursor-not-allowed border'
+                : 'bg-gradient-to-r from-primary to-secondary text-white shadow-lg'
+            }`}
+          >
+            {showResult ? (currentIndex === sentenceData.length - 1 ? 'Finish' : 'Continue') : 'Check'}
+          </button>
         </div>
       </div>
 
