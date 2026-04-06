@@ -58,6 +58,7 @@ export default function AdminDashboard({ navigate, appState, premium }: AdminDas
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [users, setUsers] = useState<AdminUserRecord[]>([]);
   const [deleteError, setDeleteError] = useState('');
+  const [activeUserActionKey, setActiveUserActionKey] = useState<string | null>(null);
   const wordsLearned = appState.learnedWords.length;
   const batteries = premium.isPremium
     ? 'Unlimited'
@@ -174,6 +175,7 @@ export default function AdminDashboard({ navigate, appState, premium }: AdminDas
     }
 
     setDeleteError('');
+    setActiveUserActionKey(`delete:${userKey}`);
 
     try {
       const response = await fetch('/api/admin-users', {
@@ -192,6 +194,54 @@ export default function AdminDashboard({ navigate, appState, premium }: AdminDas
       setUsers((current) => current.filter((user) => user.userKey !== userKey));
     } catch {
       setDeleteError('Failed to delete user.');
+    } finally {
+      setActiveUserActionKey(null);
+    }
+  };
+
+  const handleResetUserHistory = async (userKey: string) => {
+    const confirmReset = window.confirm(
+      `Reset all learning history for ${userKey}? This keeps the account but clears progress, XP, stars, and backpack data.`
+    );
+    if (!confirmReset) {
+      return;
+    }
+
+    setDeleteError('');
+    setActiveUserActionKey(`reset:${userKey}`);
+
+    try {
+      const response = await fetch('/api/admin-users', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-password': adminPassword,
+        },
+        body: JSON.stringify({ userKey }),
+      });
+
+      if (!response.ok) {
+        throw new Error('reset-failed');
+      }
+
+      setUsers((current) =>
+        current.map((user) =>
+          user.userKey === userKey
+            ? {
+                ...user,
+                totalXP: 0,
+                stars: 0,
+                learnedWords: 0,
+                currentStreak: 1,
+                updatedAt: new Date().toISOString(),
+              }
+            : user
+        )
+      );
+    } catch {
+      setDeleteError('Failed to reset user history.');
+    } finally {
+      setActiveUserActionKey(null);
     }
   };
 
@@ -312,7 +362,7 @@ export default function AdminDashboard({ navigate, appState, premium }: AdminDas
 
           <Card hover={false} className="rounded-2xl border p-5">
             <h2 className="theme-title font-baloo text-3xl font-bold">User Accounts</h2>
-            <p className="theme-muted mt-1 text-sm font-semibold">Delete synced accounts from Cloudflare D1.</p>
+            <p className="theme-muted mt-1 text-sm font-semibold">Reset user history or delete synced accounts from Cloudflare D1.</p>
             {deleteError && <p className="mt-2 text-sm font-semibold text-red-400">{deleteError}</p>}
             <div className="mt-4 max-h-[24rem] space-y-3 overflow-y-auto pr-1">
               {users.length === 0 ? (
@@ -329,12 +379,22 @@ export default function AdminDashboard({ navigate, appState, premium }: AdminDas
                         {user.learnedWords} words • {user.stars} stars • XP {user.totalXP}
                       </p>
                     </div>
-                    <button
-                      onClick={() => handleDeleteUser(user.userKey)}
-                      className="rounded-xl border border-red-400 px-3 py-2 text-xs font-bold text-red-300 transition hover:bg-red-500/10"
-                    >
-                      Delete
-                    </button>
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      <button
+                        onClick={() => handleResetUserHistory(user.userKey)}
+                        disabled={activeUserActionKey !== null}
+                        className="rounded-xl border border-amber-400 px-3 py-2 text-xs font-bold text-amber-300 transition hover:bg-amber-500/10 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {activeUserActionKey === `reset:${user.userKey}` ? 'Resetting...' : 'Reset History'}
+                      </button>
+                      <button
+                        onClick={() => handleDeleteUser(user.userKey)}
+                        disabled={activeUserActionKey !== null}
+                        className="rounded-xl border border-red-400 px-3 py-2 text-xs font-bold text-red-300 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {activeUserActionKey === `delete:${user.userKey}` ? 'Deleting...' : 'Delete'}
+                      </button>
+                    </div>
                   </div>
                 ))
               )}
