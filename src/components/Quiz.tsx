@@ -27,6 +27,7 @@ interface AIQuizPayload {
 }
 
 const aiQuizCache = new Map<string, AIQuizPayload>();
+const quizOptionsCache = new Map<string, VocabularyItem[]>();
 
 const stripCodeFence = (text: string) => text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim();
 
@@ -100,13 +101,25 @@ export default function Quiz({
     setCorrectText(fallbackCorrect);
     setIncorrectText(fallbackIncorrect);
 
-    const setLocalOptions = () => {
-      const wrongOptions = allWords
-        .filter((word) => word.id !== currentWord.id)
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 3);
+    const optionsCacheKey = [
+      currentWord.id,
+      allWords.map((word) => word.id).join(','),
+    ].join('|');
 
+    const setLocalOptions = () => {
+      const cachedOptions = quizOptionsCache.get(optionsCacheKey);
+      if (cachedOptions) {
+        setOptions(cachedOptions);
+        return;
+      }
+
+      const shuffledPool = [...allWords]
+        .filter((word) => word.id !== currentWord.id)
+        .sort(() => Math.random() - 0.5);
+      const wrongOptions = shuffledPool.slice(0, 3);
       const localOptions = [currentWord, ...wrongOptions].sort(() => Math.random() - 0.5);
+
+      quizOptionsCache.set(optionsCacheKey, localOptions);
       setOptions(localOptions);
     };
 
