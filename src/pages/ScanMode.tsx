@@ -1172,6 +1172,17 @@ const translateManualText = async () => {
                         className="h-[74%] w-[96%] max-h-[320px] max-w-[900px] rounded-lg border-4 border-dashed border-white opacity-80"
                       />
                     </div>
+
+                    <button
+                      type="button"
+                      onClick={handleSwapCamera}
+                      disabled={cameraLoading || isScanning}
+                      className="absolute bottom-4 right-4 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-slate-900/65 text-lg text-white shadow-lg transition hover:scale-105 hover:bg-slate-900/80 disabled:cursor-not-allowed disabled:opacity-50"
+                      aria-label="Swap camera"
+                      title="Swap camera"
+                    >
+                      ↻
+                    </button>
                   </>
                 )}
               </div>
@@ -1191,15 +1202,8 @@ const translateManualText = async () => {
                   >
                     {isScanning ? '⏳ Scanning...' : '📄 Scan Text'}
                   </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={handleSwapCamera}
-                    disabled={cameraLoading || isScanning}
-                  >
-                    {preferredFacingMode === 'environment' ? '🔄 Front' : '🔄 Back'}
-                  </Button>
-                  <Button variant="outline" onClick={stopCamera}>
-                    ⏹️
+                  <Button variant="outline" onClick={stopCamera} className="min-w-[92px]">
+                    Stop
                   </Button>
                 </motion.div>
               )}
