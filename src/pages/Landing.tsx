@@ -102,7 +102,7 @@ export default function Landing({ navigate, resetAppState }: LandingProps) {
         transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
         className="absolute top-1/4 -translate-y-1/2 left-[15%] w-80 h-80 object-contain"
       >
-        <img src = "/assets/PipinRocket.png"/>
+        <img src = "../../assets/PipinRocket.png"/>
       </motion.div>
 
       {/* Login Card */}
