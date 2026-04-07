@@ -6,7 +6,7 @@ const jsonHeaders = {
   'Content-Type': 'application/json',
 };
 
-const CACHE_TTL_MS = 1000 * 60 * 60 * 24;
+const CACHE_TTL_MS = 1000 * 60 * 60 * 12;
 
 const memoryCache = new Map<string, { text: string; provider: string; updatedAt: number }>();
 const inFlightRefresh = new Map<string, Promise<{ text: string; provider: string }>>();
@@ -404,12 +404,6 @@ export default async function handler(req: any, res: any) {
     if (memCached && !refresh) {
       const isStale = Date.now() - memCached.updatedAt > CACHE_TTL_MS;
 
-      if (isStale) {
-        void refreshPair(pairKey, prompt).catch(() => {
-          // Keep serving stale cache if refresh fails.
-        });
-      }
-
       res.status(200).json({
         text: memCached.text,
         provider: memCached.provider,
@@ -422,9 +416,6 @@ export default async function handler(req: any, res: any) {
     const memPairFallback = readAnyPairCachedFromMemory(targetLanguage, nativeLanguage);
     if (memPairFallback && !refresh) {
       const isStale = Date.now() - memPairFallback.updatedAt > CACHE_TTL_MS;
-      void refreshPair(pairKey, prompt).catch(() => {
-        // Keep serving fallback cache if refresh fails.
-      });
 
       res.status(200).json({
         text: memPairFallback.text,
@@ -440,11 +431,6 @@ export default async function handler(req: any, res: any) {
       memoryCache.set(pairKey, d1Cached);
 
       const isStale = Date.now() - d1Cached.updatedAt > CACHE_TTL_MS;
-      if (isStale) {
-        void refreshPair(pairKey, prompt).catch(() => {
-          // Keep serving stale cache if refresh fails.
-        });
-      }
 
       res.status(200).json({
         text: d1Cached.text,
@@ -459,10 +445,6 @@ export default async function handler(req: any, res: any) {
     if (d1PairFallback && !refresh) {
       memoryCache.set(pairKey, d1PairFallback);
       const isStale = Date.now() - d1PairFallback.updatedAt > CACHE_TTL_MS;
-
-      void refreshPair(pairKey, prompt).catch(() => {
-        // Keep serving fallback cache if refresh fails.
-      });
 
       res.status(200).json({
         text: d1PairFallback.text,

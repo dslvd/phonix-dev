@@ -99,6 +99,7 @@ export default function VocabularyLearning({
   const targetLanguage = appState.targetLanguage || 'Hiligaynon';
   const nativeLanguage = appState.nativeLanguage || 'English';
   const levelCycle = getVocabularyLevelCycle(appState.learnedWords.length);
+  const learnedInCurrentCycle = appState.learnedWords.length % VOCABULARY_PACK_WORD_COUNT;
 
   const [isQuizMode, setIsQuizMode] = useState(false);
   const [isReviewMode, setIsReviewMode] = useState(false);
@@ -124,6 +125,7 @@ export default function VocabularyLearning({
   const [aiFlashcardItem, setAiFlashcardItem] = useState<VocabularyItem | null>(null);
 
   useEffect(() => {
+    const shouldAllowRefresh = learnedInCurrentCycle === 0;
     const cached = readCachedAIVocabularyOrPairLatest(targetLanguage, nativeLanguage, { levelCycle });
     if (cached.length > 0) {
       setAiVocabulary(cached);
@@ -140,7 +142,7 @@ export default function VocabularyLearning({
 
     const loadAIVocabulary = async () => {
       try {
-        const words = await fetchAIVocabulary(targetLanguage, nativeLanguage, { levelCycle });
+        const words = await fetchAIVocabulary(targetLanguage, nativeLanguage, { levelCycle, allowRefresh: shouldAllowRefresh });
         if (cancelled) {
           return;
         }
@@ -157,7 +159,7 @@ export default function VocabularyLearning({
     return () => {
       cancelled = true;
     };
-  }, [targetLanguage, nativeLanguage, isGuestMode, levelCycle]);
+  }, [targetLanguage, nativeLanguage, isGuestMode, levelCycle, learnedInCurrentCycle]);
 
   useEffect(() => {
     if (previousLevelCycleRef.current === levelCycle) {
@@ -181,8 +183,6 @@ export default function VocabularyLearning({
     shownCheckpointIdsRef.current = new Set();
     setActiveCheckpointId(null);
   }, [levelCycle, updateState]);
-
-  const learnedInCurrentCycle = appState.learnedWords.length % VOCABULARY_PACK_WORD_COUNT;
 
   const currentLevelWords = (() => {
     const difficulty = learnedInCurrentCycle < 20 ? 'beginner' : learnedInCurrentCycle < 40 ? 'intermediate' : 'advanced';
