@@ -436,11 +436,6 @@ export const fetchAIVocabulary = async (
     return ensurePhaseOneSupportWords(memory, levelCycle);
   }
 
-  const pairLatest = readCachedAIVocabularyByPairLatest(targetLanguage, nativeLanguage);
-  if (pairLatest.length > 0) {
-    return ensurePhaseOneSupportWords(pairLatest, levelCycle);
-  }
-
   const activeRequest = inFlightRequests.get(cacheKey);
   if (activeRequest) {
     return activeRequest;
@@ -464,9 +459,11 @@ export const fetchAIVocabulary = async (
       throw new Error('ai-vocabulary-request-failed');
     }
 
-    const data = await response.json();
-    if (data?.stale) {
-      void fetch('/api/ai-vocabulary', {
+    let data = await response.json();
+
+    // If server returned pair-fallback or stale cache, force a fresh generation now.
+    if (data?.source === 'cache-fallback' || data?.stale) {
+      const refreshResponse = await fetch('/api/ai-vocabulary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -476,9 +473,11 @@ export const fetchAIVocabulary = async (
           levelCycle,
           refresh: true,
         }),
-      }).catch(() => {
-        // Keep stale cache if async refresh fails.
       });
+
+      if (refreshResponse.ok) {
+        data = await refreshResponse.json();
+      }
     }
 
     const payload = parsePayload(String(data?.text || ''));
