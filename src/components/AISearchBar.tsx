@@ -85,15 +85,15 @@ export default function AISearchBar({
   };
 
   return (
-    <Card className="bg-gradient-to-br from-purple-100 to-pink-100">
+    <Card>
       <div className="space-y-4">
-        <div className="flex items-center gap-2 mb-2">
+        <div className="mb-2 flex items-center gap-2">
           <span className="text-3xl">🤖</span>
           <div>
-            <h3 className="font-baloo text-xl font-bold text-gray-800">
+            <h3 className="text-xl font-bold">
               AI Learning Assistant
             </h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-muted text-sm">
               {isFilipino
                 ? `Magtanong tungkol sa ${targetLanguage} at sa app.`
                 : `Ask me anything about ${targetLanguage} and the app!`}
@@ -102,8 +102,11 @@ export default function AISearchBar({
         </div>
 
         {usingFallback && (
-          <div className="rounded-2xl border-2 border-yellow-300 bg-yellow-50 px-4 py-3">
-            <p className="text-sm font-bold text-yellow-700">
+          <div
+            className="rounded-2xl border px-4 py-3"
+            style={{ backgroundColor: 'color-mix(in srgb, var(--primary) 12%, var(--surface))' }}
+          >
+            <p className="text-sm font-bold">
               {isFilipino
                 ? 'Smart Helper Mode ay aktibo kaya may sagot agad ang website AI.'
                 : 'Smart Helper Mode is active so the website AI still works right away.'}
@@ -122,7 +125,7 @@ export default function AISearchBar({
                 ? `Paano sabihin ang "hello" sa ${targetLanguage}?`
                 : `e.g., How do I say 'hello' in ${targetLanguage}?`
             }
-            className="flex-1 px-4 py-3 rounded-2xl border-2 border-purple-300 focus:border-primary outline-none text-base font-semibold transition-all"
+            className="flex-1 rounded-2xl border bg-transparent px-4 py-3 text-base font-semibold outline-none transition focus:border-[color:var(--primary)]"
             disabled={loading}
           />
           <Button
@@ -139,7 +142,7 @@ export default function AISearchBar({
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-center py-4"
+            className="py-4 text-center"
           >
             <motion.div
               animate={{ rotate: 360 }}
@@ -148,7 +151,7 @@ export default function AISearchBar({
             >
               🤖
             </motion.div>
-            <p className="text-sm text-gray-600 mt-2">
+            <p className="text-muted mt-2 text-sm">
               {isFilipino ? 'Nag-iisip ang AI...' : 'AI is thinking...'}
             </p>
           </motion.div>
@@ -160,9 +163,9 @@ export default function AISearchBar({
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="bg-red-100 border-2 border-red-300 rounded-2xl p-4"
+              className="rounded-2xl border border-red-400/60 bg-red-500/10 p-4"
             >
-              <p className="text-red-700 font-semibold text-sm">{error}</p>
+              <p className="text-sm font-semibold text-red-300">{error}</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -173,15 +176,15 @@ export default function AISearchBar({
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
-              className="bg-white rounded-2xl p-4 shadow-lg border-2 border-purple-200"
+              className="card rounded-2xl p-4"
             >
-              <div className="flex items-start gap-2 mb-2">
+              <div className="mb-2 flex items-start gap-2">
                 <span className="text-2xl">💡</span>
-                <p className="font-bold text-sm text-purple-600">
+                <p className="text-sm font-bold" style={{ color: 'var(--primary)' }}>
                   {isFilipino ? 'Sagot ng AI:' : 'AI Answer:'}
                 </p>
               </div>
-              <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">
+              <div className="whitespace-pre-wrap leading-relaxed">
                 {result}
               </div>
               <button
@@ -189,7 +192,8 @@ export default function AISearchBar({
                   setResult('');
                   setQuery('');
                 }}
-                className="mt-3 text-xs text-purple-600 hover:text-purple-800 font-bold"
+                className="mt-3 text-xs font-bold"
+                style={{ color: 'var(--primary)' }}
               >
                 {isFilipino ? 'Magtanong ulit' : 'Ask another question'}
               </button>
@@ -199,7 +203,7 @@ export default function AISearchBar({
 
         {!result && !loading && (
           <div className="pt-2">
-            <p className="text-xs text-gray-500 mb-2 font-semibold">
+            <p className="text-muted mb-2 text-xs font-semibold">
               {isFilipino ? 'Subukan mong itanong:' : 'Try asking:'}
             </p>
             <div className="flex flex-wrap gap-2">
@@ -221,7 +225,8 @@ export default function AISearchBar({
                 <button
                   key={suggestion}
                   onClick={() => setQuery(suggestion)}
-                  className="text-xs bg-white px-3 py-1 rounded-full border border-purple-200 hover:border-purple-400 hover:bg-purple-50 transition-all font-semibold"
+                  className="rounded-full border px-3 py-1 text-xs font-semibold transition hover:border-[color:var(--primary)]"
+                  style={{ backgroundColor: 'var(--surface)' }}
                 >
                   {suggestion}
                 </button>

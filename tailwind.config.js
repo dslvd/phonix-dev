@@ -49,7 +49,7 @@ export default {
       },
       fontFamily: {
         nunito: ['Nunito', 'sans-serif'],
-        baloo: ['Baloo 2', 'cursive'],
+        baloo: ['Nunito', 'sans-serif'],
       },
       animation: {
         'bounce-slow': 'bounce 2s infinite',
