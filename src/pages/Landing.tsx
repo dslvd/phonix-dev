@@ -95,32 +95,18 @@ export default function Landing({ navigate, resetAppState }: LandingProps) {
 
   return (
     // Landing Page Container
-    <div className="theme-page relative flex min-h-screen items-center justify-center overflow-hidden p-4 text-slate-100">
+    <div className="theme-page relative flex h-screen items-center justify-center overflow-hidden p-4 text-slate-100">
       {/* Floating cloud decorations */}
       <motion.div
-        animate={{ y: [0, -20, 0], x: [0, 10, 0] }}
-        transition={{ duration: 6, repeat: Infinity }}
-        className="absolute top-10 left-10 text-6xl opacity-30"
+        animate={{ y: [10, -10, 10] }}
+        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute top-1/4 -translate-y-1/2 left-[15%] w-80 h-80 object-contain"
       >
-        ☁️
-      </motion.div>
-      <motion.div
-        animate={{ y: [0, -15, 0], x: [0, -10, 0] }}
-        transition={{ duration: 5, repeat: Infinity }}
-        className="absolute top-20 right-20 text-5xl opacity-25"
-      >
-        ☁️
-      </motion.div>
-      <motion.div
-        animate={{ y: [0, -25, 0] }}
-        transition={{ duration: 7, repeat: Infinity }}
-        className="absolute bottom-20 left-1/4 text-7xl opacity-20"
-      >
-        ☁️
+        <img src = "/assets/PipinRocket.png"/>
       </motion.div>
 
       {/* Login Card */}
-      <Card className="max-w-md w-full animate-pop">
+      <Card className="max-w-lg w-full animate-pop ml-auto mr-6">
         {/* Logo with wooden sign style */}
         <div className="text-center mb-8">
           <div className="inline-block">
