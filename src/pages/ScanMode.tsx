@@ -43,6 +43,20 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
 const cleanOCRText = (text: string) => text.replace(/\s+/g, ' ').trim();
 
 export default function ScanMode({ navigate, appState, updateState, premium }: ScanModeProps) {
+  const paperclipIcon = (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M21 11.5 12.5 20A6 6 0 1 1 4 11.5l9-9a4 4 0 1 1 5.7 5.6l-9.2 9.2a2 2 0 1 1-2.8-2.8l8.5-8.5" />
+    </svg>
+  );
+  const refreshIcon = (
+    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 5v6h-6" />
+      <path d="M4 19v-6h6" />
+      <path d="M6.9 9A7 7 0 0 1 18 6l2 2" />
+      <path d="M17.1 15A7 7 0 0 1 6 18l-2-2" />
+    </svg>
+  );
+
   const isGuestMode = (() => {
     if (typeof window === 'undefined') {
       return false;
@@ -65,6 +79,7 @@ export default function ScanMode({ navigate, appState, updateState, premium }: S
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraLoading, setCameraLoading] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
+  const [activeScanAction, setActiveScanAction] = useState<'camera' | 'upload' | 'manual' | null>(null);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [savedScans, setSavedScans] = useState<ScanResult[]>([]);
@@ -73,14 +88,19 @@ export default function ScanMode({ navigate, appState, updateState, premium }: S
   const [showLoginRequiredModal, setShowLoginRequiredModal] = useState(false);
   const [manualText, setManualText] = useState('');
   const [pendingAttachment, setPendingAttachment] = useState<PendingAttachment | null>(null);
+  const [selectedSavedScan, setSelectedSavedScan] = useState<ScanResult | null>(null);
   const [isDragActive, setIsDragActive] = useState(false);
   const [preferredFacingMode, setPreferredFacingMode] = useState<'environment' | 'user'>('environment');
+  const [isCaptureAnimating, setIsCaptureAnimating] = useState(false);
+  const [frozenFrame, setFrozenFrame] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const guideBoxRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const pause = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
   const canUseBatteryAction = () => {
     if (premium.isPremium) {
@@ -251,6 +271,7 @@ export default function ScanMode({ navigate, appState, updateState, premium }: S
 
   const startCamera = async () => {
     if (!requireLoginForAI()) return;
+    setFrozenFrame(null);
     await launchCamera(preferredFacingMode);
   };
 
@@ -266,6 +287,7 @@ export default function ScanMode({ navigate, appState, updateState, premium }: S
 
     setCameraActive(false);
     setCameraLoading(false);
+    setFrozenFrame(null);
   };
 
   const handleSwapCamera = async () => {
@@ -677,6 +699,7 @@ const translatePendingAttachment = async () => {
   }
 
   setIsScanning(true);
+  setActiveScanAction('upload');
   setError(null);
 
   try {
@@ -695,6 +718,7 @@ const translatePendingAttachment = async () => {
     setError(err instanceof Error ? err.message : 'Failed to translate attached content.');
   } finally {
     setIsScanning(false);
+    setActiveScanAction(null);
   }
 };
 
@@ -780,6 +804,8 @@ const captureAndAnalyze = async () => {
   if (!canUseBatteryAction()) return;
 
   setIsScanning(true);
+  setActiveScanAction('camera');
+  setIsCaptureAnimating(true);
   setError(null);
 
   try {
@@ -799,6 +825,18 @@ const captureAndAnalyze = async () => {
       setError('Camera not ready yet.');
       return;
     }
+
+    const previewCanvas = document.createElement('canvas');
+    const previewCtx = previewCanvas.getContext('2d');
+
+    if (previewCtx) {
+      previewCanvas.width = videoWidth;
+      previewCanvas.height = videoHeight;
+      previewCtx.drawImage(video, 0, 0, videoWidth, videoHeight);
+      setFrozenFrame(previewCanvas.toDataURL('image/jpeg', 0.92));
+    }
+
+    await pause(700);
 
     const videoRect = video.getBoundingClientRect();
     const guideRect = guideBoxRef.current.getBoundingClientRect();
@@ -876,7 +914,10 @@ const captureAndAnalyze = async () => {
     console.error('Scan error:', err);
     setError(err instanceof Error ? err.message : 'Failed to scan and translate text.');
   } finally {
+    setIsCaptureAnimating(false);
     setIsScanning(false);
+    setActiveScanAction(null);
+    window.setTimeout(() => setFrozenFrame(null), 350);
   }
 };
 
@@ -891,6 +932,7 @@ const translateManualText = async () => {
 
   try {
     setIsScanning(true);
+    setActiveScanAction('manual');
     setError(null);
 
     const sourceText = manualText.trim();
@@ -941,6 +983,7 @@ const translateManualText = async () => {
     setError(err instanceof Error ? err.message : 'Translation is temporarily unavailable. Please try again in a few seconds.');
   } finally {
     setIsScanning(false);
+    setActiveScanAction(null);
   }
 };
 
@@ -1083,13 +1126,13 @@ const translateManualText = async () => {
         </motion.div>
 
         {/* Main Two-Column Layout */}
-        <div className="grid gap-6 xl:grid-cols-[1.15fr_0.95fr]">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.95fr)]">
           {/* Left Column: Camera, Upload, and Manual Translate */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
-            className="space-y-4"
+            className="min-w-0 space-y-4"
           >
             {/* Camera and OCR Workspace Card */}
             <Card className="theme-surface relative min-h-[380px] border p-5">
@@ -1101,6 +1144,18 @@ const translateManualText = async () => {
                 className="hidden"
               />
 
+              <div className="-mx-5 mb-2 border-b border-[#e6eef9] px-5 pb-2 dark:border-white/10">
+                <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-1.5">
+                    <span className="text-sm leading-none text-[#5ea4ff]">📷</span>
+                    <h3 className="theme-title font-baloo text-lg font-bold">Live Camera</h3>
+                  </div>
+                  <span className="rounded-full bg-[#dff7e6] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[#39a860]">
+                    {cameraActive ? 'ACTIVE' : 'READY'}
+                  </span>
+                </div>
+              </div>
+
               {/* Camera Preview Area */}
               <div className="relative h-[260px] overflow-hidden rounded-lg bg-gray-900 sm:h-[290px]">
                 <video
@@ -1108,8 +1163,16 @@ const translateManualText = async () => {
                   autoPlay
                   playsInline
                   muted
-                  className={`w-full h-full object-cover ${cameraActive ? 'opacity-100' : 'opacity-0'}`}
+                  className={`h-full w-full object-cover ${cameraActive && !frozenFrame ? 'opacity-100' : 'opacity-0'}`}
                 />
+
+                {frozenFrame && (
+                  <img
+                    src={frozenFrame}
+                    alt="Captured frame"
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                )}
 
                 {!cameraActive && !cameraLoading ? (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-4">
@@ -1146,12 +1209,12 @@ const translateManualText = async () => {
                 {cameraActive && (
                   <>
                     <AnimatePresence>
-                      {isScanning && (
+                      {(isScanning || isCaptureAnimating) && (
                         <motion.div
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
-                          className="absolute inset-0 bg-primary/30 flex items-center justify-center"
+                          className="absolute inset-0 flex items-center justify-center bg-slate-950/18"
                         >
                           <div className="text-white text-2xl font-bold font-baloo flex items-center gap-3">
                             <motion.div
@@ -1169,8 +1232,24 @@ const translateManualText = async () => {
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <div
                         ref={guideBoxRef}
-                        className="h-[74%] w-[96%] max-h-[320px] max-w-[900px] rounded-lg border-4 border-dashed border-white opacity-80"
-                      />
+                        className="relative h-[74%] w-[96%] max-h-[320px] max-w-[900px] overflow-hidden rounded-[22px] border border-white/55"
+                      >
+                        <div className="absolute left-0 top-0 h-10 w-10 rounded-tl-2xl border-l-[3px] border-t-[3px] border-[#5ea4ff]" />
+                        <div className="absolute right-0 top-0 h-10 w-10 rounded-tr-2xl border-r-[3px] border-t-[3px] border-[#5ea4ff]" />
+                        <div className="absolute bottom-0 left-0 h-10 w-10 rounded-bl-2xl border-b-[3px] border-l-[3px] border-[#5ea4ff]" />
+                        <div className="absolute bottom-0 right-0 h-10 w-10 rounded-br-2xl border-b-[3px] border-r-[3px] border-[#5ea4ff]" />
+                        <AnimatePresence>
+                          {isCaptureAnimating && (
+                            <motion.div
+                              initial={{ top: '8%' }}
+                              animate={{ top: '92%' }}
+                              exit={{ opacity: 0 }}
+                              transition={{ duration: 0.65, ease: 'easeInOut' }}
+                              className="absolute left-[8%] right-[8%] h-[2px] -translate-y-1/2 rounded-full bg-[#5ea4ff] shadow-[0_0_12px_rgba(94,164,255,0.95)]"
+                            />
+                          )}
+                        </AnimatePresence>
+                      </div>
                     </div>
 
                     <button
@@ -1200,53 +1279,13 @@ const translateManualText = async () => {
                     disabled={isScanning}
                     className="flex-1"
                   >
-                    {isScanning ? '⏳ Scanning...' : '📄 Scan Text'}
+                    {activeScanAction === 'camera' ? '⏳ Scanning...' : 'Scan Text'}
                   </Button>
                   <Button variant="outline" onClick={stopCamera} className="min-w-[92px]">
                     Stop
                   </Button>
                 </motion.div>
               )}
-
-              {/* File Upload and Paste Section */}
-              <div className="mt-5 rounded-2xl border border-[#56b8e8]/30 bg-gradient-to-br from-[#56b8e8]/10 to-[#56b8e8]/5 p-5">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <h4 className="theme-title font-baloo text-xl font-bold">Upload File</h4>
-                    <p className="theme-muted mt-1 max-w-md text-sm font-semibold leading-7">
-                      Attach an image, PDF, DOCX, or text file, or paste text/image here, then click translate.
-                    </p>
-                    {pendingAttachment && (
-                      <div className="mt-3 flex flex-wrap items-center gap-2">
-                        <div className="inline-flex max-w-full items-center gap-2 rounded-full bg-white/60 px-3 py-1 text-sm font-semibold text-primary dark:bg-white/10">
-                          <span className="truncate">Attached: {pendingAttachment.name}</span>
-                          <button
-                            onClick={clearPendingAttachment}
-                            className="theme-muted rounded-full border px-2 py-0.5 text-xs font-bold transition hover:text-primary"
-                            aria-label="Remove attached file"
-                          >
-                            x
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="w-full sm:w-auto sm:min-w-[220px]">
-                    <Button
-                      variant={pendingAttachment ? 'primary' : 'secondary'}
-                      onClick={pendingAttachment ? translatePendingAttachment : handleUploadClick}
-                      disabled={isScanning}
-                      className="w-full"
-                    >
-                      {isScanning ? 'Translating...' : pendingAttachment ? 'Translate' : 'Attach File'}
-                    </Button>
-                  </div>
-                </div>
-                <p className="theme-muted mt-3 text-xs font-semibold">
-                  Tip: press `Ctrl+V` to paste an image, copied file, or text, or drag and drop a file anywhere on this page.
-                </p>
-              </div>
 
               {/* Error and Troubleshooting Block */}
               {error && (
@@ -1282,35 +1321,84 @@ const translateManualText = async () => {
               <canvas ref={canvasRef} className="hidden" />
             </Card>
 
-            {/* Manual Text Translation Card */}
-            <Card className="theme-surface-soft border p-5">
-              <h3 className="theme-title mb-3 flex items-center gap-2 font-baloo text-xl font-bold">
-                <span>⌨️</span>
-                Manual Text Translate
-              </h3>
-              <p className="theme-muted mb-4 text-sm font-semibold leading-7">
-                If camera OCR is slow or unclear, type the text manually and translate it instantly.
-              </p>
+            <div className="grid items-stretch gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+              <Card className="theme-surface-soft min-w-0 flex h-full flex-col border p-5">
+                <h3 className="theme-title mb-2 flex items-center gap-2 font-baloo text-xl font-bold">
+                  <span className="text-[#FFB23F]">{paperclipIcon}</span>
+                  Upload File
+                </h3>
+                <p className="theme-muted mb-4 text-sm font-semibold">
+                  Images, PDF, DOCX, or TXT
+                </p>
 
-              <div className="flex flex-col gap-3">
-                <textarea
-                  value={manualText}
-                  onChange={(e) => setManualText(e.target.value)}
-                  placeholder="Type or paste text here..."
-                  rows={6}
-                  className="theme-surface min-h-[180px] w-full resize-none rounded-2xl border-2 px-4 py-4 font-semibold outline-none transition-all focus:border-[#56b8e8]"
-                />
-
-                <Button
-                  variant="secondary"
-                  onClick={translateManualText}
+                <button
+                  type="button"
+                  onClick={pendingAttachment ? translatePendingAttachment : handleUploadClick}
                   disabled={isScanning}
-                  className="w-full"
+                  className="flex min-h-[170px] flex-1 w-full flex-col items-center justify-center rounded-[26px] border-2 border-dashed border-[#9fc8ff] bg-[#dbeafe] px-6 py-8 text-center transition hover:border-[#6da9ff] hover:bg-[#e6f1ff] disabled:cursor-not-allowed disabled:opacity-70 dark:bg-[#12263a]/40 dark:hover:bg-[#12263a]/55"
+                  style={{ backgroundColor: '#cfe5ff', borderColor: '#9fc8ff' }}
                 >
-                  {isScanning ? '⏳ Translating...' : '⚡ Translate Text'}
-                </Button>
-              </div>
-            </Card>
+                  <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-white text-[#5b5b5b] shadow-sm">
+                    {pendingAttachment ? refreshIcon : <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M21 11.5 12.5 20A6 6 0 1 1 4 11.5l9-9a4 4 0 1 1 5.7 5.6l-9.2 9.2a2 2 0 1 1-2.8-2.8l8.5-8.5" />
+                    </svg>}
+                  </div>
+                  <div className="font-baloo text-2xl font-bold text-[#2f61d4]">
+                    {activeScanAction === 'upload' ? 'Translating...' : pendingAttachment ? 'Translate' : 'Browse Files'}
+                  </div>
+                  {!pendingAttachment && (
+                    <div className="theme-muted mt-1 text-sm font-semibold">
+                      or drag & drop here
+                    </div>
+                  )}
+                </button>
+
+                {pendingAttachment && (
+                  <div className="mt-3 flex min-w-0 items-center justify-between gap-3 rounded-2xl border border-[#b8d7ff] bg-white/70 px-4 py-3 dark:bg-white/5">
+                    <p className="min-w-0 flex-1 truncate text-sm font-semibold text-primary">
+                      {pendingAttachment.name}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={clearPendingAttachment}
+                      className="theme-muted flex-shrink-0 rounded-full border px-2 py-0.5 text-xs font-bold transition hover:text-primary"
+                      aria-label="Remove attached file"
+                    >
+                      x
+                    </button>
+                  </div>
+                )}
+              </Card>
+
+              <Card className="theme-surface-soft min-w-0 flex h-full flex-col border p-5">
+                <h3 className="theme-title mb-2 flex items-center gap-2 font-baloo text-xl font-bold">
+                  <span>✎</span>
+                  Type Manually
+                </h3>
+                <p className="theme-muted mb-4 text-sm font-semibold">
+                  Paste or type text directly
+                </p>
+
+                <div className="flex flex-1 flex-col gap-3">
+                  <textarea
+                    value={manualText}
+                    onChange={(e) => setManualText(e.target.value)}
+                    placeholder="Type something to translate..."
+                    rows={5}
+                    className="theme-surface min-h-[132px] w-full resize-none rounded-2xl border-2 px-4 py-4 font-semibold outline-none transition-all focus:border-[#56b8e8]"
+                  />
+
+                  <Button
+                    variant="primary"
+                    onClick={translateManualText}
+                    disabled={isScanning}
+                    className="w-full"
+                  >
+                    {activeScanAction === 'manual' ? '⏳ Translating...' : 'Translate'}
+                  </Button>
+                </div>
+              </Card>
+            </div>
           </motion.div>
 
           {/* Right Column: Result + Saved Scans */}
@@ -1318,11 +1406,195 @@ const translateManualText = async () => {
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
-            className="space-y-4"
+            className="min-w-0 space-y-4"
           >
+            <Card
+              className={`theme-surface min-w-0 max-w-full overflow-hidden p-0 ${
+                scanResult ? 'border border-[#8db7ff]' : 'theme-border'
+              }`}
+            >
+              <div
+                className={`flex items-center justify-between gap-3 px-5 py-4 ${
+                  scanResult
+                    ? 'border-b border-[#dce7fb] bg-[#eef5ff]'
+                    : 'theme-border border-b bg-white/70 dark:bg-transparent'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-[#FFB23F]">✨</span>
+                  <h3
+                    className={`font-baloo text-xl font-bold ${
+                      scanResult ? 'text-[#2f61d4]' : 'theme-title'
+                    }`}
+                  >
+                    {scanResult ? 'Translation Ready' : 'Translation Result'}
+                  </h3>
+                </div>
+                {scanResult && (
+                  <button
+                    type="button"
+                    onClick={() => setScanResult(null)}
+                    className="text-lg font-bold text-[#8da2c9] transition hover:text-[#5c76ac]"
+                    aria-label="Clear translation result"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+
+              {scanResult ? (
+                <div className="space-y-5 px-5 py-5">
+                  <div className="text-left">
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#6e83ab]">
+                        Detected Text
+                      </p>
+                      <span className="rounded-full bg-[#eef4ff] px-2.5 py-1 text-[11px] font-bold text-[#4c77ff]">
+                        {scanResult.confidence === 'manual'
+                          ? 'Manual Input'
+                          : scanResult.confidence === 'upload'
+                            ? 'Uploaded File'
+                            : 'Camera OCR'}
+                      </span>
+                    </div>
+
+                    <div className="rounded-2xl bg-[#f7fbff] px-4 py-4">
+                      <p className="max-h-28 overflow-y-auto break-words whitespace-pre-wrap pr-1 text-sm font-semibold leading-7 text-[#435574]">
+                        {scanResult.detectedText}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="text-left">
+                    <p className="mb-2 text-xs font-bold uppercase tracking-[0.12em] text-[#4c77ff]">
+                      {appState.targetLanguage}
+                    </p>
+                    <div className="flex items-start justify-between gap-4">
+                      <p
+                        onClick={() => scanResult.translatedText && speakText(scanResult.translatedText)}
+                        className="max-h-48 flex-1 cursor-pointer overflow-y-auto break-words whitespace-pre-wrap pr-1 text-[2rem] font-extrabold leading-[1.45] text-[#0f1f3d]"
+                        title="Tap to hear pronunciation"
+                      >
+                        {scanResult.translatedText || '—'}
+                      </p>
+                      {scanResult.translatedText && (
+                        <button
+                          onClick={() => speakText(scanResult.translatedText)}
+                          className="mt-1 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-[#edf4ff] text-xl text-[#4b84ff] transition hover:scale-105"
+                        >
+                          🔊
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <Button
+                    variant="primary"
+                    onClick={saveScan}
+                    className="w-full border-b-4 border-[#d97b12] bg-[#ff9126] text-white hover:bg-[#ff9d41]"
+                  >
+                    💾 Save to Collection
+                  </Button>
+                </div>
+              ) : (
+                <div className="m-5 rounded-[28px] border border-dashed border-[#dfe8f6] px-8 py-12 text-center">
+                  <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-[#f5f8fd] text-4xl">
+                    👀
+                  </div>
+                  <h4 className="theme-title font-baloo text-2xl font-bold">Waiting for input</h4>
+                  <p className="theme-muted mx-auto mt-3 max-w-xs text-sm font-semibold leading-7">
+                    Start the camera, upload a file, or type text to see the translation here.
+                  </p>
+                </div>
+              )}
+            </Card>
+
+            {/*
+            <Card className="hidden theme-surface overflow-hidden border border-[#8db7ff] p-0">
+              <div className="flex items-center justify-between gap-3 border-b border-[#dce7fb] bg-[#eef5ff] px-5 py-4">
+                <span className="text-[#FFB23F]">✨</span>
+                <h3 className="font-baloo text-xl font-bold text-[#2f61d4]">
+                  {scanResult ? 'Translation Ready' : 'Translation Result'}
+                </h3>
+              </div>
+                {scanResult && (
+                  <button
+                    type="button"
+                    onClick={() => setScanResult(null)}
+                    className="text-lg font-bold text-[#8da2c9] transition hover:text-[#5c76ac]"
+                    aria-label="Clear translation result"
+                  >
+                    x
+                  </button>
+                )}
+              </div>
+
+              {scanResult ? (
+                (() => {
+                  const result = scanResult;
+                  return (
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+                  <div className="theme-surface-soft rounded-[28px] border border-[#dfe8f6] p-4 text-left">
+                    <p className="theme-muted mb-1 text-xs font-bold uppercase tracking-[0.2em]">
+                      {result.confidence === 'manual'
+                        ? 'Manual Input'
+                        : result.confidence === 'upload'
+                          ? 'Uploaded File'
+                          : 'Camera OCR'}
+                    </p>
+                    <p className="theme-muted mb-1 font-semibold">Detected Text:</p>
+                    <p className="theme-title mb-4 max-h-36 overflow-y-auto break-words whitespace-pre-wrap pr-1 text-sm font-semibold leading-7">
+                      {result.detectedText}
+                    </p>
+
+                    <p className="theme-muted mb-1 font-semibold">{appState.targetLanguage}:</p>
+                    <div className="flex items-start justify-between gap-3">
+                      <p
+                        onClick={() => result.translatedText && speakText(result.translatedText)}
+                        className="max-h-48 flex-1 cursor-pointer overflow-y-auto break-words whitespace-pre-wrap pr-1 text-lg font-bold leading-8 text-primary"
+                        title="Tap to hear pronunciation"
+                      >
+                        {result.translatedText || '—'}
+                      </p>
+                      {result.translatedText && (
+                        <button
+                          onClick={() => speakText(result.translatedText)}
+                          className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-[#edf4ff] text-xl text-[#4b84ff] transition hover:scale-105"
+                        >
+                          🔊
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <Button variant="success" onClick={saveScan} className="flex-1">
+                      💾 Save to Collection
+                    </Button>
+                    <Button variant="outline" onClick={() => setScanResult(null)} className="min-w-[84px]">
+                      ✖️
+                    </Button>
+                  </div>
+                </motion.div>
+                  );
+                })()
+              ) : (
+                <div className="rounded-[28px] border border-dashed border-[#dfe8f6] px-8 py-12 text-center">
+                  <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-[#f5f8fd] text-4xl">
+                    👀
+                  </div>
+                  <h4 className="theme-title font-baloo text-2xl font-bold">Waiting for input</h4>
+                  <p className="theme-muted mx-auto mt-3 max-w-xs text-sm font-semibold leading-7">
+                    Start the camera, upload a file, or type text to see the translation here.
+                  </p>
+                </div>
+              )}
+            </Card>
+            */}
+
             {/* Live Translation Result */}
             <AnimatePresence>
-              {scanResult && (
+              {false && scanResult && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8, y: 20 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1337,9 +1609,9 @@ const translateManualText = async () => {
                       </h3>
 
                       <p className="theme-muted mb-4 text-xs font-bold uppercase tracking-[0.2em]">
-                        {scanResult.confidence === 'manual'
+                        {scanResult!.confidence === 'manual'
                           ? 'Manual Input'
-                          : scanResult.confidence === 'upload'
+                          : scanResult!.confidence === 'upload'
                             ? 'Uploaded File'
                             : 'Camera OCR'}
                       </p>
@@ -1347,7 +1619,7 @@ const translateManualText = async () => {
                       <div className="theme-surface-soft mb-4 rounded-2xl border p-4 text-left">
                         <p className="theme-muted mb-1 font-semibold">Detected Text:</p>
                         <p className="theme-title mb-4 max-h-40 overflow-y-auto break-words whitespace-pre-wrap pr-1 text-sm font-semibold leading-7">
-                          {scanResult.detectedText}
+                          {scanResult!.detectedText}
                         </p>
 
                         <p className="theme-muted mb-1 font-semibold">
@@ -1358,16 +1630,16 @@ const translateManualText = async () => {
                         <div className="flex flex-col gap-1">
                           <div className="flex items-start justify-between gap-2">
                             <p
-                              onClick={() => scanResult.translatedText && speakText(scanResult.translatedText)}
+                              onClick={() => scanResult!.translatedText && speakText(scanResult!.translatedText)}
                               className="max-h-64 cursor-pointer overflow-y-auto break-words whitespace-pre-wrap pr-1 text-lg font-bold leading-8 text-primary"
                               title="Tap to hear pronunciation"
                             >
-                              {scanResult.translatedText || '—'}
+                              {scanResult!.translatedText || '—'}
                             </p>
 
-                            {scanResult.translatedText && (
+                            {scanResult!.translatedText && (
                               <button
-                                onClick={() => speakText(scanResult.translatedText)}
+                                onClick={() => speakText(scanResult!.translatedText)}
                                 className="text-3xl hover:scale-110 transition-transform"
                               >
                                 🔊
@@ -1375,7 +1647,7 @@ const translateManualText = async () => {
                             )}
                           </div>
 
-                          {!scanResult.translatedText && (
+                          {!scanResult!.translatedText && (
                             <div className="theme-muted mt-2 text-sm">
                               <p className="italic">
                                 Translation is not available right now.
@@ -1404,66 +1676,149 @@ const translateManualText = async () => {
               )}
             </AnimatePresence>
 
-            {/* Saved Scans List */}
-            <Card className="theme-surface border">
-              <h3 className="theme-title mb-3 flex items-center gap-2 font-baloo text-xl font-bold">
-                <span>📝</span>
-                Scanned Text ({savedScans.length})
-              </h3>
-
-              <div className="max-h-96 space-y-2 overflow-y-auto">
-                {savedScans.length === 0 ? (
-                  <div className="theme-muted py-8 text-center">
-                    <div className="text-4xl mb-2 leading-none flex items-center justify-center">👀</div>
-                    <p className="font-semibold">No saved scans yet!</p>
-                    <p className="text-sm">Scan text or documents to save translations</p>
-                  </div>
-                ) : (
-                  savedScans.map((item, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      className="theme-surface-soft rounded-lg border p-3"
-                    >
-                      <p className="theme-title mb-1 break-words whitespace-pre-wrap text-sm font-bold">
-                        {item.detectedText}
-                      </p>
-                      <div className="flex items-start justify-between gap-2">
-                        <p
-                          onClick={() => item.translatedText && speakText(item.translatedText)}
-                          className="flex-1 cursor-pointer break-words whitespace-pre-wrap text-lg font-bold text-primary"
-                          title="Tap to hear pronunciation"
-                        >
-                          {item.translatedText}
-                        </p>
-                        <button
-                          onClick={() => speakText(item.translatedText)}
-                          className="text-2xl hover:scale-110 transition-transform leading-none flex items-center justify-center flex-shrink-0"
-                        >
-                          🔊
-                        </button>
-                      </div>
-                    </motion.div>
-                  ))
-                )}
+            {/* Collection */}
+            <Card className="theme-surface min-w-0 max-w-full overflow-hidden border p-0">
+              <div className="flex items-center justify-between gap-3 border-b border-[#e6eef9] px-5 py-4">
+                <h3 className="theme-title flex items-center gap-2 font-baloo text-xl font-bold">
+                  <span className="text-[#7e93b4]">📄</span>
+                  Collection
+                </h3>
+                <span className="rounded-full bg-[#f4f7fc] px-3 py-1 text-[11px] font-bold text-[#91a2bd]">
+                  {savedScans.length} {savedScans.length === 1 ? 'Item' : 'Items'}
+                </span>
               </div>
 
-              {savedScans.length > 0 && (
-                <Button
-                  variant="outline"
-                  onClick={() => navigate('collection')}
-                  className="mt-4 w-full"
-                >
-                  View Full Collection 🎒
-                </Button>
-              )}
+              <div className="min-w-0 max-w-full space-y-3 overflow-hidden px-4 py-4">
+                {savedScans.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-[#dfe8f6] px-6 py-8 text-center">
+                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#f5f8fd] text-3xl">
+                      👀
+                    </div>
+                    <p className="theme-title font-semibold">No saved items yet</p>
+                    <p className="theme-muted mt-2 text-sm">
+                      Save a translation and it will appear here.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="max-h-64 min-w-0 space-y-3 overflow-y-auto pr-1">
+                      {savedScans.slice(0, 3).map((item, index) => (
+                        <motion.div
+                          key={`${item.detectedText}-${index}`}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                          className="w-full min-w-0 overflow-hidden rounded-2xl bg-[#fbfdff] px-4 py-3 shadow-sm ring-1 ring-[#edf2fa] transition hover:ring-[#c8daf6]"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => setSelectedSavedScan(item)}
+                            className="flex w-full min-w-0 flex-col items-start text-left"
+                          >
+                            <span
+                              className="block w-full min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-sm font-semibold text-[#64789a]"
+                              title={item.detectedText}
+                            >
+                              {item.detectedText}
+                            </span>
+                            <div className="mt-1 flex w-full min-w-0 items-start justify-between gap-3">
+                              <span
+                                className="block min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-sm font-bold text-[#2f61d4]"
+                                title={item.translatedText}
+                              >
+                                {item.translatedText}
+                              </span>
+                              <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#f1f5ff] text-sm text-[#7b94cc]">
+                                🔊
+                              </span>
+                            </div>
+                          </button>
+                        </motion.div>
+                      ))}
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      onClick={() => navigate('collection')}
+                      className="w-full"
+                    >
+                      View Full Collection
+                    </Button>
+                  </>
+                )}
+              </div>
             </Card>
 
           </motion.div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {selectedSavedScan && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 px-4 py-6"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 18, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 12, scale: 0.98 }}
+              className="w-full max-w-2xl"
+            >
+              <Card className="theme-surface overflow-hidden border border-[#cfe0f8] p-0 shadow-2xl">
+                <div className="flex items-center justify-between gap-3 border-b border-[#dce7fb] bg-[#f7faff] px-5 py-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#b8c5da]">📄</span>
+                    <h3 className="theme-title font-baloo text-xl font-bold">Collection Item</h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedSavedScan(null)}
+                    className="text-lg font-bold text-[#8da2c9] transition hover:text-[#5c76ac]"
+                    aria-label="Close collection preview"
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <div className="space-y-5 px-5 py-5">
+                  <div>
+                    <p className="mb-2 text-xs font-bold uppercase tracking-[0.12em] text-[#6e83ab]">
+                      Detected Text
+                    </p>
+                    <div className="rounded-2xl bg-[#f7fbff] px-4 py-4">
+                      <p className="max-h-40 overflow-y-auto break-words whitespace-pre-wrap pr-1 text-sm font-semibold leading-7 text-[#435574]">
+                        {selectedSavedScan.detectedText}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#4c77ff]">
+                        {appState.targetLanguage}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => speakText(selectedSavedScan.translatedText)}
+                        className="flex h-11 w-11 items-center justify-center rounded-full bg-[#edf4ff] text-lg text-[#4b84ff] transition hover:scale-105"
+                        aria-label="Play saved pronunciation"
+                      >
+                        🔊
+                      </button>
+                    </div>
+                    <p className="max-h-56 overflow-y-auto break-words whitespace-pre-wrap pr-1 text-xl font-extrabold leading-[1.55] text-[#0f1f3d]">
+                      {selectedSavedScan.translatedText}
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Quick Tips Floating Panel */}
       <AnimatePresence>
