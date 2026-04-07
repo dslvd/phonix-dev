@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "setup:hooks": "bash scripts/setup-git-hooks.sh",
+    "prepare": "npm run setup:hooks"
   },
   "keywords": [
     "language-learning",
