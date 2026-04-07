@@ -96,18 +96,17 @@ export default function Landing({ navigate, resetAppState }: LandingProps) {
   return (
     // Landing Page Container
     <div className="theme-page relative flex h-screen items-center justify-center overflow-hidden p-4 text-slate-100">
-      {/* Floating cloud decorations */}
+      {/* Floating pipin decoration */}
       <motion.div
         animate={{ y: [10, -10, 10] }}
         transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
         className="absolute top-1/4 -translate-y-1/2 left-[15%] w-80 h-80 object-contain"
       >
-        <img src = "../../../assets/PipinRocket.png"/>
+        <img src = "../../assets/PipinRocket.png"/>
       </motion.div>
 
       {/* Login Card */}
       <Card className="max-w-lg w-full animate-pop ml-auto mr-6">
-        {/* Logo with wooden sign style */}
         <div className="text-center mb-8">
           <div className="inline-block">
             <div className="mb-4 p-2">
