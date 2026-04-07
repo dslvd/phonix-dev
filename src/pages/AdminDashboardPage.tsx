@@ -45,6 +45,13 @@ function getAdminIdentity() {
 
 export default function AdminDashboard({ navigate, appState, premium }: AdminDashboardProps) {
   const admin = getAdminIdentity();
+  const [isOverrideMode, setIsOverrideMode] = useState(() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    return window.sessionStorage.getItem('phonix-admin-override') === '1';
+  });
   const [adminPassword, setAdminPassword] = useState(() => {
     if (typeof window === 'undefined') {
       return '';
@@ -76,6 +83,19 @@ export default function AdminDashboard({ navigate, appState, premium }: AdminDas
     { label: 'Current Streak', value: `${appState.currentStreak} day${appState.currentStreak === 1 ? '' : 's'}`, hint: 'Consistency' },
     { label: 'Quiz Stars', value: `${appState.stars}`, hint: 'Quiz performance' },
   ];
+
+  useEffect(() => {
+    if (isOverrideMode) {
+      setIsAuthenticated(true);
+      setAuthError('');
+      return;
+    }
+
+    if (!adminPassword) {
+      setIsAuthenticated(false);
+      return;
+    }
+  }, [isOverrideMode, adminPassword]);
 
   useEffect(() => {
     if (!adminPassword) {
@@ -165,6 +185,26 @@ export default function AdminDashboard({ navigate, appState, premium }: AdminDas
       setUsers([]);
     } finally {
       setIsLoadingUsers(false);
+    }
+  };
+
+  const enableOverrideMode = () => {
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.setItem('phonix-admin-override', '1');
+    }
+    setIsOverrideMode(true);
+    setIsAuthenticated(true);
+    setAuthError('');
+  };
+
+  const disableOverrideMode = () => {
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.removeItem('phonix-admin-override');
+    }
+    setIsOverrideMode(false);
+
+    if (!adminPassword) {
+      setIsAuthenticated(false);
     }
   };
 
@@ -268,6 +308,12 @@ export default function AdminDashboard({ navigate, appState, premium }: AdminDas
             >
               {isLoadingUsers ? 'Checking...' : 'Unlock Admin'}
             </button>
+            <button
+              onClick={enableOverrideMode}
+              className="theme-nav-button w-full rounded-2xl border px-6 py-3 text-sm font-bold uppercase tracking-[0.08em] transition"
+            >
+              Use Admin Override
+            </button>
           </div>
         </div>
       </div>
@@ -277,6 +323,22 @@ export default function AdminDashboard({ navigate, appState, premium }: AdminDas
   return (
     <div className="theme-page min-h-screen p-6 lg:p-8">
       <div className="mx-auto max-w-6xl space-y-6">
+        {isOverrideMode && (
+          <div className="theme-surface rounded-2xl border border-amber-400/40 bg-amber-500/10 px-4 py-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm font-semibold text-amber-200">
+                Admin override is active. Account management actions may require a valid admin password.
+              </p>
+              <button
+                onClick={disableOverrideMode}
+                className="rounded-xl border border-amber-300 px-3 py-2 text-xs font-bold uppercase tracking-[0.08em] text-amber-200 transition hover:bg-amber-400/10"
+              >
+                Disable Override
+              </button>
+            </div>
+          </div>
+        )}
+
         <motion.section
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}

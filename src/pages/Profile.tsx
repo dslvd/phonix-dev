@@ -22,6 +22,9 @@ export default function Profile({ navigate, appState, updateState, premium }: Pr
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState('');
+  const isGuestMode =
+    !!userData &&
+    (((userData.name || '').trim().toLowerCase() === 'guest') || ((userData.email || '').trim().length === 0));
 
   useEffect(() => {
     // Load user data from localStorage
@@ -293,7 +296,7 @@ export default function Profile({ navigate, appState, updateState, premium }: Pr
           >
             <span className="flex items-center gap-2">
               <span className="text-xl leading-none">🚪</span>
-              Log Out
+              {isGuestMode ? 'Exit Guest Mode' : 'Log Out'}
             </span>
           </motion.button>
         </motion.div>
