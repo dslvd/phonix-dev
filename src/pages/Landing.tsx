@@ -95,7 +95,7 @@ export default function Landing({ navigate, resetAppState }: LandingProps) {
 
   return (
     // Landing Page Container
-    <div className="theme-page relative flex min-h-screen items-center justify-center overflow-hidden p-4 text-slate-100">
+    <div className="theme-page relative flex h-screen items-center justify-center overflow-hidden p-4 text-slate-100">
       {/* Floating cloud decorations */}
       <motion.div
         animate={{ y: [0, -20, 0], x: [0, 10, 0] }}
@@ -120,7 +120,7 @@ export default function Landing({ navigate, resetAppState }: LandingProps) {
       </motion.div>
 
       {/* Login Card */}
-      <Card className="max-w-md w-full animate-pop">
+      <Card className="max-w-md w-full animate-pop ml-auto mr-6">
         {/* Logo with wooden sign style */}
         <div className="text-center mb-8">
           <div className="inline-block">
