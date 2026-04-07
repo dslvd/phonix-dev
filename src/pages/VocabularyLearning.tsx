@@ -249,6 +249,18 @@ export default function VocabularyLearning({
   const nextItemLearned = nextItem ? appState.learnedWords.includes(nextItem.id) : false;
   const introducedVocabulary = aiVocabulary.slice(0, Math.max(appState.currentVocabIndex, 0) + 1);
   const introducedCurrentBandWords = introducedVocabulary.filter((item) => item.difficulty === currentDifficultyBand);
+  const backpackDiscoveredVocabulary = aiVocabulary.filter((item) =>
+    appState.backpackItems.some((backpackItem) => {
+      if (backpackItem.id === `lesson:${item.id}`) {
+        return true;
+      }
+
+      return (
+        normalizeComparableText(backpackItem.nativeText) === normalizeComparableText(item.nativeWord) &&
+        normalizeComparableText(backpackItem.translatedText) === normalizeComparableText(item.englishWord)
+      );
+    })
+  );
   const quizWordPool =
     introducedCurrentBandWords.length >= 4
       ? introducedCurrentBandWords
@@ -651,7 +663,11 @@ export default function VocabularyLearning({
 
     if (isPracticeQuizSession) {
       const practicePool =
-        introducedVocabulary.length >= 2
+        backpackDiscoveredVocabulary.length >= 2
+          ? backpackDiscoveredVocabulary
+          : backpackDiscoveredVocabulary.length === 1
+          ? backpackDiscoveredVocabulary
+          : introducedVocabulary.length >= 2
           ? introducedVocabulary
           : introducedVocabulary.length === 1
           ? introducedVocabulary
@@ -781,7 +797,7 @@ export default function VocabularyLearning({
           .join(', ')}.`
       : '',
     isPracticeQuizSession
-      ? 'Quiz Me mode is active. This is a review session over discovered words with mastery repeats.'
+      ? `Quiz Me mode is active. This is a mastery-based review session over backpack-discovered words. Current discovered pool size: ${backpackDiscoveredVocabulary.length}.`
       : 'Normal lesson flow is active.',
     'If asked about batteries, explain that mistakes can drain batteries and premium gives unlimited batteries.',
     'If asked directly for a quiz answer, refuse and give a clue instead.',
@@ -1089,7 +1105,11 @@ export default function VocabularyLearning({
                 <button
                   onClick={() => {
                     const practicePool =
-                      introducedVocabulary.length >= 2
+                      backpackDiscoveredVocabulary.length >= 2
+                        ? backpackDiscoveredVocabulary
+                        : backpackDiscoveredVocabulary.length === 1
+                        ? backpackDiscoveredVocabulary
+                        : introducedVocabulary.length >= 2
                         ? introducedVocabulary
                         : introducedVocabulary.length === 1
                         ? introducedVocabulary
