@@ -336,6 +336,13 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
         100
     )
   );
+  const firstUndiscoveredVocabularyIndex = aiVocabulary.findIndex(
+    (item) => !appState.learnedWords.includes(item.id)
+  );
+  const resumeVocabularyIndex =
+    firstUndiscoveredVocabularyIndex === -1
+      ? Math.max(aiVocabulary.length - 1, 0)
+      : Math.max(firstUndiscoveredVocabularyIndex - 1, 0);
 
   const openRoadmapNode = (node: (typeof roadmapNodes)[number]) => {
     if (!node.unlocked) {
@@ -414,16 +421,31 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
               <motion.div
                 initial={{ opacity: 0, y: -14 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-2xl border-b-4 border-[#FF9126] bg-gradient-to-b from-[#FF9126] to-[#FF9126] px-5 py-4"
+                className="rounded-2xl border-b-4 border-[#FF9126] bg-gradient-to-b from-[#FF9126] to-[#ff9b3d] px-5 py-4"
               >
-                <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#fff3de]">Progress</p>
-                <div className="mt-3 h-3 overflow-hidden rounded-full bg-[#FF9126]">
-                  <div
-                    className="h-full rounded-full bg-[#FAC775]"
-                    style={{ width: `${seasonedProgress}%` }}
-                  />
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#fff3de]">Progress</p>
+                    <div className="mt-3 h-3 overflow-hidden rounded-full bg-[#ffc78f]/45">
+                      <div
+                        className="h-full rounded-full bg-[#ffe7c9]"
+                        style={{ width: `${seasonedProgress}%` }}
+                      />
+                    </div>
+                    <p className="mt-2 text-sm font-bold text-[#fff3de]">{seasonedProgress}% complete ({appState.learnedWords.length}/{totalWords} words)</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      updateState({
+                        currentVocabIndex: resumeVocabularyIndex,
+                      });
+                      navigate('vocabulary');
+                    }}
+                    className="rounded-xl border border-[#fff3de]/60 bg-[#fff3de] px-4 py-2 text-xs font-bold uppercase tracking-[0.08em] text-[#8a4a00] transition hover:bg-white"
+                  >
+                    Resume
+                  </button>
                 </div>
-                <p className="mt-2 text-sm font-bold text-[#ffd9b0]">{seasonedProgress}% complete ({appState.learnedWords.length}/{totalWords} words)</p>
               </motion.div>
             )}
 
