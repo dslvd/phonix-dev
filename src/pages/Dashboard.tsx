@@ -21,6 +21,7 @@ interface DashboardProps {
 
 export default function Dashboard({ navigate, appState, updateState, premium }: DashboardProps) {
   const levelCycle = getVocabularyLevelCycle(appState.learnedWords.length);
+  const learnedInCurrentCycle = appState.learnedWords.length % VOCABULARY_PACK_WORD_COUNT;
   const isGuestMode = (() => {
     if (typeof window === 'undefined') {
       return false;
@@ -58,6 +59,7 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
   useEffect(() => {
     const targetLanguage = appState.targetLanguage || 'Hiligaynon';
     const nativeLanguage = appState.nativeLanguage || 'English';
+    const shouldAllowRefresh = learnedInCurrentCycle === 0;
 
     if (isGuestMode) {
       setAiVocabulary(vocabularyData.slice(0, VOCABULARY_PACK_WORD_COUNT));
@@ -77,7 +79,7 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
 
     const refreshAIVocabulary = async () => {
       try {
-        const words = await fetchAIVocabulary(targetLanguage, nativeLanguage, { levelCycle });
+        const words = await fetchAIVocabulary(targetLanguage, nativeLanguage, { levelCycle, allowRefresh: shouldAllowRefresh });
         if (cancelled) {
           return;
         }
@@ -93,7 +95,7 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
     return () => {
       cancelled = true;
     };
-  }, [appState.targetLanguage, appState.nativeLanguage, isGuestMode, levelCycle]);
+  }, [appState.targetLanguage, appState.nativeLanguage, isGuestMode, levelCycle, learnedInCurrentCycle]);
 
   useEffect(() => {
     setLevelDescriptions(defaultLevelDescriptions);

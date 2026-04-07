@@ -16,6 +16,7 @@ interface AIVocabularyPayload {
 
 interface AIVocabularyOptions {
   levelCycle?: number;
+  allowRefresh?: boolean;
 }
 
 const LEVEL_COUNTS: Record<Difficulty, number> = {
@@ -429,6 +430,7 @@ export const fetchAIVocabulary = async (
   options: AIVocabularyOptions = {}
 ): Promise<VocabularyItem[]> => {
   const levelCycle = normalizeLevelCycle(options.levelCycle);
+  const allowRefresh = options.allowRefresh !== false;
   const levelTheme = getVocabularyLevelTheme(levelCycle);
   const cacheKey = getAIVocabularyCacheKey(targetLanguage, nativeLanguage, levelCycle);
   const memory = memoryCache.get(cacheKey);
@@ -461,8 +463,8 @@ export const fetchAIVocabulary = async (
 
     let data = await response.json();
 
-    // If server returned pair-fallback or stale cache, force a fresh generation now.
-    if (data?.source === 'cache-fallback' || data?.stale) {
+    // Refresh only when caller allows it (e.g., start of cycle) to avoid mid-progress card churn.
+    if (allowRefresh && (data?.source === 'cache-fallback' || data?.stale)) {
       const refreshResponse = await fetch('/api/ai-vocabulary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
