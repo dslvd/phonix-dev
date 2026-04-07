@@ -204,6 +204,44 @@ export const getAIVocabularyCacheKey = (targetLanguage: string, nativeLanguage: 
 const getPairLatestCacheKey = (targetLanguage: string, nativeLanguage: string) =>
   `${PAIR_LATEST_CACHE_KEY_PREFIX}:${(targetLanguage || 'hiligaynon').toLowerCase()}:${(nativeLanguage || 'english').toLowerCase()}`;
 
+const buildVocabularyPrompt = (
+  targetLanguage: string,
+  nativeLanguage: string,
+  levelCycle: number,
+  levelTheme: string
+) =>
+  [
+    'Generate a complete vocabulary list for a language-learning app.',
+    `Target language: ${targetLanguage || 'Hiligaynon'}.`,
+    `Learner native language: ${nativeLanguage || 'English'}.`,
+    `Current level cycle: ${levelCycle + 1}.`,
+    `Level focus theme: ${levelTheme}.`,
+    'Return STRICT JSON only with this shape:',
+    '{',
+    '  "words": [',
+    '    {',
+    '      "id": "string",',
+    '      "nativeWord": "string",',
+    '      "englishWord": "string",',
+    '      "category": "string",',
+    '      "emoji": "string",',
+    '      "difficulty": "beginner|intermediate|advanced"',
+    '    }',
+    '  ]',
+    '}',
+    'Rules:',
+    `1. Provide exactly ${VOCABULARY_PACK_WORD_COUNT} words total.`,
+    '2. beginner must have exactly 20 words.',
+    '3. intermediate must have exactly 20 words.',
+    '4. advanced must have exactly 8 words.',
+    '5. Avoid duplicates in nativeWord and englishWord.',
+    '6. Keep words useful for daily conversation.',
+    '7. Make vocabulary clearly match the level focus theme.',
+    '8. Do not reuse the exact same set from previous levels.',
+    '9. Keep words kid-friendly, simple, and easy to learn.',
+    '10. Include these beginner support words in the pack: Cook, Work, and Hot.',
+  ].join('\n');
+
 export const readCachedAIVocabulary = (targetLanguage: string, nativeLanguage: string, options: AIVocabularyOptions = {}): VocabularyItem[] => {
   if (typeof window === 'undefined') {
     return [];
@@ -343,6 +381,48 @@ export const getFiveStageLevel = (progress: number, total: number): number => {
   return Math.max(1, Math.min(5, stage));
 };
 
+export const refreshAIVocabularyOverride = async (
+  targetLanguage: string,
+  nativeLanguage: string,
+  options: AIVocabularyOptions = {}
+): Promise<VocabularyItem[]> => {
+  const levelCycle = normalizeLevelCycle(options.levelCycle);
+  const levelTheme = getVocabularyLevelTheme(levelCycle);
+  const prompt = buildVocabularyPrompt(targetLanguage, nativeLanguage, levelCycle, levelTheme);
+
+  const response = await fetch('/api/ai-vocabulary', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      prompt,
+      targetLanguage,
+      nativeLanguage,
+      levelCycle,
+      refresh: true,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error('ai-vocabulary-override-refresh-failed');
+  }
+
+  const data = await response.json();
+  const payload = parsePayload(String(data?.text || ''));
+  const rawWords = payload?.words || [];
+
+  const normalized = rawWords
+    .map((word, index) => normalizeWord(word, index, 'beginner'))
+    .filter((word): word is VocabularyItem => !!word);
+
+  if (normalized.length < 20) {
+    throw new Error('ai-vocabulary-invalid-payload');
+  }
+
+  const finalized = enforceLevelCounts(normalized, levelCycle);
+  writeCachedAIVocabulary(targetLanguage, nativeLanguage, finalized, { levelCycle });
+  return finalized;
+};
+
 export const fetchAIVocabulary = async (
   targetLanguage: string,
   nativeLanguage: string,
@@ -367,37 +447,7 @@ export const fetchAIVocabulary = async (
   }
 
   const requestPromise = (async () => {
-    const prompt = [
-      'Generate a complete vocabulary list for a language-learning app.',
-      `Target language: ${targetLanguage || 'Hiligaynon'}.`,
-      `Learner native language: ${nativeLanguage || 'English'}.`,
-      `Current level cycle: ${levelCycle + 1}.`,
-      `Level focus theme: ${levelTheme}.`,
-      'Return STRICT JSON only with this shape:',
-      '{',
-      '  "words": [',
-      '    {',
-      '      "id": "string",',
-      '      "nativeWord": "string",',
-      '      "englishWord": "string",',
-      '      "category": "string",',
-      '      "emoji": "string",',
-      '      "difficulty": "beginner|intermediate|advanced"',
-      '    }',
-      '  ]',
-      '}',
-      'Rules:',
-      `1. Provide exactly ${VOCABULARY_PACK_WORD_COUNT} words total.`,
-      '2. beginner must have exactly 20 words.',
-      '3. intermediate must have exactly 20 words.',
-      '4. advanced must have exactly 8 words.',
-      '5. Avoid duplicates in nativeWord and englishWord.',
-      '6. Keep words useful for daily conversation.',
-      '7. Make vocabulary clearly match the level focus theme.',
-      '8. Do not reuse the exact same set from previous levels.',
-      '9. Keep words kid-friendly, simple, and easy to learn.',
-      '10. Include these beginner support words in the pack: Cook, Work, and Hot.',
-    ].join('\n');
+    const prompt = buildVocabularyPrompt(targetLanguage, nativeLanguage, levelCycle, levelTheme);
 
     const response = await fetch('/api/ai-vocabulary', {
       method: 'POST',
