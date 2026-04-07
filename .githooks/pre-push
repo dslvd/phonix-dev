@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+remote_name="${1:-origin}"
+remote_url="${2:-}"
+
+current_email="$(git config user.email | tr '[:upper:]' '[:lower:]')"
+allowed_main_emails=(
+  "matthew.estilo@gmail.com"
+)
+
+is_owner=false
+for allowed_email in "${allowed_main_emails[@]}"; do
+  if [[ "$current_email" == "$allowed_email" ]]; then
+    is_owner=true
+    break
+  fi
+done
+
+blocked=false
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [[ -z "${remote_ref:-}" ]] && continue
+
+  if [[ "$remote_ref" == "refs/heads/main" ]]; then
+    blocked=true
+    break
+  fi
+done
+
+if [[ "$blocked" == true && "$is_owner" != true ]]; then
+  echo ""
+  echo "[BLOCKED] Push to 'main' is restricted to the repository owner."
+  echo "Remote: $remote_name ${remote_url:+($remote_url)}"
+  echo ""
+  echo "Use 'dev' instead:" 
+  echo "  git push $remote_name HEAD:dev"
+  echo ""
+  echo "If you are the repo owner, configure your git email to a whitelisted owner email."
+  echo ""
+  exit 1
+fi
+
+exit 0
