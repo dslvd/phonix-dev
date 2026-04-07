@@ -74,6 +74,7 @@ export default function ScanMode({ navigate, appState, updateState, premium }: S
   const [manualText, setManualText] = useState('');
   const [pendingAttachment, setPendingAttachment] = useState<PendingAttachment | null>(null);
   const [isDragActive, setIsDragActive] = useState(false);
+  const [preferredFacingMode, setPreferredFacingMode] = useState<'environment' | 'user'>('environment');
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -126,114 +127,132 @@ export default function ScanMode({ navigate, appState, updateState, premium }: S
     return false;
   };
 
-  const startCamera = async () => {
-  if (!requireLoginForAI()) return;
-  try {
-    setError(null);
-    setCameraLoading(true);
+  const getCameras = async () => {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    return devices.filter((device) => device.kind === 'videoinput');
+  };
 
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      setError('Camera not supported in this browser. Try Chrome, Firefox, or Safari.');
-      setCameraLoading(false);
-      return;
-    }
+  const findPreferredCamera = (
+    cameras: MediaDeviceInfo[],
+    facingMode: 'environment' | 'user'
+  ) => {
+    const preferredLabels =
+      facingMode === 'user'
+        ? ['front', 'user', 'face']
+        : ['back', 'rear', 'environment', 'world'];
 
-    let stream: MediaStream | null = null;
+    return (
+      cameras.find((camera) =>
+        preferredLabels.some((label) => camera.label.toLowerCase().includes(label))
+      ) || cameras[0]
+    );
+  };
 
+  const launchCamera = async (facingMode: 'environment' | 'user') => {
     try {
-      // Ask for camera permission with the simplest possible request first.
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
-        audio: false,
-      });
-    } catch (basicError) {
-      const cameras = await getCameras();
+      setError(null);
+      setCameraLoading(true);
 
-      if (cameras.length === 0) {
-        setError('No camera found. Please connect a camera and try again.');
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setError('Camera not supported in this browser. Try Chrome, Firefox, or Safari.');
         setCameraLoading(false);
         return;
       }
 
-      const preferredCamera =
-        cameras.find(c =>
-          !c.label.toLowerCase().includes('phone') &&
-          !c.label.toLowerCase().includes('android') &&
-          !c.label.toLowerCase().includes('iphone') &&
-          !c.label.toLowerCase().includes('droid') &&
-          !c.label.toLowerCase().includes('obs') &&
-          !c.label.toLowerCase().includes('virtual')
-        ) || cameras[0];
+      let stream: MediaStream | null = null;
 
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          deviceId: { exact: preferredCamera.deviceId },
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
-        audio: false,
-      });
-    }
-
-    if (!stream) {
-      throw new Error('Could not start camera stream.');
-    }
-
-    streamRef.current = stream;
-
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    if (!videoRef.current) {
-      setError('Video element not ready. Please try again.');
-      setCameraLoading(false);
-      stream.getTracks().forEach((track) => track.stop());
-      return;
-    }
-
-    const videoElement = videoRef.current;
-
-    videoElement.srcObject = stream;
-
-    videoElement.onloadedmetadata = async () => {
       try {
-        await videoElement.play();
-        setCameraActive(true);
-        setCameraLoading(false);
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: facingMode },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+          audio: false,
+        });
       } catch {
-        setError('Failed to start video playback.');
-        setCameraLoading(false);
+        const cameras = await getCameras();
+
+        if (cameras.length === 0) {
+          setError('No camera found. Please connect a camera and try again.');
+          setCameraLoading(false);
+          return;
+        }
+
+        const preferredCamera = findPreferredCamera(
+          cameras.filter(
+            (camera) =>
+              !camera.label.toLowerCase().includes('obs') &&
+              !camera.label.toLowerCase().includes('virtual')
+          ),
+          facingMode
+        );
+
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            deviceId: { exact: preferredCamera.deviceId },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+          audio: false,
+        });
       }
-    };
-  } catch (err: any) {
-    setCameraLoading(false);
-    const errorName = String(err?.name || '').toLowerCase();
 
-    if (errorName.includes('notallowed') || errorName.includes('permission')) {
-      setError('Camera permission was blocked. Please allow camera access in your browser and try again.');
-      return;
+      if (!stream) {
+        throw new Error('Could not start camera stream.');
+      }
+
+      streamRef.current = stream;
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      if (!videoRef.current) {
+        setError('Video element not ready. Please try again.');
+        setCameraLoading(false);
+        stream.getTracks().forEach((track) => track.stop());
+        return;
+      }
+
+      const videoElement = videoRef.current;
+      videoElement.srcObject = stream;
+
+      videoElement.onloadedmetadata = async () => {
+        try {
+          await videoElement.play();
+          setCameraActive(true);
+          setCameraLoading(false);
+        } catch {
+          setError('Failed to start video playback.');
+          setCameraLoading(false);
+        }
+      };
+    } catch (err: any) {
+      setCameraLoading(false);
+      const errorName = String(err?.name || '').toLowerCase();
+
+      if (errorName.includes('notallowed') || errorName.includes('permission')) {
+        setError('Camera permission was blocked. Please allow camera access in your browser and try again.');
+        return;
+      }
+
+      if (errorName.includes('notfound') || errorName.includes('devicesnotfound')) {
+        setError('No camera was found on this device.');
+        return;
+      }
+
+      if (errorName.includes('notreadable') || errorName.includes('trackstart')) {
+        setError('Your camera is busy or unavailable. Close other apps using the camera and try again.');
+        return;
+      }
+
+      setError(`Camera error: ${err.message || 'Unknown error'}`);
     }
+  };
 
-    if (errorName.includes('notfound') || errorName.includes('devicesnotfound')) {
-      setError('No camera was found on this device.');
-      return;
-    }
-
-    if (errorName.includes('notreadable') || errorName.includes('trackstart')) {
-      setError('Your camera is busy or unavailable. Close other apps using the camera and try again.');
-      return;
-    }
-
-    setError(`Camera error: ${err.message || 'Unknown error'}`);
-  }
-};
-
-  const getCameras = async () => {
-  const devices = await navigator.mediaDevices.enumerateDevices();
-  return devices.filter((device) => device.kind === 'videoinput');
-};
+  const startCamera = async () => {
+    if (!requireLoginForAI()) return;
+    await launchCamera(preferredFacingMode);
+  };
 
   const stopCamera = () => {
     if (streamRef.current) {
@@ -247,6 +266,18 @@ export default function ScanMode({ navigate, appState, updateState, premium }: S
 
     setCameraActive(false);
     setCameraLoading(false);
+  };
+
+  const handleSwapCamera = async () => {
+    const nextFacingMode = preferredFacingMode === 'environment' ? 'user' : 'environment';
+    setPreferredFacingMode(nextFacingMode);
+
+    if (!cameraActive) {
+      return;
+    }
+
+    stopCamera();
+    await launchCamera(nextFacingMode);
   };
 
   const playSuccessSound = () => {
@@ -1150,6 +1181,13 @@ const translateManualText = async () => {
                     className="flex-1"
                   >
                     {isScanning ? '⏳ Scanning...' : '📄 Scan Text'}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={handleSwapCamera}
+                    disabled={cameraLoading || isScanning}
+                  >
+                    {preferredFacingMode === 'environment' ? '🔄 Front' : '🔄 Back'}
                   </Button>
                   <Button variant="outline" onClick={stopCamera}>
                     ⏹️
