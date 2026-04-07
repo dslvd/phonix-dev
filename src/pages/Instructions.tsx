@@ -62,7 +62,9 @@ export default function Instructions({ navigate, appState }: InstructionsProps) 
   ];
 
   return (
+    // Instructions Page Container
     <div className="theme-page min-h-screen px-4 py-5 text-slate-100 lg:px-6">
+      {/* Top Navigation */}
       <NavigationHeader
         onBack={() => navigate('dashboard')}
         onLogout={() => navigate('landing')}
@@ -70,7 +72,9 @@ export default function Instructions({ navigate, appState }: InstructionsProps) 
         title="How Phonix Works"
       />
 
+      {/* Page Content Wrapper */}
       <div className="mx-auto mt-6 max-w-6xl">
+        {/* Guide Hero Banner */}
         <motion.div
           initial={{ opacity: 0, y: -14 }}
           animate={{ opacity: 1, y: 0 }}
@@ -83,6 +87,7 @@ export default function Instructions({ navigate, appState }: InstructionsProps) 
           </p>
         </motion.div>
 
+        {/* How-It-Works Cards */}
         <div className="mt-5 grid gap-4 md:grid-cols-2">
           {cards.map((card, index) => (
             <motion.div
@@ -103,6 +108,7 @@ export default function Instructions({ navigate, appState }: InstructionsProps) 
           ))}
         </div>
 
+        {/* Guest vs Account Section */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -117,6 +123,7 @@ export default function Instructions({ navigate, appState }: InstructionsProps) 
           </ul>
         </motion.div>
 
+        {/* XP Rules Section */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -132,6 +139,7 @@ export default function Instructions({ navigate, appState }: InstructionsProps) 
           </ul>
         </motion.div>
 
+        {/* Bottom Action Buttons */}
         <div className="mt-6 flex flex-wrap gap-3 pb-6">
           <button
             onClick={() => navigate('dashboard')}

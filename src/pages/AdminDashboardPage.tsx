@@ -312,7 +312,9 @@ export default function AdminDashboard({ navigate, appState, premium }: AdminDas
 
   if (!isAuthenticated) {
     return (
+      // Admin Login Gate
       <div className="theme-page min-h-screen p-6 lg:p-8">
+        {/* Password Access Card */}
         <div className="card mx-auto max-w-md p-6">
           <p className="text-xs font-bold uppercase tracking-[0.16em]" style={{ color: 'var(--primary)' }}>Admin Access</p>
           <h1 className="mt-2 text-4xl font-bold">Enter password</h1>
@@ -346,8 +348,11 @@ export default function AdminDashboard({ navigate, appState, premium }: AdminDas
   }
 
   return (
+    // Admin Dashboard Page Container
     <div className="theme-page min-h-screen p-6 lg:p-8">
+      {/* Admin Content Wrapper */}
       <div className="mx-auto max-w-6xl space-y-6">
+        {/* Override Mode Banner */}
         {isOverrideMode && (
           <div className="theme-surface rounded-2xl border border-amber-400/40 bg-amber-500/10 px-4 py-3">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -364,6 +369,7 @@ export default function AdminDashboard({ navigate, appState, premium }: AdminDas
           </div>
         )}
 
+        {/* Admin Header Section */}
         <motion.section
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -386,6 +392,7 @@ export default function AdminDashboard({ navigate, appState, premium }: AdminDas
           </div>
         </motion.section>
 
+        {/* Top Metrics Grid */}
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {topMetrics.map((metric, index) => (
             <motion.div
@@ -403,8 +410,10 @@ export default function AdminDashboard({ navigate, appState, premium }: AdminDas
           ))}
         </section>
 
+        {/* System Panels and User Management */}
         <section className="grid gap-4 lg:grid-cols-2">
           <Card hover={false} className="rounded-2xl border p-5">
+            {/* System Status Panel */}
             <h2 className="text-3xl font-bold">System Status</h2>
             <div className="mt-4 space-y-3">
               <div className="card flex items-center justify-between rounded-xl px-3 py-2">
@@ -429,6 +438,7 @@ export default function AdminDashboard({ navigate, appState, premium }: AdminDas
           </Card>
 
           <Card hover={false} className="rounded-2xl border p-5">
+            {/* Quick Actions Panel */}
             <h2 className="text-3xl font-bold">Quick Actions</h2>
             <p className="text-muted mt-1 text-sm font-semibold">Open core areas to review product behavior fast.</p>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -462,6 +472,7 @@ export default function AdminDashboard({ navigate, appState, premium }: AdminDas
           </Card>
 
           <Card hover={false} className="rounded-2xl border p-5">
+            {/* User Accounts Management Panel */}
             <h2 className="text-3xl font-bold">User Accounts</h2>
             <p className="text-muted mt-1 text-sm font-semibold">Reset user history or delete synced accounts from Cloudflare D1.</p>
             {deleteError && <p className="mt-2 text-sm font-semibold text-red-400">{deleteError}</p>}

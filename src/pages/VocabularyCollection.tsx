@@ -131,7 +131,9 @@ export default function VocabularyCollection({
   }, [learnedVocabulary, appState.backpackItems, updateState]);
 
   return (
+    // Backpack / Vocabulary Collection Page Container
     <div className="theme-page min-h-screen pb-20 text-slate-100">
+      {/* Top Navigation */}
       <NavigationHeader
         onBack={() => navigate('dashboard')}
         onLogout={() => navigate('landing')}
@@ -139,7 +141,9 @@ export default function VocabularyCollection({
         title="Your Backpack"
       />
 
+      {/* Collection Content Wrapper */}
       <div className="mx-auto mt-6 max-w-6xl p-4">
+        {/* Progress Summary */}
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
           <Card className="theme-summary-card mb-8 border-b-4">
             <div className="grid gap-6 md:grid-cols-2">
@@ -196,6 +200,7 @@ export default function VocabularyCollection({
           </Card>
         </motion.div>
 
+        {/* Collection States: Guest, Learned Words, Empty */}
         {isGuestMode ? (
           <motion.div
             initial={{ opacity: 0 }}
@@ -213,6 +218,7 @@ export default function VocabularyCollection({
           </motion.div>
         ) : learnedVocabulary.length > 0 ? (
           <>
+            {/* Learned Vocabulary Grid */}
             <h2 className="theme-title mb-6 font-baloo text-3xl font-bold">Your Learned Words</h2>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
               {learnedVocabulary.map((item, index) => (
@@ -271,6 +277,7 @@ export default function VocabularyCollection({
           </motion.div>
         )}
 
+        {/* Locked / Upcoming Vocabulary Grid */}
         {!isGuestMode && learnedVocabulary.length > 0 && (
           <div className="mt-12">
             <h2 className="theme-title mb-6 font-baloo text-3xl font-bold">More to Learn</h2>
@@ -300,6 +307,7 @@ export default function VocabularyCollection({
           </div>
         )}
 
+        {/* Continue Learning CTA */}
         {!isGuestMode && learnedVocabulary.length > 0 && learnedVocabulary.length < totalWords && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -317,6 +325,7 @@ export default function VocabularyCollection({
           </motion.div>
         )}
 
+        {/* Out-of-Battery Modal */}
         {!isGuestMode && showNoBatteryModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
             <div className="w-full max-w-md rounded-3xl border border-[#2a4151] bg-[#122733] p-8 text-center shadow-2xl">

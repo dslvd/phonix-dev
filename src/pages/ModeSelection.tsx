@@ -20,14 +20,18 @@ export default function ModeSelection({ navigate, updateState }: ModeSelectionPr
   };
 
   return (
+    // Mode Selection Page Container
     <div className="theme-page min-h-screen text-slate-100">
+      {/* Top Navigation */}
       <NavigationHeader
         onBack={() => navigate('setup')}
         onLogout={() => navigate('landing')}
         showStats={false}
       />
+      {/* Centered Mode Content */}
       <div className="flex items-center justify-center p-4 min-h-[calc(100vh-80px)]">
       <div className="max-w-2xl w-full">
+        {/* Page Title */}
         <motion.h1
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -36,6 +40,7 @@ export default function ModeSelection({ navigate, updateState }: ModeSelectionPr
           Mode Selection 🎮
         </motion.h1>
 
+        {/* Mode Option Cards */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           {/* Learn Mode */}
           <motion.div
@@ -96,6 +101,7 @@ export default function ModeSelection({ navigate, updateState }: ModeSelectionPr
           </motion.div>
         </div>
 
+        {/* Bottom Helper Text */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

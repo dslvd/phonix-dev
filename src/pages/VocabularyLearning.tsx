@@ -799,7 +799,9 @@ export default function VocabularyLearning({
     .join('\n');
 
   return (
+    // Vocabulary Learning Page Container
     <div className="theme-page min-h-screen flex flex-col">
+      {/* Top Navigation with Progress + Battery */}
       <NavigationHeader
         onBack={() => navigate('dashboard')}
         onLogout={() => navigate('landing')}
@@ -813,11 +815,13 @@ export default function VocabularyLearning({
         isPremium={premium.isPremium}
       />
 
-      {/* Main Content */}
+      {/* Main Lesson Content */}
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="max-w-lg w-full">
+          {/* Entrance Spacer Animation */}
           <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} className="mb-6" />
 
+          {/* Page States: Loading, Review, Quiz, Flashcard */}
           {!hasAIVocabulary ? (
             <motion.div
               initial={{ opacity: 0, y: 14 }}
@@ -833,6 +837,7 @@ export default function VocabularyLearning({
               </p>
             </motion.div>
           ) : isReviewMode ? (
+            // Review Mode Card
             <motion.div
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
@@ -908,6 +913,7 @@ export default function VocabularyLearning({
           ) : isQuizMode ? (
             // Quiz Mode
             <>
+              {/* Practice Session Exit Action */}
               {isPracticeQuizSession && (
                 <div className="mb-4 flex justify-end">
                   <button
@@ -1167,6 +1173,7 @@ export default function VocabularyLearning({
         </div>
       </div>
 
+      {/* Out-of-Batteries Modal */}
       {showOutOfBatteriesModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
           <div className="max-w-md w-full rounded-3xl border-4 border-primary bg-white p-8 text-center shadow-2xl">
@@ -1199,6 +1206,7 @@ export default function VocabularyLearning({
         </div>
       )}
 
+      {/* Level Complete Modal */}
       {showLevelCompleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
           <div className="max-w-md w-full rounded-3xl border-4 border-primary bg-white p-8 text-center shadow-2xl">
@@ -1231,6 +1239,7 @@ export default function VocabularyLearning({
         </div>
       )}
 
+      {/* Milestone Checkpoint Modal */}
       {activeCheckpoint && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
           <div className="max-w-md w-full rounded-3xl border-4 border-primary bg-white p-8 text-center shadow-2xl">
@@ -1262,6 +1271,7 @@ export default function VocabularyLearning({
         </div>
       )}
 
+      {/* Floating Mascot Assistant */}
       <Mascot
         message={mascotMessage}
         animation="float"

@@ -234,7 +234,9 @@ export default function SentenceLearning({
   ].join('\n');
 
   return (
+    // Sentence Learning Page Container
     <div className="theme-page min-h-screen flex flex-col text-slate-100">
+      {/* Top Navigation with Progress */}
       <NavigationHeader
         onBack={() => navigate('vocabulary')}
         onLogout={() => navigate('landing')}
@@ -244,9 +246,10 @@ export default function SentenceLearning({
         totalProgress={sentenceData.length}
       />
 
-      {/* Main Content */}
+      {/* Main Sentence Practice Content */}
       <div className="flex-1 px-4 pb-28 pt-5">
         <div className="mx-auto w-full max-w-3xl">
+          {/* Active Sentence Card */}
           <motion.div
             key={currentSentence.id}
             initial={{ opacity: 0, y: 28 }}
@@ -302,6 +305,7 @@ export default function SentenceLearning({
                 </div>
               </div>
 
+              {/* Answer Option Buttons */}
               <div className="mt-6 flex flex-wrap justify-center gap-3">
                 {question.options.map((option) => {
                   const isCorrectOption = option.toLowerCase() === question.correctWord.toLowerCase();
@@ -330,6 +334,7 @@ export default function SentenceLearning({
                 })}
               </div>
 
+              {/* Answer Feedback */}
               {showResult && (
                 <div className="theme-surface-soft mt-4 rounded-xl border p-4">
                   <p className="theme-title text-lg font-bold">
@@ -343,6 +348,7 @@ export default function SentenceLearning({
             </Card>
           </motion.div>
 
+          {/* Progress Dots */}
           <div className="mt-4 flex justify-center gap-2">
             {sentenceData.map((_, index) => (
               <div
@@ -360,6 +366,7 @@ export default function SentenceLearning({
         </div>
       </div>
 
+      {/* Bottom Action Bar */}
       <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-[color:var(--theme-border)] bg-[color:var(--theme-bg-solid)]/95 px-4 py-3 backdrop-blur">
         <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3">
           <button
@@ -382,6 +389,7 @@ export default function SentenceLearning({
         </div>
       </div>
 
+      {/* Level Complete Modal */}
       {showLevelCompleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
           <div className="max-w-md w-full rounded-3xl border-4 border-primary bg-white p-8 text-center shadow-2xl">
@@ -414,6 +422,7 @@ export default function SentenceLearning({
         </div>
       )}
 
+      {/* Floating Mascot Assistant */}
       <Mascot
         message={sentenceMascotMessage}
         animation="float"
