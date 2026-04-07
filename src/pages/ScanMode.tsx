@@ -168,6 +168,7 @@ export default function ScanMode({ navigate, appState, updateState, premium }: S
     );
   };
 
+  /*Launch camera*/
   const launchCamera = async (facingMode: 'environment' | 'user') => {
     try {
       setError(null);
@@ -335,6 +336,8 @@ const translateTextWithGemini = async (text: string, targetLanguage: string) => 
     throw new Error('Missing VITE_GEMINI_API_KEY or VITE_GEMINI_API_KEY_BACKUP in .env');
   }
 
+
+/*PROMPT VERY IMPORTANT*/
   const prompt = `
 Translate the following text into ${targetLanguage}.
 Return only the translated text.
