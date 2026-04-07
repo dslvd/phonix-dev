@@ -765,7 +765,7 @@ function App() {
                 }}
                 className="btn btn-secondary w-full rounded-xl px-4 py-3 text-sm uppercase tracking-[0.08em]"
               >
-                Log Out
+                {isGuestMode ? 'Exit Guest Mode' : 'Log Out'}
               </button>
             </div>
           </aside>
