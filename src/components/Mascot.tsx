@@ -294,9 +294,10 @@ export default function Mascot({
           className="theme-surface-strong relative flex h-14 w-14 items-center justify-center rounded-full border shadow-[0_24px_40px_rgba(15,27,36,0.24)] md:h-16 md:w-16"
           aria-label={isOpen ? 'Hide AI assistant' : 'Open AI assistant'}
         >
-          <img 
-            src = "/assets/PipinIcon.png"
-            className={`${animationClasses[animation]} w-14 h-14 md:w-16 md:h-16 object-contain`}        
+          <img
+            src="/assets/PipinIcon.png"
+            alt="Pipin mascot"
+            className={`${animationClasses[animation]} h-14 w-14 object-contain md:h-16 md:w-16`}
           />
         </motion.button>
       </div>
