@@ -385,10 +385,12 @@ function App() {
   }, [currentPage]);
 
   const themeToggle = (
-    <div className="theme-toggle inline-flex items-center gap-1 rounded-full p-1" role="group" aria-label="Theme mode switch">
+    <div className="card inline-flex items-center gap-1 rounded-full p-1" role="group" aria-label="Theme mode switch">
       <button
         onClick={() => setTheme('light')}
-        className="theme-toggle-option grid h-9 w-9 place-items-center rounded-full text-lg leading-none font-bold sm:h-10 sm:w-10"
+        className={`grid h-9 w-9 place-items-center rounded-full text-lg leading-none font-bold transition sm:h-10 sm:w-10 ${
+          theme === 'light' ? 'bg-[color:var(--primary)] text-[color:var(--text)]' : 'text-muted'
+        }`}
         data-active={theme === 'light'}
         aria-label="Switch to light mode"
         aria-pressed={theme === 'light'}
@@ -398,7 +400,9 @@ function App() {
       </button>
       <button
         onClick={() => setTheme('dark')}
-        className="theme-toggle-option grid h-9 w-9 place-items-center rounded-full text-lg leading-none font-bold sm:h-10 sm:w-10"
+        className={`grid h-9 w-9 place-items-center rounded-full text-lg leading-none font-bold transition sm:h-10 sm:w-10 ${
+          theme === 'dark' ? 'bg-[color:var(--primary)] text-[color:var(--text)]' : 'text-muted'
+        }`}
         data-active={theme === 'dark'}
         aria-label="Switch to dark mode"
         aria-pressed={theme === 'dark'}
@@ -724,10 +728,10 @@ function App() {
       )}
       <div className={`mx-auto ${showDesktopSidebar ? 'max-w-[1400px] grid grid-cols-[240px,minmax(0,1fr)] gap-4' : 'max-w-7xl'}`}>
         {showDesktopSidebar && (
-          <aside className="theme-surface-strong sticky top-4 flex h-[calc(100vh-2rem)] flex-col overflow-hidden rounded-[28px] border p-4">
+          <aside className="card sticky top-4 flex h-[calc(100vh-2rem)] flex-col overflow-hidden rounded-[28px] p-4">
             <div>
-              <h1 className="font-baloo text-4xl font-bold text-[#FF9126]">phonix</h1>
-              <p className="theme-muted text-xs font-bold uppercase tracking-[0.16em]">AI-DRIVEN learning app</p>
+              <h1 className="text-4xl font-bold" style={{ color: 'var(--primary)' }}>phonix</h1>
+              <p className="text-muted text-xs font-bold uppercase tracking-[0.16em]">AI-driven learning app</p>
             </div>
 
             <nav className="mt-6 space-y-2">
@@ -740,7 +744,7 @@ function App() {
                     className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm font-bold transition ${
                       isActive
                         ? 'theme-nav-active'
-                        : 'theme-text-soft border-transparent bg-transparent hover:border-[#274154] hover:bg-[color:var(--theme-surface-soft)]'
+                        : 'text-muted border-transparent bg-transparent hover:border-[color:var(--border)] hover:bg-[color:var(--surface)]'
                     }`}
                   >
                     <span className="text-lg leading-none">{item.icon}</span>
@@ -759,7 +763,7 @@ function App() {
                   resetAppState();
                   navigate('landing');
                 }}
-                className="theme-nav-button w-full rounded-xl border px-4 py-3 text-sm font-bold uppercase tracking-[0.08em] transition"
+                className="btn btn-secondary w-full rounded-xl px-4 py-3 text-sm uppercase tracking-[0.08em]"
               >
                 Log Out
               </button>
@@ -768,7 +772,7 @@ function App() {
         )}
 
         <main
-          className={`min-w-0 ${keepMainPanel ? 'overflow-hidden rounded-[28px] theme-surface-strong border' : 'w-full overflow-visible bg-transparent border-0 rounded-none shadow-none'} ${showDesktopSidebar ? '' : 'w-full'}`}
+          className={`min-w-0 ${keepMainPanel ? 'card overflow-hidden rounded-[28px]' : 'w-full overflow-visible bg-transparent border-0 rounded-none shadow-none'} ${showDesktopSidebar ? '' : 'w-full'}`}
         >
           {renderPage()}
         </main>

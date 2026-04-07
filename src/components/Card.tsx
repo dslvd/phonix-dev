@@ -16,11 +16,9 @@ export default function Card({
   hover = true,
   gradient = false,
 }: CardProps) {
-  const baseClasses = 'theme-surface rounded-3xl border p-6 transition-all duration-300';
-  const bgClass = gradient 
-    ? 'bg-gradient-to-b from-[#FF9126] to-[#FF9126] border-b-4 border-[#FF9126]' 
-    : '';
-  const hoverClasses = hover ? 'hover:card-shadow-lg hover:-translate-y-2 cursor-pointer' : '';
+  const baseClasses = 'card p-6 transition-transform duration-200';
+  const bgClass = gradient ? 'bg-[color:var(--primary)] text-[color:var(--text)] border-transparent' : '';
+  const hoverClasses = hover ? 'hover:-translate-y-1' : '';
   const clickableClass = onClick ? 'cursor-pointer' : '';
 
   return (

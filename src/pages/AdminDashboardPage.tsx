@@ -247,24 +247,24 @@ export default function AdminDashboard({ navigate, appState, premium }: AdminDas
 
   if (!isAuthenticated) {
     return (
-      <div className="theme-page min-h-screen p-6 text-slate-100 lg:p-8">
-        <div className="mx-auto max-w-md rounded-3xl border p-6 theme-surface">
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#FAC775]">Admin Access</p>
-          <h1 className="theme-title mt-2 font-baloo text-4xl font-bold">Enter password</h1>
-          <p className="theme-muted mt-2 text-sm font-semibold">Protected admin area for Phonix page management.</p>
+      <div className="theme-page min-h-screen p-6 lg:p-8">
+        <div className="card mx-auto max-w-md p-6">
+          <p className="text-xs font-bold uppercase tracking-[0.16em]" style={{ color: 'var(--primary)' }}>Admin Access</p>
+          <h1 className="mt-2 text-4xl font-bold">Enter password</h1>
+          <p className="text-muted mt-2 text-sm font-semibold">Protected admin area for Phonix page management.</p>
           <div className="mt-5 space-y-3">
             <input
               type="password"
               value={passwordInput}
               onChange={(event) => setPasswordInput(event.target.value)}
               placeholder="Admin password"
-              className="theme-surface-soft w-full rounded-2xl border px-4 py-3 font-semibold outline-none focus:border-[#56b8e8]"
+              className="w-full rounded-2xl border bg-transparent px-4 py-3 font-semibold outline-none focus:border-[color:var(--primary)]"
             />
             {authError && <p className="text-sm font-semibold text-red-400">{authError}</p>}
             <button
               onClick={handleAdminLogin}
               disabled={isLoadingUsers}
-              className="w-full rounded-2xl bg-gradient-to-r from-primary to-secondary px-6 py-4 font-bold text-white shadow-lg disabled:opacity-60"
+              className="btn w-full py-4"
             >
               {isLoadingUsers ? 'Checking...' : 'Unlock Admin'}
             </button>
@@ -275,26 +275,26 @@ export default function AdminDashboard({ navigate, appState, premium }: AdminDas
   }
 
   return (
-    <div className="theme-page min-h-screen p-6 text-slate-100 lg:p-8">
+    <div className="theme-page min-h-screen p-6 lg:p-8">
       <div className="mx-auto max-w-6xl space-y-6">
         <motion.section
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="theme-surface rounded-3xl border p-6"
+          className="card p-6"
         >
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#FAC775]">Admin Dashboard</p>
-              <h1 className="theme-title mt-1 font-baloo text-4xl font-bold">Platform Control Center</h1>
-              <p className="theme-muted mt-2 text-sm font-semibold">
+              <p className="text-xs font-bold uppercase tracking-[0.16em]" style={{ color: 'var(--primary)' }}>Admin Dashboard</p>
+              <h1 className="mt-1 text-4xl font-bold">Platform Control Center</h1>
+              <p className="text-muted mt-2 text-sm font-semibold">
                 Manage user learning health, monitor progress metrics, and jump into key workflows.
               </p>
             </div>
 
-            <div className="theme-surface-soft rounded-2xl border px-4 py-3">
-              <p className="theme-muted text-xs font-bold uppercase tracking-[0.12em]">Logged in as</p>
-              <p className="theme-title mt-1 text-sm font-bold">{admin.name}</p>
-              <p className="theme-muted text-xs">{admin.email}</p>
+            <div className="card rounded-2xl px-4 py-3">
+              <p className="text-muted text-xs font-bold uppercase tracking-[0.12em]">Logged in as</p>
+              <p className="mt-1 text-sm font-bold">{admin.name}</p>
+              <p className="text-muted text-xs">{admin.email}</p>
             </div>
           </div>
         </motion.section>
@@ -308,9 +308,9 @@ export default function AdminDashboard({ navigate, appState, premium }: AdminDas
               transition={{ delay: 0.06 * index }}
             >
               <Card hover={false} className="h-full rounded-2xl border p-4">
-                <p className="theme-muted text-xs font-bold uppercase tracking-[0.12em]">{metric.label}</p>
-                <p className="theme-title mt-2 font-baloo text-4xl font-bold">{metric.value}</p>
-                <p className="theme-muted mt-1 text-xs font-semibold">{metric.hint}</p>
+                <p className="text-muted text-xs font-bold uppercase tracking-[0.12em]">{metric.label}</p>
+                <p className="mt-2 text-4xl font-bold">{metric.value}</p>
+                <p className="text-muted mt-1 text-xs font-semibold">{metric.hint}</p>
               </Card>
             </motion.div>
           ))}
@@ -318,32 +318,32 @@ export default function AdminDashboard({ navigate, appState, premium }: AdminDas
 
         <section className="grid gap-4 lg:grid-cols-2">
           <Card hover={false} className="rounded-2xl border p-5">
-            <h2 className="theme-title font-baloo text-3xl font-bold">System Status</h2>
+            <h2 className="text-3xl font-bold">System Status</h2>
             <div className="mt-4 space-y-3">
-              <div className="theme-surface-soft flex items-center justify-between rounded-xl border px-3 py-2">
-                <span className="theme-muted text-sm font-semibold">Cloud Sync</span>
-                <span className="rounded-full border border-[#2f9de4] bg-[#12364b] px-2.5 py-1 text-xs font-bold uppercase tracking-[0.08em] text-[#9fdbff]">Online</span>
+              <div className="card flex items-center justify-between rounded-xl px-3 py-2">
+                <span className="text-muted text-sm font-semibold">Cloud Sync</span>
+                <span className="rounded-full border px-2.5 py-1 text-xs font-bold uppercase tracking-[0.08em]">Online</span>
               </div>
-              <div className="theme-surface-soft flex items-center justify-between rounded-xl border px-3 py-2">
-                <span className="theme-muted text-sm font-semibold">Premium Access</span>
-                <span className="rounded-full border border-[#FF9126] bg-[#4c2d09] px-2.5 py-1 text-xs font-bold uppercase tracking-[0.08em] text-[#ffc484]">
+              <div className="card flex items-center justify-between rounded-xl px-3 py-2">
+                <span className="text-muted text-sm font-semibold">Premium Access</span>
+                <span className="rounded-full border px-2.5 py-1 text-xs font-bold uppercase tracking-[0.08em]">
                   {premium.loading ? 'Checking' : premium.isPremium ? 'Active' : 'Free'}
                 </span>
               </div>
-              <div className="theme-surface-soft flex items-center justify-between rounded-xl border px-3 py-2">
-                <span className="theme-muted text-sm font-semibold">Batteries</span>
-                <span className="theme-title text-sm font-bold">{batteries}</span>
+              <div className="card flex items-center justify-between rounded-xl px-3 py-2">
+                <span className="text-muted text-sm font-semibold">Batteries</span>
+                <span className="text-sm font-bold">{batteries}</span>
               </div>
-              <div className="theme-surface-soft flex items-center justify-between rounded-xl border px-3 py-2">
-                <span className="theme-muted text-sm font-semibold">Engagement Score</span>
-                <span className="theme-title text-sm font-bold">{activityScore}%</span>
+              <div className="card flex items-center justify-between rounded-xl px-3 py-2">
+                <span className="text-muted text-sm font-semibold">Engagement Score</span>
+                <span className="text-sm font-bold">{activityScore}%</span>
               </div>
             </div>
           </Card>
 
           <Card hover={false} className="rounded-2xl border p-5">
-            <h2 className="theme-title font-baloo text-3xl font-bold">Quick Actions</h2>
-            <p className="theme-muted mt-1 text-sm font-semibold">Open core areas to review product behavior fast.</p>
+            <h2 className="text-3xl font-bold">Quick Actions</h2>
+            <p className="text-muted mt-1 text-sm font-semibold">Open core areas to review product behavior fast.</p>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               <Button variant="primary" onClick={() => navigate('dashboard')} icon="🏠" className="w-full">
                 Main Dashboard
@@ -361,21 +361,21 @@ export default function AdminDashboard({ navigate, appState, premium }: AdminDas
           </Card>
 
           <Card hover={false} className="rounded-2xl border p-5">
-            <h2 className="theme-title font-baloo text-3xl font-bold">User Accounts</h2>
-            <p className="theme-muted mt-1 text-sm font-semibold">Reset user history or delete synced accounts from Cloudflare D1.</p>
+            <h2 className="text-3xl font-bold">User Accounts</h2>
+            <p className="text-muted mt-1 text-sm font-semibold">Reset user history or delete synced accounts from Cloudflare D1.</p>
             {deleteError && <p className="mt-2 text-sm font-semibold text-red-400">{deleteError}</p>}
             <div className="mt-4 max-h-[24rem] space-y-3 overflow-y-auto pr-1">
               {users.length === 0 ? (
-                <p className="theme-muted text-sm font-semibold">
+                <p className="text-muted text-sm font-semibold">
                   {isLoadingUsers ? 'Loading users...' : 'No synced users found.'}
                 </p>
               ) : (
                 users.map((user) => (
-                  <div key={user.userKey} className="theme-surface-soft flex items-center justify-between gap-3 rounded-xl border px-3 py-3">
+                  <div key={user.userKey} className="card flex items-center justify-between gap-3 rounded-xl px-3 py-3">
                     <div className="min-w-0">
-                      <p className="theme-title truncate text-sm font-bold">{user.displayName}</p>
-                      <p className="theme-muted truncate text-xs font-semibold">{user.userKey}</p>
-                      <p className="theme-muted text-xs font-semibold">
+                      <p className="truncate text-sm font-bold">{user.displayName}</p>
+                      <p className="text-muted truncate text-xs font-semibold">{user.userKey}</p>
+                      <p className="text-muted text-xs font-semibold">
                         {user.learnedWords} words • {user.stars} stars • XP {user.totalXP}
                       </p>
                     </div>
@@ -383,14 +383,14 @@ export default function AdminDashboard({ navigate, appState, premium }: AdminDas
                       <button
                         onClick={() => handleResetUserHistory(user.userKey)}
                         disabled={activeUserActionKey !== null}
-                        className="rounded-xl border border-amber-400 px-3 py-2 text-xs font-bold text-amber-300 transition hover:bg-amber-500/10 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="btn btn-ghost rounded-xl px-3 py-2 text-xs"
                       >
                         {activeUserActionKey === `reset:${user.userKey}` ? 'Resetting...' : 'Reset History'}
                       </button>
                       <button
                         onClick={() => handleDeleteUser(user.userKey)}
                         disabled={activeUserActionKey !== null}
-                        className="rounded-xl border border-red-400 px-3 py-2 text-xs font-bold text-red-300 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="btn btn-ghost rounded-xl border-red-400 px-3 py-2 text-xs text-red-300"
                       >
                         {activeUserActionKey === `delete:${user.userKey}` ? 'Deleting...' : 'Delete'}
                       </button>

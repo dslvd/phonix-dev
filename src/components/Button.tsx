@@ -22,14 +22,14 @@ export default function Button({
   disabled = false,
   className = '',
 }: ButtonProps) {
-  const baseClasses = 'font-bold rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg';
+  const baseClasses = 'btn';
   
   const variantClasses = {
-    primary: 'bg-[#FF9126] border-b-4 border-[#FF9126] text-[#4a2a00] hover:brightness-105 hover:scale-105',
-    secondary: 'bg-[#56b8e8] border border-[#2a4151] text-[#0a344a] hover:brightness-105 hover:scale-105',
-    outline: 'theme-nav-button border hover:border-[#56b8e8] hover:text-inherit',
-    success: 'bg-[#FF9126] border-b-4 border-[#FF9126] text-[#4a2a00] hover:brightness-105 hover:scale-105',
-    danger: 'theme-nav-button border hover:brightness-105 hover:scale-105',
+    primary: '',
+    secondary: 'btn-secondary',
+    outline: 'btn-ghost',
+    success: '',
+    danger: 'btn-ghost border-red-400 text-red-400 hover:bg-red-500/10',
   };
 
   const sizeClasses = {
@@ -39,7 +39,7 @@ export default function Button({
   };
 
   const widthClass = fullWidth ? 'w-full' : '';
-  const disabledClass = disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer';
+  const disabledClass = disabled ? '' : 'cursor-pointer';
 
   return (
     <motion.button
