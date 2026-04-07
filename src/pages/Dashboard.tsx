@@ -464,84 +464,76 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
               <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#FAC775]">Roadmap</p>
-                  <h3 className="theme-title mt-1 font-baloo text-2xl font-bold">Your learning route</h3>
+                  <h3 className="theme-title mt-1 font-baloo text-4xl font-bold">Your learning route</h3>
                 </div>
-                <p className="theme-muted text-xs font-semibold sm:text-sm">Tap a tile to jump back into vocabulary practice.</p>
+                <p className="theme-muted text-sm font-semibold">Tap a tile to jump back into vocabulary practice.</p>
               </div>
 
-              <div className="relative mx-auto max-w-3xl space-y-2.5 py-0.5">
-                <div
-                  aria-hidden="true"
-                  className="pointer-events-none absolute bottom-5 left-5 top-5 w-px bg-[color:var(--theme-border)] md:left-1/2 md:-translate-x-1/2"
-                />
-                {roadmapNodes.map((node, index) => {
-                  const completion = Math.max(0, Math.min(100, Math.round((node.progress / node.total) * 100)));
-                  const isCurrent = index === roadmapFocusIndex;
-                  const isCompleted = node.progress >= node.total;
-                  const statusText = !node.unlocked ? 'Locked' : isCurrent ? 'Continue here' : isCompleted ? 'Completed' : 'Unlocked';
-                  const iconOnLeft = index % 2 === 0;
-                  const cardOffsetClass = iconOnLeft ? 'md:translate-x-3' : 'md:-translate-x-3';
+              <div className="relative mx-auto max-w-4xl">
+                <div className="absolute left-5 top-6 h-[calc(100%-3rem)] w-1 rounded-full bg-gradient-to-b from-[#FF9126] via-[#56b8e8] to-[#c8a4ff] opacity-35 sm:left-1/2 sm:-translate-x-1/2" />
 
-                  return (
-                    // Individual Roadmap Step
-                    <motion.div
-                      key={node.title}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      className="relative grid grid-cols-[2.25rem,minmax(0,1fr)] items-start gap-2 md:grid-cols-[2.75rem,minmax(0,1fr),2.75rem]"
-                    >
-                      <button
-                        onClick={node.unlocked ? () => openRoadmapNode(node) : undefined}
-                        disabled={!node.unlocked}
-                        className={`relative z-10 mt-1 flex h-8 w-8 items-center justify-center rounded-full border-2 text-sm shadow-sm md:justify-self-center ${
-                          iconOnLeft ? 'col-start-1 md:col-start-1' : 'col-start-1 md:col-start-3'
-                        } ${
-                          node.unlocked ? `bg-gradient-to-br ${node.tone} border-white/20 text-white` : 'theme-lock-button cursor-not-allowed'
-                        }`}
-                        aria-label={node.title}
+                <div className="space-y-4 sm:space-y-6">
+                  {roadmapNodes.map((node, index) => {
+                    const completion = Math.max(0, Math.min(100, Math.round((node.progress / node.total) * 100)));
+                    const isCurrent = index === roadmapFocusIndex;
+                    const isOdd = index % 2 === 1;
+
+                    return (
+                      <motion.div
+                        key={node.title}
+                        initial={{ opacity: 0, y: 16, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{ delay: index * 0.08 }}
+                        className={`relative flex items-start gap-4 sm:gap-6 ${isOdd ? 'sm:flex-row-reverse' : ''}`}
                       >
-                        {node.unlocked ? node.icon : '🔒'}
-                      </button>
+                        <div className="relative z-10 flex w-10 shrink-0 justify-center sm:w-16">
+                          <button
+                            onClick={node.unlocked ? () => openRoadmapNode(node) : undefined}
+                            disabled={!node.unlocked}
+                            className={`flex h-10 w-10 items-center justify-center rounded-full border-4 text-lg shadow-lg transition sm:h-16 sm:w-16 sm:text-3xl ${
+                              node.unlocked
+                                ? `bg-gradient-to-br ${node.tone} border-white/70 text-white hover:scale-105`
+                                : 'theme-lock-button cursor-not-allowed'
+                            }`}
+                            aria-label={node.title}
+                          >
+                            {node.unlocked ? node.icon : '🔒'}
+                          </button>
+                        </div>
 
-                      {/* Roadmap Step Detail Card */}
-                      <button
-                        onClick={node.unlocked ? () => openRoadmapNode(node) : undefined}
-                        disabled={!node.unlocked}
-                        className={`relative z-10 col-start-2 w-full text-left theme-surface-soft rounded-xl border px-3 py-2.5 transition md:max-w-[46rem] md:justify-self-center ${cardOffsetClass} ${
-                          isCurrent ? 'border-[#56b8e8] ring-2 ring-[#56b8e8]/35' : 'border-[color:var(--theme-border)]'
-                        } ${node.unlocked ? '' : 'opacity-80 cursor-not-allowed'}`}
-                      >
-                        <span
-                          aria-hidden="true"
-                          className={`absolute top-7 hidden h-px w-4 bg-[color:var(--theme-border)] md:block ${
-                            iconOnLeft ? '-left-7' : '-right-7'
-                          }`}
-                        />
+                        <div className={`flex-1 ${isOdd ? 'sm:pr-12' : 'sm:pl-12'}`}>
+                          <div className={`theme-surface-soft rounded-3xl border p-4 sm:p-5 ${isCurrent ? 'ring-2 ring-[#56b8e8]' : ''}`}>
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                              <div>
+                                <p className="theme-muted text-[11px] font-bold uppercase tracking-[0.16em]">{node.hint}</p>
+                                <h4 className="theme-title mt-1 font-baloo text-2xl font-bold">{node.title}</h4>
+                                <p className="theme-text-soft mt-2 text-sm font-semibold leading-7">{node.description}</p>
+                              </div>
+                              <div className="rounded-full border border-[color:var(--theme-border)] px-3 py-1.5 text-right">
+                                <p className="theme-muted text-[11px] font-bold uppercase tracking-[0.08em]">Level</p>
+                                <p className="theme-title font-baloo text-lg font-bold">{index + 1}/{roadmapNodes.length}</p>
+                              </div>
+                            </div>
 
-                        <div className="flex items-start justify-between gap-2">
-                          <p className="theme-muted text-[9px] font-bold uppercase tracking-[0.14em]">{node.hint}</p>
-                          <div className="min-w-[4.25rem] shrink-0 rounded-lg border border-[color:var(--theme-border)] px-2 py-0.5 text-center">
-                            <p className="theme-muted text-[8px] font-bold uppercase tracking-[0.08em]">Level</p>
-                            <p className="theme-title text-base font-black leading-none">{index + 1}/{roadmapNodes.length}</p>
+                            <div className="mt-4 h-2 overflow-hidden rounded-full bg-[color:var(--theme-border)]">
+                              <div
+                                className={`h-full rounded-full bg-gradient-to-r ${node.tone}`}
+                                style={{ width: `${completion}%` }}
+                              />
+                            </div>
+
+                            <div className="mt-3 flex items-center justify-between text-xs font-semibold">
+                              <p className="theme-muted">{node.progress}/{node.total} completed</p>
+                              <p className={`font-bold ${node.unlocked ? 'text-[#7ed6ff]' : 'theme-muted'}`}>
+                                {node.unlocked ? (isCurrent ? 'Continue here' : 'Unlocked') : 'Locked'}
+                              </p>
+                            </div>
                           </div>
                         </div>
-
-                        <h4 className="theme-title mt-1 font-baloo text-xl font-bold leading-none">{node.title}</h4>
-                        <p className="theme-text-soft mt-1 text-sm font-semibold leading-5">{node.description}</p>
-
-                        <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-[color:var(--theme-border)]">
-                          <div className={`h-full rounded-full bg-gradient-to-r ${node.tone}`} style={{ width: `${completion}%` }} />
-                        </div>
-
-                        <div className="mt-2 flex items-center justify-between gap-2 text-xs font-semibold">
-                          <p className="theme-muted">{node.progress}/{node.total} completed</p>
-                          <span className={`${isCurrent ? 'text-[#7ed6ff]' : 'theme-muted'} text-[11px] font-bold`}>{statusText}</span>
-                        </div>
-                      </button>
-                    </motion.div>
-                  );
-                })}
+                      </motion.div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </section>
