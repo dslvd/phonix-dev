@@ -65,6 +65,7 @@ export default function Premium({ navigate, premium }: PremiumProps) {
   ];
 
   return (
+    // Premium Page Container
     <div className="theme-page min-h-screen relative overflow-hidden">
       {/* BACKGROUND */}
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(72,187,255,0.08),transparent_30%),#0f1b24] -z-10" />
@@ -92,12 +93,14 @@ export default function Premium({ navigate, premium }: PremiumProps) {
         />
       ))}
 
+      {/* Top Navigation */}
       <NavigationHeader
         onBack={() => navigate("dashboard")}
         onLogout={() => navigate("landing")}
         title="Premium"
       />
 
+      {/* Premium Content Wrapper */}
       <div className="max-w-6xl mx-auto p-4 mt-6">
         {/* HERO */}
         <motion.div className="text-center mb-12">
@@ -117,7 +120,7 @@ export default function Premium({ navigate, premium }: PremiumProps) {
             </div>
           )}
 
-          {/* PRICING CARD */}
+          {/* Pricing Card */}
           <Card className="theme-surface-strong shadow-2xl">
             <div className="p-8 text-center">
               <div className="text-6xl mb-3">🎁</div>
@@ -143,7 +146,7 @@ export default function Premium({ navigate, premium }: PremiumProps) {
                       ? "Processing…"
                       : "🔋Unlock Unlimited Batteries"}
                 </motion.button>
-                {/* RESTORE */}
+                {/* Restore Purchase Action */}
                 <motion.button
                   whileHover={{ opacity: 0.9 }}
                   whileTap={{ scale: 0.98 }}
@@ -160,7 +163,7 @@ export default function Premium({ navigate, premium }: PremiumProps) {
           </Card>
         </motion.div>
 
-        {/* FEATURES */}
+        {/* Premium Features Section */}
         <motion.div className="mb-12">
           <h2 className="theme-title mb-8 text-center text-4xl font-bold">Premium Features</h2>
 
@@ -187,7 +190,7 @@ export default function Premium({ navigate, premium }: PremiumProps) {
           </div>
         </motion.div>
 
-        {/* TESTIMONIALS (UNCHANGED) */}
+        {/* Testimonials Section */}
         <motion.div className="mb-12">
           <h2 className="theme-title mb-8 text-center font-baloo text-4xl font-bold">
             What Learners Say
@@ -232,7 +235,7 @@ export default function Premium({ navigate, premium }: PremiumProps) {
           </div>
         </motion.div>
 
-        {/* FAQ (UNCHANGED) */}
+        {/* FAQ Section */}
         <motion.div>
           <h2 className="theme-title mb-8 text-center font-baloo text-4xl font-bold">
             Frequently Asked Questions

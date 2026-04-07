@@ -281,6 +281,7 @@ export default function Quiz({
   };
 
   return (
+    // Quiz Component Container
     <div className="space-y-8">
       {/* Challenge Header */}
       <motion.div
@@ -317,6 +318,7 @@ export default function Quiz({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <AnimatePresence mode="wait">
           {options.map((word, index) => (
+            // Quiz Answer Option
             <motion.button
               key={word.id}
               initial={{ opacity: 0, y: 20 }}
@@ -359,6 +361,7 @@ export default function Quiz({
       {/* Result Message */}
       <AnimatePresence>
         {showResult && (
+          // Result Feedback Panel
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

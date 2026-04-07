@@ -54,14 +54,18 @@ export default function Profile({ navigate, appState, updateState, premium }: Pr
   };
 
   return (
+    // Profile Page Container
     <div className="theme-page min-h-screen px-4 py-5 text-slate-100 lg:px-6">
+      {/* Top Navigation */}
       <NavigationHeader
         onBack={() => navigate('dashboard')}
         onLogout={handleLogout}
         title="Profile"
       />
 
+      {/* Profile Content Wrapper */}
       <div className="mx-auto mt-6 max-w-6xl">
+        {/* Profile Hero Banner */}
         <motion.div
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -72,7 +76,9 @@ export default function Profile({ navigate, appState, updateState, premium }: Pr
           <p className="text-sm font-bold text-[#ffd9b0]">Manage your learning journey</p>
         </motion.div>
 
+        {/* Main Two-Column Layout */}
         <div className="mt-5 grid gap-5 lg:grid-cols-2">
+          {/* Account Information Card */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
@@ -154,6 +160,7 @@ export default function Profile({ navigate, appState, updateState, premium }: Pr
               )}
           </motion.div>
 
+          {/* Learning Stats Card */}
           <motion.div
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
@@ -211,6 +218,7 @@ export default function Profile({ navigate, appState, updateState, premium }: Pr
           </motion.div>
         </div>
 
+        {/* Premium Upsell Banner */}
         {!premium.isPremium && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -242,6 +250,7 @@ export default function Profile({ navigate, appState, updateState, premium }: Pr
           </motion.div>
         )}
 
+        {/* Quick Navigation Actions */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -282,6 +291,7 @@ export default function Profile({ navigate, appState, updateState, premium }: Pr
           </button>
         </motion.div>
 
+        {/* Logout Action */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

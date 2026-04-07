@@ -1037,12 +1037,14 @@ const translateManualText = async () => {
   }, [handlePasteAttachment]);
 
   return (
+    // Scan Mode Page Container
     <div
       className={`theme-page min-h-screen text-slate-100 ${isDragActive ? 'ring-4 ring-[#56b8e8]/50 ring-inset' : ''}`}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDropAttachment}
     >
+      {/* Top Navigation with Stats */}
       <NavigationHeader
         onBack={() => {
           stopCamera();
@@ -1062,7 +1064,9 @@ const translateManualText = async () => {
         isPremium={premium.isPremium}
       />
 
+      {/* Scan Page Content Wrapper */}
       <div className="mx-auto mt-6 max-w-7xl p-4 lg:px-8">
+        {/* Page Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1078,13 +1082,16 @@ const translateManualText = async () => {
           </p>
         </motion.div>
 
+        {/* Main Two-Column Layout */}
         <div className="grid gap-6 xl:grid-cols-[1.15fr_0.95fr]">
+          {/* Left Column: Camera, Upload, and Manual Translate */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
             className="space-y-4"
           >
+            {/* Camera and OCR Workspace Card */}
             <Card className="theme-surface relative min-h-[380px] border p-5">
               <input
                 ref={fileInputRef}
@@ -1094,6 +1101,7 @@ const translateManualText = async () => {
                 className="hidden"
               />
 
+              {/* Camera Preview Area */}
               <div className="relative h-[260px] overflow-hidden rounded-lg bg-gray-900 sm:h-[290px]">
                 <video
                   ref={videoRef}
@@ -1168,6 +1176,7 @@ const translateManualText = async () => {
                 )}
               </div>
 
+              {/* Camera Action Buttons */}
               {cameraActive && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -1195,6 +1204,7 @@ const translateManualText = async () => {
                 </motion.div>
               )}
 
+              {/* File Upload and Paste Section */}
               <div className="mt-5 rounded-2xl border border-[#56b8e8]/30 bg-gradient-to-br from-[#56b8e8]/10 to-[#56b8e8]/5 p-5">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
@@ -1234,6 +1244,7 @@ const translateManualText = async () => {
                 </p>
               </div>
 
+              {/* Error and Troubleshooting Block */}
               {error && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}
@@ -1267,6 +1278,7 @@ const translateManualText = async () => {
               <canvas ref={canvasRef} className="hidden" />
             </Card>
 
+            {/* Manual Text Translation Card */}
             <Card className="theme-surface-soft border p-5">
               <h3 className="theme-title mb-3 flex items-center gap-2 font-baloo text-xl font-bold">
                 <span>⌨️</span>
@@ -1297,12 +1309,14 @@ const translateManualText = async () => {
             </Card>
           </motion.div>
 
+          {/* Right Column: Result + Saved Scans */}
           <motion.div
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
             className="space-y-4"
           >
+            {/* Live Translation Result */}
             <AnimatePresence>
               {scanResult && (
                 <motion.div
@@ -1386,6 +1400,7 @@ const translateManualText = async () => {
               )}
             </AnimatePresence>
 
+            {/* Saved Scans List */}
             <Card className="theme-surface border">
               <h3 className="theme-title mb-3 flex items-center gap-2 font-baloo text-xl font-bold">
                 <span>📝</span>
@@ -1446,6 +1461,7 @@ const translateManualText = async () => {
         </div>
       </div>
 
+      {/* Quick Tips Floating Panel */}
       <AnimatePresence>
         {showQuickTips && (
           <motion.div
@@ -1491,6 +1507,7 @@ const translateManualText = async () => {
         )}
       </AnimatePresence>
 
+      {/* Login Required Modal */}
       <AnimatePresence>
         {showLoginRequiredModal && (
           <motion.div
@@ -1537,6 +1554,7 @@ const translateManualText = async () => {
 
       </AnimatePresence>
 
+      {/* Upgrade Modal */}
       <AnimatePresence>
         {showUpgradeModal && (
           <motion.div

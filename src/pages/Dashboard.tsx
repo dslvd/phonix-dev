@@ -364,10 +364,15 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
   };
 
   return (
+    // Dashboard Page Container
     <div className="theme-page min-h-screen px-4 py-5 text-slate-100 lg:px-6">
+      {/* Dashboard Content Wrapper */}
       <div className="mx-auto max-w-6xl">
+        {/* Main Grid: Primary Content + Optional Right Rail */}
         <div className={`grid gap-5 ${showRightRail ? 'lg:grid-cols-[minmax(0,1fr),320px]' : ''}`}>
+          {/* Left Column: Progress + Roadmap */}
           <section>
+            {/* Guest Welcome Panel */}
             {isGuestMode && (
               <motion.div
                 initial={{ opacity: 0, y: -14 }}
@@ -418,6 +423,7 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
               </motion.div>
             )}
 
+            {/* Logged-in Progress Summary */}
             {!isGuestMode && (
               <motion.div
                 initial={{ opacity: 0, y: -14 }}
@@ -452,7 +458,9 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
               </motion.div>
             )}
 
+            {/* Learning Roadmap Section */}
             <div className="theme-surface mt-5 rounded-3xl border px-4 py-6 sm:px-6">
+              {/* Roadmap Header */}
               <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#FAC775]">Roadmap</p>
@@ -475,6 +483,7 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
                   const cardOffsetClass = iconOnLeft ? 'md:translate-x-3' : 'md:-translate-x-3';
 
                   return (
+                    // Individual Roadmap Step
                     <motion.div
                       key={node.title}
                       initial={{ opacity: 0, y: 10 }}
@@ -495,6 +504,7 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
                         {node.unlocked ? node.icon : '🔒'}
                       </button>
 
+                      {/* Roadmap Step Detail Card */}
                       <button
                         onClick={node.unlocked ? () => openRoadmapNode(node) : undefined}
                         disabled={!node.unlocked}
@@ -536,8 +546,10 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
             </div>
           </section>
 
+          {/* Right Rail: Leaderboard + Stats + Account Actions */}
           {showRightRail && (
             <aside className="space-y-4">
+              {/* Leaderboard Card */}
               {!isGuestMode && (
                 <div className="theme-surface rounded-2xl border p-4">
                   <h3 className="theme-title text-xl font-bold">Leaderboard</h3>
@@ -583,6 +595,7 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
                 </div>
               )}
 
+              {/* Current Learning Stats Card */}
               {!isGuestMode && (
                 <div className="theme-surface rounded-2xl border p-4">
                   <div className="rounded-2xl border-b-4 border-[#FF9126] bg-gradient-to-b from-[#FF9126] to-[#FF9126] p-4">
@@ -631,6 +644,7 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
                 </div>
               )}
 
+              {/* Guest Save Progress Card */}
               {!hasLoggedInUser && (
                 <div className="theme-surface rounded-2xl border p-4">
                   <h3 className="theme-title text-xl font-bold">Save your progress</h3>

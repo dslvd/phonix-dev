@@ -668,6 +668,7 @@ function App() {
   }
 
   const renderPage = () => {
+    // Route-to-page component switcher
     switch (currentPage) {
       case 'landing':
         return <Landing navigate={navigate} resetAppState={resetAppState} />;
@@ -702,11 +703,15 @@ function App() {
 
   if (isMobile) {
     return (
+      // Mobile App Shell
       <div className={`theme-page min-h-screen ${useCleanUi ? 'clean-ui' : ''}`}>
+        {/* Active Page Content */}
         {renderPage()}
+        {/* Floating Theme Toggle */}
         <div className="fixed right-4 top-4 z-[70]">
           {themeToggle}
         </div>
+        {/* Global Mascot Assistant */}
         {shouldShowGlobalMascot && (
           <Mascot
             message={globalMascotMessage}
@@ -720,13 +725,17 @@ function App() {
   }
 
   return (
+    // Desktop App Shell
     <div className={`${showDesktopSidebar ? 'theme-shell p-4' : 'theme-page p-6'} ${useCleanUi ? 'clean-ui' : ''} min-h-screen`}>
+      {/* Standalone Theme Toggle (no sidebar layout) */}
       {!showDesktopSidebar && (
         <div className="fixed right-6 top-6 z-[70]">
           {themeToggle}
         </div>
       )}
+      {/* Desktop Layout Wrapper */}
       <div className={`mx-auto ${showDesktopSidebar ? 'max-w-[1400px] grid grid-cols-[240px,minmax(0,1fr)] gap-4' : 'max-w-7xl'}`}>
+        {/* Left Sidebar Navigation */}
         {showDesktopSidebar && (
           <aside className="card sticky top-4 flex h-[calc(100vh-2rem)] flex-col overflow-hidden rounded-[28px] p-4">
             <div>
@@ -771,6 +780,7 @@ function App() {
           </aside>
         )}
 
+        {/* Main Page Panel */}
         <main
           className={`min-w-0 ${keepMainPanel ? 'card overflow-hidden rounded-[28px]' : 'w-full overflow-visible bg-transparent border-0 rounded-none shadow-none'} ${showDesktopSidebar ? '' : 'w-full'}`}
         >
@@ -778,6 +788,7 @@ function App() {
         </main>
       </div>
 
+      {/* Global Mascot Assistant */}
       {shouldShowGlobalMascot && (
         <Mascot
           message={globalMascotMessage}
