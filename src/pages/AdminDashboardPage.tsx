@@ -5,6 +5,7 @@ import Button from '../components/Button';
 import { AppState, Page } from '../App';
 import { usePremium } from '../lib/usePremium';
 import { BATTERY_MAX, formatBatteryCountdown } from '../lib/battery';
+import { getVocabularyLevelCycle, refreshAIVocabularyOverride } from '../lib/aiVocabulary';
 
 interface AdminDashboardProps {
   navigate: (page: Page) => void;
@@ -66,6 +67,8 @@ export default function AdminDashboard({ navigate, appState, premium }: AdminDas
   const [users, setUsers] = useState<AdminUserRecord[]>([]);
   const [deleteError, setDeleteError] = useState('');
   const [activeUserActionKey, setActiveUserActionKey] = useState<string | null>(null);
+  const [isRefreshingFlashcards, setIsRefreshingFlashcards] = useState(false);
+  const [flashcardRefreshMessage, setFlashcardRefreshMessage] = useState('');
   const wordsLearned = appState.learnedWords.length;
   const batteries = premium.isPremium
     ? 'Unlimited'
@@ -285,6 +288,28 @@ export default function AdminDashboard({ navigate, appState, premium }: AdminDas
     }
   };
 
+  const handleRefreshFlashcardsOverride = async () => {
+    const targetLanguage = (appState.targetLanguage || 'Hiligaynon').trim();
+    const nativeLanguage = (appState.nativeLanguage || 'English').trim();
+    const levelCycle = getVocabularyLevelCycle(appState.learnedWords.length);
+
+    setIsRefreshingFlashcards(true);
+    setFlashcardRefreshMessage('');
+
+    try {
+      await Promise.all([
+        refreshAIVocabularyOverride(targetLanguage, nativeLanguage, { levelCycle }),
+        refreshAIVocabularyOverride(targetLanguage, nativeLanguage, { levelCycle: levelCycle + 1 }),
+      ]);
+
+      setFlashcardRefreshMessage('AI flashcards refreshed for current and next level packs.');
+    } catch {
+      setFlashcardRefreshMessage('Failed to refresh AI flashcards. Check API credentials and try again.');
+    } finally {
+      setIsRefreshingFlashcards(false);
+    }
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="theme-page min-h-screen p-6 lg:p-8">
@@ -419,6 +444,20 @@ export default function AdminDashboard({ navigate, appState, premium }: AdminDas
               <Button variant="outline" onClick={() => navigate('profile')} icon="👤" className="w-full">
                 Profile
               </Button>
+            </div>
+            <div className="mt-4 space-y-2">
+              <button
+                onClick={handleRefreshFlashcardsOverride}
+                disabled={isRefreshingFlashcards}
+                className="btn w-full"
+              >
+                {isRefreshingFlashcards ? 'Refreshing AI Flashcards...' : 'Override Refresh AI Flashcards'}
+              </button>
+              {flashcardRefreshMessage && (
+                <p className={`text-xs font-semibold ${flashcardRefreshMessage.startsWith('Failed') ? 'text-red-400' : 'text-emerald-300'}`}>
+                  {flashcardRefreshMessage}
+                </p>
+              )}
             </div>
           </Card>
 
