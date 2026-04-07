@@ -295,7 +295,7 @@ export default function Mascot({
           aria-label={isOpen ? 'Hide AI assistant' : 'Open AI assistant'}
         >
           <img 
-            src = "../../public/assets/PipinIcon.png"
+            src = "/assets/PipinIcon.png"
             className={`${animationClasses[animation]} w-14 h-14 md:w-16 md:h-16 object-contain`}        
           />
         </motion.button>
