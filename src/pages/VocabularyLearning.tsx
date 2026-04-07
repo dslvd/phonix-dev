@@ -4,7 +4,7 @@ import NavigationHeader from '../components/NavigationHeader';
 import Quiz from '../components/Quiz';
 import Mascot from '../components/Mascot';
 import { Page, AppState, BackpackItem, UpdateStateFn } from '../App';
-import { sentenceData, VocabularyItem } from '../data/vocabulary';
+import { VocabularyItem } from '../data/vocabulary';
 import { usePremium } from '../lib/usePremium';
 import {
   fetchAIVocabulary,
@@ -24,8 +24,6 @@ interface VocabularyLearningProps {
   updateState: UpdateStateFn;
   premium: ReturnType<typeof usePremium>;
 }
-
-const QUIZ_GOAL_PER_CYCLE = 15;
 
 const normalizeComparableText = (value: string) =>
   value
@@ -223,13 +221,7 @@ export default function VocabularyLearning({
       ? intermediateCount
       : advancedCount;
   const levelStage = getFiveStageLevel(bandProgress, bandTotal);
-  const totalLearningUnits = VOCABULARY_PACK_WORD_COUNT + QUIZ_GOAL_PER_CYCLE + sentenceData.length;
-  const completedLearningUnits = Math.min(
-    totalLearningUnits,
-    learnedInCurrentCycle +
-      Math.min(appState.quizAnswersInCycle, QUIZ_GOAL_PER_CYCLE) +
-      Math.min(appState.sentenceAnswersInCycle, sentenceData.length)
-  );
+  const totalVocabularyWords = beginnerCount + intermediateCount + advancedCount;
 
   const fallbackItem: VocabularyItem = {
     id: 'ai-loading',
@@ -813,8 +805,8 @@ export default function VocabularyLearning({
         onLogout={() => navigate('landing')}
         title="Vocabulary Learning"
         showProgress={true}
-        currentProgress={Math.max(0, completedLearningUnits)}
-        totalProgress={Math.max(totalLearningUnits, 1)}
+        currentProgress={Math.max(0, Math.min(learnedInCurrentCycle, totalVocabularyWords))}
+        totalProgress={Math.max(totalVocabularyWords, 1)}
         batteryCurrent={appState.batteriesRemaining}
         batteryMax={BATTERY_MAX}
         batteryResetAt={appState.batteryResetAt}
@@ -922,7 +914,7 @@ export default function VocabularyLearning({
                     onClick={exitPracticeQuizSession}
                     className="theme-nav-button rounded-2xl border px-4 py-2 text-xs font-bold uppercase tracking-[0.08em]"
                   >
-                    Exit Quiz Me
+                    Exit Quiz
                   </button>
                 </div>
               )}

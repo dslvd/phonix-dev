@@ -213,11 +213,11 @@ export function generateFallbackAIAnswer(
   }
 
   if (normalizedQuery === 'hello' || normalizedQuery === 'hi' || normalizedQuery === 'hey') {
-    return reply('Hello. In Hiligaynon, you can say "Kumusta."', 'Hello. Sa Hiligaynon, puwede mong sabihin ang "Kumusta."');
+    return reply('Hello. In Hiligaynon, you can say "Kamusta."', 'Hello. Sa Hiligaynon, puwede mong sabihin ang "Kamusta."');
   }
 
   if (normalizedQuery.includes('how are you')) {
-    return reply('You can say "Kumusta ka?"', 'Puwede mong sabihin ang "Kumusta ka?"');
+    return reply('You can say "Kamusta ka?"', 'Puwede mong sabihin ang "Kamusta ka?"');
   }
 
   if (normalizedQuery.includes('thank you')) {
@@ -282,7 +282,7 @@ export function generateFallbackAIAnswer(
   }
 
   if (normalizedQuery.includes('hello') || normalizedQuery.includes('greeting')) {
-    return reply('A common greeting is "Kumusta."', 'Karaniwang bati ang "Kumusta."');
+    return reply('A common greeting is "Kamusta."', 'Karaniwang bati ang "Kamusta."');
   }
 
   if (normalizedQuery.includes('count') || normalizedQuery.includes('number')) {

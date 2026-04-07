@@ -328,7 +328,7 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
 
   const activeRoadmapIndex = roadmapNodes.findIndex((node) => node.unlocked && node.progress < node.total);
   const roadmapFocusIndex = activeRoadmapIndex === -1 ? roadmapNodes.length - 1 : activeRoadmapIndex;
-  const seasonedProgress = Math.min(
+  const overallJourneyProgress = Math.min(
     100,
     Math.round(
       ((Math.min(vocabularyProgress, totalWords) + Math.min(sentenceProgress, sentenceData.length)) /
@@ -343,6 +343,7 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
     firstUndiscoveredVocabularyIndex === -1
       ? Math.max(aiVocabulary.length - 1, 0)
       : Math.max(firstUndiscoveredVocabularyIndex - 1, 0);
+  const hasStartedVocabulary = appState.learnedWords.length > 0;
 
   const openRoadmapNode = (node: (typeof roadmapNodes)[number]) => {
     if (!node.unlocked) {
@@ -423,16 +424,18 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
                 animate={{ opacity: 1, y: 0 }}
                 className="rounded-2xl border-b-4 border-[#FF9126] bg-gradient-to-b from-[#FF9126] to-[#ff9b3d] px-5 py-4"
               >
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#fff3de]">Progress</p>
                     <div className="mt-3 h-3 overflow-hidden rounded-full bg-[#ffc78f]/45">
                       <div
                         className="h-full rounded-full bg-[#ffe7c9]"
-                        style={{ width: `${seasonedProgress}%` }}
+                        style={{ width: `${overallJourneyProgress}%` }}
                       />
                     </div>
-                    <p className="mt-2 text-sm font-bold text-[#fff3de]">{seasonedProgress}% complete ({appState.learnedWords.length}/{totalWords} words)</p>
+                    <p className="mt-2 text-sm font-bold text-[#fff3de]">
+                      {overallJourneyProgress}% overall progress
+                    </p>
                   </div>
                   <button
                     onClick={() => {
@@ -441,9 +444,9 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
                       });
                       navigate('vocabulary');
                     }}
-                    className="rounded-xl border border-[#fff3de]/60 bg-[#fff3de] px-4 py-2 text-xs font-bold uppercase tracking-[0.08em] text-[#8a4a00] transition hover:bg-white"
+                    className="shrink-0 self-start rounded-xl border border-[#fff3de]/60 bg-[#fff3de] px-4 py-2 text-xs font-bold uppercase tracking-[0.08em] text-[#8a4a00] transition hover:bg-white sm:self-center"
                   >
-                    Resume
+                    {hasStartedVocabulary ? 'Resume' : 'Start'}
                   </button>
                 </div>
               </motion.div>
