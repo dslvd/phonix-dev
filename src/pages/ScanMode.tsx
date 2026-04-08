@@ -408,11 +408,13 @@ Text: ${text}
   throw lastError instanceof Error ? lastError : new Error('Gemini translation failed');
 };
 
+
+/*b64 image translation*/
 const detectTextWithVisionBrowser = async (image: string) => {
   const apiKey = import.meta.env.VITE_GOOGLE_VISION_API_KEY;
 
-  if (!apiKey) {
-    throw new Error('Missing Google Vision API key for local scan fallback.');
+  if (!apiKey) { /*Returns error if wala API key, im rephrasing ts*/
+    throw new Error('Unable to connect to Google Vision API.');
   }
 
   const base64Image = image.replace(/^data:image\/[a-zA-Z0-9.+-]+;base64,/, '').trim();
@@ -564,7 +566,7 @@ const attachPendingText = (text: string, name = 'Pasted text') => {
   const sourceText = cleanOCRText(text);
 
   if (!sourceText) {
-    setError('The pasted text is empty.');
+    setError('No source text found.'); /*Originally "the pasted string is empty"*/
     return;
   }
 
@@ -642,7 +644,7 @@ const processAttachment = async (attachment: PendingAttachment) => {
   }
 
   if (!isImage && !isTextFile && !isPdf && !isDocx) {
-    throw new Error('Supported uploads are images, PDF, DOCX, TXT, and MD files.');
+    throw new Error('Unsupported filetype. Supported uploads are images, PDF, DOCX, TXT, and MD files.');
   }
 
   if (isImage) {
@@ -707,7 +709,7 @@ const handleFileSelected = async (event: ChangeEvent<HTMLInputElement>) => {
 
 const translatePendingAttachment = async () => {
   if (!pendingAttachment) {
-    setError('Attach or paste a file first, then translate it.');
+    setError('No file found. Attach or paste a file first, then translate it.');
     return;
   }
 
@@ -770,7 +772,7 @@ const handlePasteAttachment = async (event: ReactClipboardEvent<HTMLElement> | g
     const file = fileItem.getAsFile();
 
     if (!file) {
-      setError('Could not read the pasted file.');
+      setError('Could not read uploaded file.'); /*originally "could not read the pasted file"*/
       return;
     }
 

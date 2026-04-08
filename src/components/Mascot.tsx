@@ -297,7 +297,7 @@ export default function Mascot({
           <img
             src="/assets/PipinIcon.png"
             alt="Pipin mascot"
-            className={`${animationClasses[animation]} h-14 w-14 object-contain md:h-16 md:w-16`}
+            className={`${animationClasses[animation]} h-18 w-18 object-contain md:h-22 md:w-22`}
           />
         </motion.button>
       </div>

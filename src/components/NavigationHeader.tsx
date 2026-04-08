@@ -86,7 +86,7 @@ export default function NavigationHeader({
               ←
             </motion.button>
           ) : (
-            <h1 className="font-baloo text-2xl font-bold text-[#FF9126]">Phonix</h1>
+            <h1 className="font-montserrat text-2xl font-black text-[#FF7100]">phonix</h1>
           )}
 
           {title && (
