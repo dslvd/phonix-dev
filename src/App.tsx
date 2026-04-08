@@ -739,7 +739,7 @@ function App() {
         {showDesktopSidebar && (
           <aside className="card sticky top-4 flex h-[calc(100vh-2rem)] flex-col overflow-hidden rounded-[28px] p-4">
             <div>
-              <h1 className="text-4xl font-bold" style={{ color: 'var(--primary)' }}>phonix</h1>
+              <h1 className="font-montserrat text-4xl font-black" style={{ color: 'var(--primary)' }}>phonix</h1>
               <p className="text-muted text-xs font-bold uppercase tracking-[0.16em]">AI-driven learning app</p>
             </div>
 
