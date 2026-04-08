@@ -72,7 +72,9 @@ export default function NavigationHeader({
   }, [batteryResetAt, isPremium]);
 
   return (
-    <div className="theme-surface-strong sticky inset-x-0 top-0 z-50 w-full border-b">
+    <>
+      <div aria-hidden="true" className="h-[73px] md:hidden" />
+      <div className="theme-surface-strong fixed inset-x-0 top-0 z-50 w-full border-b md:static">
       <div className="flex w-full items-center justify-between gap-3 px-4 py-3">
         <div className="flex min-w-0 items-center gap-2.5">
           {onBack ? (
@@ -146,6 +148,7 @@ export default function NavigationHeader({
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
