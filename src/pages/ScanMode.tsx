@@ -579,12 +579,15 @@ Text: ${text}
     throw lastError instanceof Error ? lastError : new Error("Gemini translation failed");
   };
 
-  const detectTextWithVisionBrowser = async (image: string) => {
-    const apiKey = import.meta.env.VITE_GOOGLE_VISION_API_KEY;
 
-    if (!apiKey) {
-      throw new Error("Missing Google Vision API key for local scan fallback.");
-    }
+/*b64 image translation*/
+const detectTextWithVisionBrowser = async (image: string) => {
+  const apiKey = import.meta.env.VITE_GOOGLE_VISION_API_KEY;
+
+  if (!apiKey) {
+ /*Returns error if wala API key, im rephrasing ts*/
+    throw new Error('Unable to connect to Google Vision API.');
+  }
 
     const base64Image = image.replace(/^data:image\/[a-zA-Z0-9.+-]+;base64,/, "").trim();
 
@@ -736,10 +739,11 @@ Text: ${text}
   const attachPendingText = (text: string, name = "Pasted text") => {
     const sourceText = cleanOCRText(text);
 
-    if (!sourceText) {
-      setError("The pasted text is empty.");
-      return;
-    }
+  if (!sourceText) {
+    setError('No source text found.');
+ /*Originally "the pasted string is empty"*/
+    return;
+  }
 
     setError(null);
     setPendingAttachment({
@@ -819,9 +823,9 @@ Text: ${text}
       );
     }
 
-    if (!isImage && !isTextFile && !isPdf && !isDocx) {
-      throw new Error("Supported uploads are images, PDF, DOCX, TXT, and MD files.");
-    }
+  if (!isImage && !isTextFile && !isPdf && !isDocx) {
+    throw new Error('Unsupported filetype. Supported uploads are images, PDF, DOCX, TXT, and MD files.');
+  }
 
     if (isImage) {
       const image = await readFileAsDataUrl(file);
@@ -888,11 +892,11 @@ Text: ${text}
     attachPendingFile(file, "file");
   };
 
-  const translatePendingAttachment = async () => {
-    if (!pendingAttachment) {
-      setError("Attach or paste a file first, then translate it.");
-      return;
-    }
+const translatePendingAttachment = async () => {
+  if (!pendingAttachment) {
+    setError('No file found. Attach or paste a file first, then translate it.');
+    return;
+  }
 
     if (!canUseBatteryAction()) {
       return;
@@ -952,10 +956,11 @@ Text: ${text}
     if (fileItem) {
       const file = fileItem.getAsFile();
 
-      if (!file) {
-        setError("Could not read the pasted file.");
-        return;
-      }
+    if (!file) {
+      setError('Could not read uploaded file.');
+ /*originally "could not read the pasted file"*/
+      return;
+    }
 
       attachPendingFile(file, file.type.startsWith("image/") ? "pasted-image" : "file");
       return;
