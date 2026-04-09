@@ -25,7 +25,7 @@ export default function LanguageSetup({ navigate, updateState }: LanguageSetupPr
 
   return (
     // Page Container
-    <div className="theme-page min-h-screen text-slate-100">
+    <div className="theme-page min-h-screen">
       {/* Top Navigation */}
       <NavigationHeader
         onBack={() => navigate('landing')}
@@ -43,7 +43,7 @@ export default function LanguageSetup({ navigate, updateState }: LanguageSetupPr
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-8"
           >
-            <h1 className="theme-title mb-2 font-baloo text-4xl font-bold">
+            <h1 className="mb-2 font-baloo text-4xl font-bold">
               Language Setup 🌍
             </h1>
             <p className="theme-muted">Tell us about your language journey!</p>
@@ -57,7 +57,7 @@ export default function LanguageSetup({ navigate, updateState }: LanguageSetupPr
             className="mb-6"
           >
             <label className="block mb-3">
-              <span className="theme-title flex items-center gap-2 text-lg font-bold">
+              <span className="flex items-center gap-2 text-lg font-bold">
                 <span>🗣️</span>
                 I speak...
               </span>
@@ -86,7 +86,7 @@ export default function LanguageSetup({ navigate, updateState }: LanguageSetupPr
             className="mb-8"
           >
             <label className="block mb-3">
-              <span className="theme-title flex items-center gap-2 text-lg font-bold">
+              <span className="flex items-center gap-2 text-lg font-bold">
                 <span>🎯</span>
                 I want to learn...
               </span>

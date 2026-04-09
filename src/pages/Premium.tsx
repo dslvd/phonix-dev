@@ -110,7 +110,7 @@ export default function Premium({ navigate, premium }: PremiumProps) {
             Unlimited Batteries
           </h1>
 
-          <p className="theme-title mb-6 text-2xl font-semibold">
+          <p className="mb-6 text-2xl font-semibold">
             Unlock Your Full Learning Potential
           </p>
 
@@ -129,7 +129,7 @@ export default function Premium({ navigate, premium }: PremiumProps) {
 
               <div className="flex justify-center items-end gap-2 mb-4">
                 <span className="theme-muted text-2xl opacity-70 line-through">₱299.99</span>
-                <span className="theme-title font-baloo text-6xl font-bold">FREE</span>
+                <span className="font-baloo text-6xl font-bold">FREE</span>
               </div>
 
               <div className="mt-2 flex flex-col items-center gap-3">
@@ -165,7 +165,7 @@ export default function Premium({ navigate, premium }: PremiumProps) {
 
         {/* Premium Features Section */}
         <motion.div className="mb-12">
-          <h2 className="theme-title mb-8 text-center text-4xl font-bold">Premium Features</h2>
+          <h2 className="mb-8 text-center text-4xl font-bold">Premium Features</h2>
 
           <div className="flex flex-wrap justify-center gap-6">
             {features.map((feature) => (
@@ -192,7 +192,7 @@ export default function Premium({ navigate, premium }: PremiumProps) {
 
         {/* Testimonials Section */}
         <motion.div className="mb-12">
-          <h2 className="theme-title mb-8 text-center font-baloo text-4xl font-bold">
+          <h2 className="mb-8 text-center font-baloo text-4xl font-bold">
             What Learners Say
           </h2>
 
@@ -225,7 +225,7 @@ export default function Premium({ navigate, premium }: PremiumProps) {
                       ))}
                     </div>
 
-                    <p className="theme-title mb-2 italic">"{testimonial.quote}"</p>
+                    <p className="mb-2 italic">"{testimonial.quote}"</p>
 
                     <p className="theme-muted text-sm font-bold">- {testimonial.name}</p>
                   </div>
@@ -237,7 +237,7 @@ export default function Premium({ navigate, premium }: PremiumProps) {
 
         {/* FAQ Section */}
         <motion.div>
-          <h2 className="theme-title mb-8 text-center font-baloo text-4xl font-bold">
+          <h2 className="mb-8 text-center font-baloo text-4xl font-bold">
             Frequently Asked Questions
           </h2>
 
@@ -257,7 +257,7 @@ export default function Premium({ navigate, premium }: PremiumProps) {
               },
             ].map((faq, index) => (
               <Card key={index} className="bg-white/10 border border-white/20">
-                <h3 className="theme-title mb-2 font-bold">{faq.q}</h3>
+                <h3 className="mb-2 font-bold">{faq.q}</h3>
                 <p className="theme-muted">{faq.a}</p>
               </Card>
             ))}

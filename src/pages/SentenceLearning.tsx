@@ -235,7 +235,7 @@ export default function SentenceLearning({
 
   return (
     // Sentence Learning Page Container
-    <div className="theme-page min-h-screen flex flex-col text-slate-100">
+    <div className="theme-page min-h-screen flex flex-col">
       {/* Top Navigation with Progress */}
       <NavigationHeader
         onBack={() => navigate('vocabulary')}
@@ -275,12 +275,12 @@ export default function SentenceLearning({
                   {appState.targetLanguage} Fill in the blank:
                 </p>
                 <div className="flex items-center justify-center gap-4">
-                  <h2 className="theme-title font-baloo text-3xl md:text-4xl font-bold leading-relaxed">
+                  <h2 className="font-baloo text-3xl md:text-4xl font-bold leading-relaxed">
                     {question.maskedSentence}
                   </h2>
                   <button
                     onClick={(e) => playMaskedSentenceAudio(e)}
-                    className="bg-primary text-white p-4 rounded-full hover:scale-110 transition-transform flex-shrink-0"
+                    className="bg-primary  p-4 rounded-full hover:scale-110 transition-transform flex-shrink-0"
                   >
                     🔊
                   </button>
@@ -337,7 +337,7 @@ export default function SentenceLearning({
               {/* Answer Feedback */}
               {showResult && (
                 <div className="theme-surface-soft mt-4 rounded-xl border p-4">
-                  <p className="theme-title text-lg font-bold">
+                  <p className="text-lg font-bold">
                     {isCorrectAnswer ? 'Correct! Great job!' : 'Nice try!'}
                   </p>
                   <p className="theme-muted mt-1 font-semibold">
@@ -413,7 +413,7 @@ export default function SentenceLearning({
                   setShowLevelCompleteModal(false);
                   navigate('dashboard');
                 }}
-                className="flex-1 rounded-2xl bg-gray-100 px-6 py-4 font-bold text-gray-700"
+                className="flex-1 rounded-2xl bg-gray-100 px-6 py-4 font-bold"
               >
                 Back to Dashboard
               </button>

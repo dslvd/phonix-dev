@@ -92,7 +92,7 @@ export default function NavigationHeader({
           )}
 
           {title && (
-            <h2 className="theme-title truncate font-baloo text-lg font-bold sm:text-xl">
+            <h2 className="truncate font-baloo text-lg font-bold sm:text-xl">
               {title}
             </h2>
           )}
@@ -101,7 +101,7 @@ export default function NavigationHeader({
         {showProgress && (
           <div className="theme-nav-button hidden items-center rounded-full border px-3 py-1.5 md:flex">
             <span className="theme-muted mr-2 text-[11px] font-bold uppercase tracking-[0.08em]">Progress</span>
-            <span className="theme-title text-sm font-bold">
+            <span className="text-sm font-bold">
               {currentProgress} / {totalProgress}
             </span>
           </div>

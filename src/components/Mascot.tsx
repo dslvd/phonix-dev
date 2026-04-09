@@ -190,7 +190,7 @@ export default function Mascot({
             <div className="theme-surface-strong overflow-hidden rounded-3xl border shadow-2xl">
               <div className="theme-surface-soft flex items-center justify-between border-b px-4 py-3">
                 <div>
-                  <p className="theme-title font-baloo text-lg font-bold">{uiText.title}</p>
+                  <p className="font-baloo text-lg font-bold">{uiText.title}</p>
                   <p className="theme-muted text-xs font-semibold">{uiText.subtitle}</p>
                 </div>
                 <button
@@ -213,7 +213,7 @@ export default function Mascot({
                       className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm font-semibold leading-relaxed shadow-sm ${
                         chatMessage.role === 'user'
                           ? 'bg-gradient-to-r from-[#FF9126] to-[#ffb35a] text-[#4a2a00]'
-                          : 'theme-surface-soft theme-title border'
+                          : 'theme-surface-soft border'
                       }`}
                     >
                       {chatMessage.text}
@@ -250,7 +250,7 @@ export default function Mascot({
                     rows={1}
                     placeholder={uiText.placeholder}
                     disabled={isGuestMode}
-                    className="theme-nav-button theme-title max-h-28 min-h-[44px] flex-1 resize-none rounded-2xl border px-4 py-3 text-sm font-semibold outline-none transition focus:border-[#FF9126]"
+                    className="theme-nav-button  max-h-28 min-h-[44px] flex-1 resize-none rounded-2xl border px-4 py-3 text-sm font-semibold outline-none transition focus:border-[#FF9126]"
                   />
                   <button
                     type="button"
@@ -277,7 +277,7 @@ export default function Mascot({
               exit={{ opacity: 0, y: 10, scale: 0.96 }}
               transition={{ delay: 0.2 }}
               onClick={() => setIsOpen(true)}
-              className="theme-surface-strong theme-title absolute bottom-full right-0 mb-3 w-[11.5rem] rounded-[20px] border px-3.5 py-2.5 text-left text-xs font-bold leading-snug shadow-[0_18px_35px_rgba(15,27,36,0.24)] md:w-[13rem]"
+              className="theme-surface-strong absolute bottom-full right-0 mb-3 w-[11.5rem] rounded-[20px] border px-3.5 py-2.5 text-left text-xs font-bold leading-snug shadow-[0_18px_35px_rgba(15,27,36,0.24)] md:w-[13rem]"
             >
               <span className="block whitespace-normal break-words">{cleanAssistantText(message)}</span>
               <span className="absolute -bottom-2 right-8 h-0 w-0 border-l-[10px] border-r-[10px] border-t-[12px] border-l-transparent border-r-transparent border-t-[color:var(--theme-surface-strong)]" />

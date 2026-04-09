@@ -27,9 +27,9 @@ export default function ProgressBar({
     <div className="w-full">
       {(label || showNumbers) && (
         <div className="flex justify-between items-center mb-2">
-          {label && <span className="theme-title text-sm font-bold">{label}</span>}
+          {label && <span className="text-sm font-bold">{label}</span>}
           {showNumbers && (
-            <span className="theme-title text-sm font-bold">
+            <span className="text-sm font-bold">
               {current}/{total}
             </span>
           )}

@@ -132,7 +132,7 @@ export default function VocabularyCollection({
 
   return (
     // Backpack / Vocabulary Collection Page Container
-    <div className="theme-page min-h-screen pb-20 text-slate-100">
+    <div className="theme-page min-h-screen pb-20">
       {/* Top Navigation */}
       <NavigationHeader
         onBack={() => navigate('dashboard')}
@@ -149,8 +149,8 @@ export default function VocabularyCollection({
             <div className="grid gap-6 md:grid-cols-2">
               <div>
                 <div className="mb-3 flex items-center justify-between">
-                  <h3 className="theme-summary-label text-lg font-bold">Words Learned</h3>
-                  <span className="theme-summary-value text-lg font-bold">
+                  <h3 className="text-lg font-bold">Words Learned</h3>
+                  <span className="text-lg font-bold">
                     {learnedVocabulary.length}/{totalWords}
                   </span>
                 </div>
@@ -163,8 +163,8 @@ export default function VocabularyCollection({
               </div>
               <div>
                 <div className="mb-3 flex items-center justify-between">
-                  <h3 className="theme-summary-label text-lg font-bold">Quiz Stars</h3>
-                  <span className="theme-summary-value text-lg font-bold">
+                  <h3 className="text-lg font-bold">Quiz Stars</h3>
+                  <span className="text-lg font-bold">
                     {appState.stars}/{totalWords}
                   </span>
                 </div>
@@ -208,7 +208,7 @@ export default function VocabularyCollection({
             className="py-20 text-center"
           >
             <div className="mb-6 flex items-center justify-center text-8xl leading-none">🔐</div>
-            <h2 className="theme-title mb-4 font-baloo text-3xl font-bold">Log in to save progress</h2>
+            <h2 className="mb-4 font-baloo text-3xl font-bold">Log in to save progress</h2>
             <p className="theme-muted mb-8 font-semibold">
               Your collection and learning progress are only saved for logged-in accounts.
             </p>
@@ -219,7 +219,7 @@ export default function VocabularyCollection({
         ) : learnedVocabulary.length > 0 ? (
           <>
             {/* Learned Vocabulary Grid */}
-            <h2 className="theme-title mb-6 font-baloo text-3xl font-bold">Your Learned Words</h2>
+            <h2 className="mb-6 font-baloo text-3xl font-bold">Your Learned Words</h2>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
               {learnedVocabulary.map((item, index) => (
                 <motion.div
@@ -264,7 +264,7 @@ export default function VocabularyCollection({
             className="py-20 text-center"
           >
             <div className="mb-6 flex items-center justify-center text-9xl leading-none">🎒</div>
-            <h2 className="theme-title mb-4 font-baloo text-3xl font-bold">Your backpack is empty</h2>
+            <h2 className="mb-4 font-baloo text-3xl font-bold">Your backpack is empty</h2>
             <p className="theme-muted mb-8 font-semibold">Complete lessons to collect words here</p>
             <Button
               variant="primary"
@@ -280,7 +280,7 @@ export default function VocabularyCollection({
         {/* Locked / Upcoming Vocabulary Grid */}
         {!isGuestMode && learnedVocabulary.length > 0 && (
           <div className="mt-12">
-            <h2 className="theme-title mb-6 font-baloo text-3xl font-bold">More to Learn</h2>
+            <h2 className="mb-6 font-baloo text-3xl font-bold">More to Learn</h2>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
               {aiVocabulary
                 .filter((item) => !appState.learnedWords.includes(item.id))
@@ -296,7 +296,7 @@ export default function VocabularyCollection({
                         {item.emoji}
                       </div>
                       <div className="blur-sm">
-                        <h3 className="theme-title mb-1 font-baloo text-xl font-bold">???</h3>
+                        <h3 className="mb-1 font-baloo text-xl font-bold">???</h3>
                         <p className="theme-muted text-sm font-semibold">{item.englishWord}</p>
                       </div>
                       <div className="mt-3 flex items-center justify-center text-2xl leading-none">🔒</div>
@@ -330,7 +330,7 @@ export default function VocabularyCollection({
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
             <div className="w-full max-w-md rounded-3xl border border-[#2a4151] bg-[#122733] p-8 text-center shadow-2xl">
               <div className="mb-4 flex items-center justify-center text-7xl leading-none">🔋</div>
-              <h3 className="theme-title font-baloo text-3xl font-bold">0 Batteries Left</h3>
+              <h3 className="font-baloo text-3xl font-bold">0 Batteries Left</h3>
               <p className="theme-muted mt-3 font-semibold">
                 You can keep reviewing everything you already learned, but new words are locked until you recharge or upgrade to premium.
               </p>
