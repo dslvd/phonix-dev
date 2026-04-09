@@ -136,7 +136,7 @@ export default function Premium({ navigate, premium }: PremiumProps) {
                   whileTap={{ scale: 0.95 }}
                   onClick={handleUnlockPremium}
                   disabled={loading || purchasing || isPremium}
-                  className="rounded-2xl bg-[#FF9126] px-12 py-4 text-xl font-bold text-[#4a2a00] shadow-2xl hover:brightness-105 disabled:opacity-50"
+                  className="rounded-2xl bg-[color:var(--primary)] px-12 py-4 text-xl font-bold shadow-2xl hover:brightness-105 disabled:opacity-50"
                 >
                   {isPremium
                     ? "Premium Unlocked"
