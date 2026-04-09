@@ -286,7 +286,7 @@ export default function Quiz({
 
   const getButtonStyle = (word: VocabularyItem) => {
     if (!showResult) {
-      return "theme-bg-surface border-2 border-[color:var(--theme-border)] hover:border-[#FF9126] hover:shadow-lg";
+      return "theme-bg-surface border-2 border-[color:var(--border)] hover:border-[#FF9126] hover:shadow-lg";
     }
 
     if (word.id === currentWord.id) {
@@ -297,7 +297,7 @@ export default function Quiz({
       return "border-2 border-red-500 bg-gradient-to-r from-red-100 to-rose-100 shadow-lg shadow-red-500/30";
     }
 
-    return "theme-bg-surface border-2 border-[color:var(--theme-border)] opacity-60";
+    return "theme-bg-surface border-2 border-[color:var(--border)] opacity-60";
   };
 
   return (
@@ -319,7 +319,7 @@ export default function Quiz({
       </motion.div>
 
       {/* Word Display */}
-      <Card className="theme-bg-surface border-2 border-[color:var(--theme-border)] text-center py-12">
+      <Card className="theme-bg-surface border-2 border-[color:var(--border)] text-center py-12">
         <motion.div
           animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
           transition={{ duration: 2, repeat: Infinity }}

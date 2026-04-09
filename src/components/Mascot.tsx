@@ -198,8 +198,8 @@ export default function Mascot({
             transition={{ duration: 0.18 }}
             className={panelClasses}
           >
-            <div className="theme-surface-strong overflow-hidden rounded-3xl border shadow-2xl">
-              <div className="theme-surface-soft flex items-center justify-between border-b px-4 py-3">
+            <div className="overflow-hidden rounded-3xl border shadow-2xl">
+              <div className="theme-bg-surface flex items-center justify-between border-b px-4 py-3">
                 <div>
                   <p className="font-baloo text-lg font-bold">{uiText.title}</p>
                   <p className="theme-text-soft text-xs font-semibold">{uiText.subtitle}</p>
@@ -207,14 +207,14 @@ export default function Mascot({
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
-                  className="theme-nav-button flex h-9 w-9 items-center justify-center rounded-full border text-lg font-bold transition"
+                  className="theme-bg-surface flex h-9 w-9 items-center justify-center rounded-full border text-lg font-bold transition"
                   aria-label="Close AI assistant"
                 >
                   x
                 </button>
               </div>
 
-              <div className="max-h-80 space-y-3 overflow-y-auto px-4 py-4">
+              <div className="theme-bg-surface max-h-80 space-y-3 overflow-y-auto px-4 py-4">
                 {messages.map((chatMessage) => (
                   <div
                     key={chatMessage.id}
@@ -224,7 +224,7 @@ export default function Mascot({
                       className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm font-semibold leading-relaxed shadow-sm ${
                         chatMessage.role === "user"
                           ? "bg-gradient-to-r from-[#FF9126] to-[#ffb35a] text-[#4a2a00]"
-                          : "theme-surface-soft border"
+                          : "border"
                       }`}
                     >
                       {chatMessage.text}
@@ -234,7 +234,7 @@ export default function Mascot({
 
                 {loading && (
                   <div className="flex justify-start">
-                    <div className="theme-surface-soft theme-text-soft rounded-2xl border px-4 py-3 text-sm font-semibold shadow-sm">
+                    <div className="theme-text-soft rounded-2xl border px-4 py-3 text-sm font-semibold shadow-sm">
                       {uiText.thinking}
                     </div>
                   </div>
@@ -247,7 +247,7 @@ export default function Mascot({
                 </div>
               )}
 
-              <div className="theme-surface-soft border-t px-4 py-3">
+              <div className="theme-bg-surface border-t px-4 py-3">
                 <div className="flex items-end gap-2">
                   <textarea
                     value={query}
@@ -261,7 +261,7 @@ export default function Mascot({
                     rows={1}
                     placeholder={uiText.placeholder}
                     disabled={isGuestMode}
-                    className="theme-nav-button max-h-28 min-h-[44px] flex-1 resize-none rounded-2xl border px-4 py-3 text-sm font-semibold outline-none transition focus:border-[#FF9126]"
+                    className="theme-bg-surface max-h-28 min-h-[44px] flex-1 resize-none rounded-2xl border px-4 py-3 text-sm font-semibold outline-none transition focus:border-[#FF9126]"
                   />
                   <button
                     type="button"
@@ -288,12 +288,12 @@ export default function Mascot({
               exit={{ opacity: 0, y: 10, scale: 0.96 }}
               transition={{ delay: 0.2 }}
               onClick={() => setIsOpen(true)}
-              className="theme-surface-strong absolute bottom-full right-0 mb-3 w-[11.5rem] rounded-[20px] border px-3.5 py-2.5 text-left text-xs font-bold leading-snug shadow-[0_18px_35px_rgba(15,27,36,0.24)] md:w-[13rem]"
+              className="theme-bg-surface absolute bottom-full right-0 mb-3 w-[11.5rem] rounded-[20px] border px-3.5 py-2.5 text-left text-xs font-bold leading-snug shadow-[0_18px_35px_rgba(15,27,36,0.24)] md:w-[13rem]"
             >
               <span className="block whitespace-normal break-words">
                 {cleanAssistantText(message)}
               </span>
-              <span className="absolute -bottom-2 right-8 h-0 w-0 border-l-[10px] border-r-[10px] border-t-[12px] border-l-transparent border-r-transparent border-t-[color:var(--theme-surface-strong)]" />
+              <span className="absolute -bottom-2 right-8 h-0 w-0 border-l-[10px] border-r-[10px] border-t-[12px] border-l-transparent border-r-transparent border-t-[color:var(--surface)]" />  
             </motion.button>
           )}
         </AnimatePresence>
@@ -304,7 +304,7 @@ export default function Mascot({
           animate={{ scale: 1, rotate: 0 }}
           transition={{ type: "spring", stiffness: 260, damping: 20 }}
           onClick={() => setIsOpen((prev) => !prev)}
-          className="theme-surface-strong relative flex h-14 w-14 items-center justify-center rounded-full border shadow-[0_24px_40px_rgba(15,27,36,0.24)] md:h-16 md:w-16"
+          className="theme-bg-surface relative flex h-14 w-14 items-center justify-center rounded-full border shadow-[0_24px_40px_rgba(15,27,36,0.24)] md:h-16 md:w-16"
           aria-label={isOpen ? "Hide AI assistant" : "Open AI assistant"}
         >
           <img

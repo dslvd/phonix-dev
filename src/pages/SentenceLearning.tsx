@@ -376,7 +376,7 @@ export default function SentenceLearning({
       </div>
 
       {/* Bottom Action Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-[color:var(--theme-border)] bg-[color:var(--theme-bg-solid)]/95 px-4 py-3 backdrop-blur">
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-[color:var(--border)] bg-[color:var(--bg)]/95 px-4 py-3 backdrop-blur">
         <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3">
           <button
             onClick={showResult ? handlePrevious : handleSkip}

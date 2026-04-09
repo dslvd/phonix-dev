@@ -389,7 +389,7 @@ function App() {
       <button
         onClick={() => setTheme('light')}
         className={`grid h-9 w-9 place-items-center rounded-full text-lg leading-none font-bold transition sm:h-10 sm:w-10 ${
-          theme === 'light' ? 'bg-[color:var(--primary)] text-[color:var(--text)]' : 'text-muted'
+          theme === 'light' ? 'bg-[color:var(--primary)]' : 'text-muted'
         }`}
         data-active={theme === 'light'}
         aria-label="Switch to light mode"
@@ -401,7 +401,7 @@ function App() {
       <button
         onClick={() => setTheme('dark')}
         className={`grid h-9 w-9 place-items-center rounded-full text-lg leading-none font-bold transition sm:h-10 sm:w-10 ${
-          theme === 'dark' ? 'bg-[color:var(--primary)] text-[color:var(--text)]' : 'text-muted'
+          theme === 'dark' ? 'bg-[color:var(--primary)]' : 'text-muted'
         }`}
         data-active={theme === 'dark'}
         aria-label="Switch to dark mode"
