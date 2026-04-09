@@ -17,7 +17,7 @@ export default function Card({
   gradient = false,
 }: CardProps) {
   const baseClasses = 'card p-6 transition-transform duration-200';
-  const bgClass = gradient ? 'bg-[color:var(--primary)] text-[color:var(--text)] border-transparent' : '';
+  const bgClass = gradient ? 'bg-[color:var(--primary)] border-transparent' : '';
   const hoverClasses = hover ? 'hover:-translate-y-1' : '';
   const clickableClass = onClick ? 'cursor-pointer' : '';
 

@@ -143,7 +143,7 @@ export default function Landing({ navigate, resetAppState }: LandingProps) {
               <p className="mb-1 font-bold text-[#56b8e8]">Google Sign-In Setup (Development)</p>
               <p className="theme-text-soft">
                 If you see a 403 error, add{" "}
-                <code className="rounded bg-[color:var(--theme-bg-solid)] px-1">
+                <code className="rounded bg-[color:var(--bg)] px-1">
                   http://localhost:3000
                 </code>{" "}
                 to authorized origins in{" "}
@@ -194,9 +194,9 @@ export default function Landing({ navigate, resetAppState }: LandingProps) {
 
           {/* Separator */}
           <div className="flex items-center my-4">
-            <div className="flex-1 border-t border-[color:var(--theme-border)]"></div>
+            <div className="flex-1 border-t border-[color:var(--border)]"></div>
             <span className="theme-text-soft px-4 text-sm font-semibold">or</span>
-            <div className="flex-1 border-t border-[color:var(--theme-border)]"></div>
+            <div className="flex-1 border-t border-[color:var(--border)]"></div>
           </div>
 
           {/* Guest Login Button */}

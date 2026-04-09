@@ -35,7 +35,7 @@ export default function ProgressBar({
           )}
         </div>
       )}
-      <div className="h-4 w-full overflow-hidden rounded-full bg-[color:var(--theme-border)]">
+      <div className="h-4 w-full overflow-hidden rounded-full bg-[color:var(--border)]">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${percentage}%` }}
