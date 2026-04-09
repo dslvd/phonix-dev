@@ -396,8 +396,8 @@ function App() {
         aria-pressed={theme === 'light'}
         title="Light mode"
       >
-        <span className="text-base leading-none">☀</span>
-      </button>
+        <img src = "/assets/LightMode.png"/>
+        </button>
       <button
         onClick={() => setTheme('dark')}
         className={`grid h-9 w-9 place-items-center rounded-full text-lg leading-none font-bold transition sm:h-10 sm:w-10 ${
@@ -408,7 +408,7 @@ function App() {
         aria-pressed={theme === 'dark'}
         title="Dark mode"
       >
-        <span className="text-base leading-none">☾</span>
+      <img src = "/assets/DarkMode.png"/>
       </button>
     </div>
   );
@@ -561,7 +561,6 @@ function App() {
 
   const showDesktopSidebar = currentPage === 'dashboard' || currentPage === 'admin';
   const keepMainPanel = currentPage === 'dashboard';
-  const useCleanUi = currentPage !== 'dashboard';
   const shouldShowGlobalMascot = !['landing', 'setup', 'mode', 'scan', 'vocabulary', 'sentence'].includes(currentPage);
   const globalMascotPageContext = (() => {
     const batteryLine = premium.isPremium
@@ -739,7 +738,7 @@ function App() {
         {showDesktopSidebar && (
           <aside className="card sticky top-4 flex h-[calc(100vh-2rem)] flex-col overflow-hidden rounded-[28px] p-4">
             <div>
-              <h1 className="text-4xl font-bold" style={{ color: 'var(--primary)' }}>phonix</h1>
+              <h1 className="font-montserrat text-4xl font-black" style={{ color: 'var(--primary)' }}>phonix</h1>
               <p className="text-muted text-xs font-bold uppercase tracking-[0.16em]">AI-driven learning app</p>
             </div>
 
