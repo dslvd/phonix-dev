@@ -561,7 +561,6 @@ function App() {
 
   const showDesktopSidebar = currentPage === 'dashboard' || currentPage === 'admin';
   const keepMainPanel = currentPage === 'dashboard';
-  const useCleanUi = currentPage !== 'dashboard';
   const shouldShowGlobalMascot = !['landing', 'setup', 'mode', 'scan', 'vocabulary', 'sentence'].includes(currentPage);
   const globalMascotPageContext = (() => {
     const batteryLine = premium.isPremium
