@@ -4,8 +4,8 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --bg: #0b071f;
+:root { /*Dark mode ni*/
+  --bg: linear-gradient(#0b071f 60%, #231833 100%);
   --text: #f5f7fa;
   --primary: #ff9126;
   --surface: #171130;
@@ -13,7 +13,7 @@
 }
 
 [data-theme="light"] {
-  --bg: #f7f9fc;
+  --bg: linear-gradient(#f7f9fc 60%, #FFFFFF 100%);
   --text: #1f2933;
   --primary: #ff9126;
   --surface: #ffffff;
@@ -21,18 +21,20 @@
 }
 
 @layer base {
-  html {
-    background-color: var(--bg);
+  html, body {
+    min-height: 100%;
+    margin: 0;
   }
-
   body {
     @apply min-h-screen font-nunito antialiased;
-    background-color: var(--bg);
+    background: var(--bg);    
     color: var(--text);
   }
-
+  [data-theme="light"] body {
+    background: var(--bg);
   * {
-    border-color: var(--border);
+      border-color: var(--border);
+    }
   }
 }
 

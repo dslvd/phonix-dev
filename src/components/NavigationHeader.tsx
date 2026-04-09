@@ -105,27 +105,29 @@ export default function NavigationHeader({
             </div>
           )}
 
-          {typeof batteryCurrent === "number" && typeof batteryMax === "number" && (
-            <div className="theme-bg-surface flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-bold">
-              <span>{isPremium ? "🔋" : batteryCurrent <= 0 ? "🪫" : "🔋"}</span>
-              <span>
-                {isPremium
-                  ? "∞"
-                  : batteryResetAt && batteryCurrent < batteryMax
-                    ? `${batteryCurrent}/${batteryMax} · ${formatBatteryCountdown(batteryResetAt, now)}`
-                    : `${batteryCurrent}/${batteryMax}`}
-              </span>
-            </div>
-          )}
-
           <div className="flex items-center gap-2">
+            {typeof batteryCurrent === "number" && typeof batteryMax === "number" && (
+              <div className="theme-bg-surface flex items-center gap-1.5 rounded-full border px-3 py-2.5 text-xs font-bold">
+                <span>{isPremium ? "🔋" : batteryCurrent <= 0 ? "🪫" : "🔋"}</span>
+                <span>
+                  {isPremium
+                    ? "∞"
+                    : batteryResetAt && batteryCurrent < batteryMax
+                      ? `${batteryCurrent}/${batteryMax} · ${formatBatteryCountdown(batteryResetAt, now)}`
+                      : `${batteryCurrent}/${batteryMax}`}
+                </span>
+              </div>
+            )}
+
+
+
             {showStats && (
               <>
-                <div className="theme-bg-surface flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-bold">
+                <div className="theme-bg-surface flex items-center gap-1 rounded-full border px-2.5 py-2.5 text-xs font-bold">
                   <span>🔥</span>
                   <span>{displayStreakCount}</span>
                 </div>
-                <div className="theme-bg-surface flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-bold">
+                <div className="theme-bg-surface flex items-center gap-1 rounded-full border px-2.5 py-2.5 text-xs font-bold">
                   <span>⭐</span>
                   <span>{displayStarCount}</span>
                 </div>
