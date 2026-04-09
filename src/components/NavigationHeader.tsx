@@ -74,78 +74,83 @@ export default function NavigationHeader({
   return (
     <>
       <div aria-hidden="true" className="h-[73px] md:hidden" />
-      <div className="theme-bg-surface fixed inset-x-0 top-0 z-50 w-full border-b md:static">
-        <div className="flex w-full items-center justify-between gap-3 px-4 py-3">
-          <div className="flex min-w-0 items-center gap-2.5">
-            {onBack ? (
-              <motion.button
-                whileHover={{ scale: 1.03, x: -1 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={onBack}
-                className="theme-bg-surface flex h-10 w-10 items-center justify-center rounded-xl border text-xl leading-none transition"
-                aria-label="Go back"
-              >
-                ←
-              </motion.button>
-            ) : (
-              <h1 className="font-baloo text-2xl font-bold text-[#FF9126]">Phonix</h1>
-            )}
 
-            {title && <h2 className="truncate font-baloo text-lg font-bold sm:text-xl">{title}</h2>}
-          </div>
 
-          {showProgress && (
-            <div className="theme-bg-surface hidden items-center rounded-full border px-3 py-1.5 md:flex">
-              <span className="theme-text-soft mr-2 text-[11px] font-bold uppercase tracking-[0.08em]">
-                Progress
-              </span>
-              <span className="text-sm font-bold">
-                {currentProgress} / {totalProgress}
-              </span>
+      <div className="fixed inset-x-0 top-0 z-50 px-4 pt-3 md:static">
+        <div className="theme-bg-surface w-full border rounded-2xl">
+          <div className="flex w-full items-center justify-between gap-3 px-4 py-3">
+            {/* ...all your content stays the same... */}
+            <div className="flex min-w-0 items-center gap-2.5">
+              {onBack ? (
+                <motion.button
+                  whileHover={{ scale: 1.03, x: -1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={onBack}
+                  className="theme-bg-surface flex h-10 w-10 items-center justify-center rounded-xl border text-xl leading-none transition"
+                  aria-label="Go back"
+                >
+                  ←
+                </motion.button>
+              ) : (
+                <h1 className="font-baloo text-2xl font-bold text-[#FF9126]">Phonix</h1>
+              )}
+
+              {title && <h2 className="truncate font-baloo text-lg font-bold sm:text-xl">{title}</h2>}
             </div>
-          )}
 
-          <div className="flex items-center gap-2">
-            {typeof batteryCurrent === "number" && typeof batteryMax === "number" && (
-              <div className="theme-bg-surface flex items-center gap-1.5 rounded-full border px-3 py-2.5 text-xs font-bold">
-                <span>{isPremium ? "🔋" : batteryCurrent <= 0 ? "🪫" : "🔋"}</span>
-                <span>
-                  {isPremium
-                    ? "∞"
-                    : batteryResetAt && batteryCurrent < batteryMax
-                      ? `${batteryCurrent}/${batteryMax} · ${formatBatteryCountdown(batteryResetAt, now)}`
-                      : `${batteryCurrent}/${batteryMax}`}
+            {showProgress && (
+              <div className="theme-bg-surface hidden items-center rounded-full border px-3 py-1.5 md:flex">
+                <span className="theme-text-soft mr-2 text-[11px] font-bold uppercase tracking-[0.08em]">
+                  Progress
+                </span>
+                <span className="text-sm font-bold">
+                  {currentProgress} / {totalProgress}
                 </span>
               </div>
             )}
 
+            <div className="flex items-center gap-2">
+              {typeof batteryCurrent === "number" && typeof batteryMax === "number" && (
+                <div className="theme-bg-surface flex items-center gap-1.5 rounded-full border px-3 py-2.5 text-xs font-bold">
+                  <span>{isPremium ? "🔋" : batteryCurrent <= 0 ? "🪫" : "🔋"}</span>
+                  <span>
+                    {isPremium
+                      ? "∞"
+                      : batteryResetAt && batteryCurrent < batteryMax
+                        ? `${batteryCurrent}/${batteryMax} · ${formatBatteryCountdown(batteryResetAt, now)}`
+                        : `${batteryCurrent}/${batteryMax}`}
+                  </span>
+                </div>
+              )}
 
 
-            {showStats && (
-              <>
-                <div className="theme-bg-surface flex items-center gap-1 rounded-full border px-2.5 py-2.5 text-xs font-bold">
+
+              {showStats && (
+                <>
+                  <div className="theme-bg-surface flex items-center gap-1 rounded-full border px-2.5 py-2.5 text-xs font-bold">
                   <span>🔥</span>
                   <span>{displayStreakCount}</span>
-                </div>
-                <div className="theme-bg-surface flex items-center gap-1 rounded-full border px-2.5 py-2.5 text-xs font-bold">
-                  <span>⭐</span>
-                  <span>{displayStarCount}</span>
-                </div>
-              </>
-            )}
+                  </div>
+                  <div className="theme-bg-surface flex items-center gap-1 rounded-full border px-2.5 py-2.5 text-xs font-bold">
+                    <span>⭐</span>
+                    <span>{displayStarCount}</span>
+                  </div>
+                </>
+              )}
 
-            {onProfile && (
-              <motion.button
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={onProfile}
-                className="theme-bg-surface flex h-10 w-10 items-center justify-center rounded-xl border text-lg leading-none transition-colors hover:text-[#2f9de4]"
-                title="Profile"
-                aria-label="Open profile"
-              >
-                👤
-              </motion.button>
-            )}
+              {onProfile && (
+                <motion.button
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={onProfile}
+                  className="theme-bg-surface flex h-10 w-10 items-center justify-center rounded-xl border text-lg leading-none transition-colors hover:text-[#2f9de4]"
+                  title="Profile"
+                  aria-label="Open profile"
+                >
+                  👤
+                </motion.button>
+              )}
+            </div>
           </div>
         </div>
       </div>
