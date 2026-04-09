@@ -1,18 +1,18 @@
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import Button from '../components/Button';
-import Card from '../components/Card';
-import ProgressBar from '../components/ProgressBar';
-import NavigationHeader from '../components/NavigationHeader';
-import { Page, AppState, BackpackItem } from '../App';
-import { VocabularyItem } from '../data/vocabulary';
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import Button from "../components/Button";
+import Card from "../components/Card";
+import ProgressBar from "../components/ProgressBar";
+import NavigationHeader from "../components/NavigationHeader";
+import { Page, AppState, BackpackItem } from "../App";
+import { VocabularyItem } from "../data/vocabulary";
 import {
   fetchAIVocabulary,
   getVocabularyLevelCycle,
   readCachedAIVocabulary,
   writeCachedAIVocabulary,
   VOCABULARY_PACK_WORD_COUNT,
-} from '../lib/aiVocabulary';
+} from "../lib/aiVocabulary";
 
 interface VocabularyCollectionProps {
   navigate: (page: Page) => void;
@@ -29,36 +29,36 @@ export default function VocabularyCollection({
   const [showNoBatteryModal, setShowNoBatteryModal] = useState(false);
   const [aiVocabulary, setAiVocabulary] = useState<VocabularyItem[]>([]);
   const isGuestMode = (() => {
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       return false;
     }
 
-    const rawUser = window.localStorage.getItem('user');
+    const rawUser = window.localStorage.getItem("user");
     if (!rawUser) {
       return false;
     }
 
     try {
       const user = JSON.parse(rawUser) as { name?: string; email?: string };
-      const name = (user.name || '').trim().toLowerCase();
-      const email = (user.email || '').trim();
-      return name === 'guest' || email.length === 0;
+      const name = (user.name || "").trim().toLowerCase();
+      const email = (user.email || "").trim();
+      return name === "guest" || email.length === 0;
     } catch {
       return false;
     }
   })();
 
-  const targetLanguage = appState.targetLanguage || 'Hiligaynon';
-  const nativeLanguage = appState.nativeLanguage || 'English';
+  const targetLanguage = appState.targetLanguage || "Hiligaynon";
+  const nativeLanguage = appState.nativeLanguage || "English";
 
   const speakTargetText = (text: string) => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
       return;
     }
 
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'fil-PH';
+    utterance.lang = "fil-PH";
     utterance.rate = 0.85;
     utterance.pitch = 0.75;
     utterance.volume = 1.0;
@@ -71,7 +71,7 @@ export default function VocabularyCollection({
       setAiVocabulary(cached);
     }
 
-    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
       return;
     }
 
@@ -99,9 +99,7 @@ export default function VocabularyCollection({
 
   const totalWords = aiVocabulary.length || VOCABULARY_PACK_WORD_COUNT;
 
-  const learnedVocabulary = aiVocabulary.filter((item) =>
-    appState.learnedWords.includes(item.id)
-  );
+  const learnedVocabulary = aiVocabulary.filter((item) => appState.learnedWords.includes(item.id));
 
   useEffect(() => {
     if (learnedVocabulary.length === 0) {
@@ -115,7 +113,7 @@ export default function VocabularyCollection({
         id: `lesson:${item.id}`,
         nativeText: item.nativeWord,
         translatedText: item.englishWord,
-        source: 'lesson',
+        source: "lesson",
         createdAt: new Date().toISOString(),
         difficulty: item.difficulty,
         emoji: item.emoji,
@@ -132,12 +130,12 @@ export default function VocabularyCollection({
 
   return (
     // Backpack / Vocabulary Collection Page Container
-    <div className="theme-page min-h-screen pb-20">
+    <div className="min-h-screen pb-20">
       {/* Top Navigation */}
       <NavigationHeader
-        onBack={() => navigate('dashboard')}
-        onLogout={() => navigate('landing')}
-        onProfile={() => navigate('profile')}
+        onBack={() => navigate("dashboard")}
+        onLogout={() => navigate("landing")}
+        onProfile={() => navigate("profile")}
         title="Your Backpack"
       />
 
@@ -145,7 +143,7 @@ export default function VocabularyCollection({
       <div className="mx-auto mt-6 max-w-6xl p-4">
         {/* Progress Summary */}
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-          <Card className="theme-summary-card mb-8 border-b-4">
+          <Card className="theme-bg-surface mb-8 border-b-4">
             <div className="grid gap-6 md:grid-cols-2">
               <div>
                 <div className="mb-3 flex items-center justify-between">
@@ -180,21 +178,21 @@ export default function VocabularyCollection({
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ delay: 0.5, type: 'spring' }}
-              className="theme-summary-banner mt-6 rounded-2xl border p-4 text-center shadow-[0_12px_28px_rgba(255,145,38,0.16)]"
+              transition={{ delay: 0.5, type: "spring" }}
+              className="theme-bg-surface mt-6 rounded-2xl border p-4 text-center"
             >
               <p className="font-baloo text-2xl font-bold">
-                {learnedVocabulary.length === 0 && 'Start learning to fill your backpack.'}
+                {learnedVocabulary.length === 0 && "Start learning to fill your backpack."}
                 {learnedVocabulary.length > 0 &&
                   learnedVocabulary.length < 10 &&
-                  'Great start. Keep going.'}
+                  "Great start. Keep going."}
                 {learnedVocabulary.length >= 10 &&
                   learnedVocabulary.length < 25 &&
-                  'You are making strong progress.'}
+                  "You are making strong progress."}
                 {learnedVocabulary.length >= 25 &&
                   learnedVocabulary.length < 40 &&
-                  'You are building a solid vocabulary.'}
-                {learnedVocabulary.length >= 40 && 'You have learned a lot already.'}
+                  "You are building a solid vocabulary."}
+                {learnedVocabulary.length >= 40 && "You have learned a lot already."}
               </p>
             </motion.div>
           </Card>
@@ -209,10 +207,10 @@ export default function VocabularyCollection({
           >
             <div className="mb-6 flex items-center justify-center text-8xl leading-none">🔐</div>
             <h2 className="mb-4 font-baloo text-3xl font-bold">Log in to save progress</h2>
-            <p className="theme-muted mb-8 font-semibold">
+            <p className="theme-text-soft mb-8 font-semibold">
               Your collection and learning progress are only saved for logged-in accounts.
             </p>
-            <Button variant="primary" onClick={() => navigate('landing')} icon="👤">
+            <Button variant="primary" onClick={() => navigate("landing")} icon="👤">
               Go to Log In
             </Button>
           </motion.div>
@@ -242,7 +240,7 @@ export default function VocabularyCollection({
                     >
                       {item.nativeWord}
                     </h3>
-                    <p className="theme-muted text-sm font-semibold">{item.englishWord}</p>
+                    <p className="theme-text-soft text-sm font-semibold">{item.englishWord}</p>
                     <button
                       onClick={() => {
                         const utterance = new SpeechSynthesisUtterance(item.nativeWord);
@@ -265,10 +263,12 @@ export default function VocabularyCollection({
           >
             <div className="mb-6 flex items-center justify-center text-9xl leading-none">🎒</div>
             <h2 className="mb-4 font-baloo text-3xl font-bold">Your backpack is empty</h2>
-            <p className="theme-muted mb-8 font-semibold">Complete lessons to collect words here</p>
+            <p className="theme-text-soft mb-8 font-semibold">
+              Complete lessons to collect words here
+            </p>
             <Button
               variant="primary"
-              onClick={() => navigate('dashboard')}
+              onClick={() => navigate("dashboard")}
               icon="📚"
               className="mx-auto w-fit"
             >
@@ -297,9 +297,11 @@ export default function VocabularyCollection({
                       </div>
                       <div className="blur-sm">
                         <h3 className="mb-1 font-baloo text-xl font-bold">???</h3>
-                        <p className="theme-muted text-sm font-semibold">{item.englishWord}</p>
+                        <p className="theme-text-soft text-sm font-semibold">{item.englishWord}</p>
                       </div>
-                      <div className="mt-3 flex items-center justify-center text-2xl leading-none">🔒</div>
+                      <div className="mt-3 flex items-center justify-center text-2xl leading-none">
+                        🔒
+                      </div>
                     </Card>
                   </motion.div>
                 ))}
@@ -314,12 +316,7 @@ export default function VocabularyCollection({
             animate={{ opacity: 1, y: 0 }}
             className="mt-8 text-center"
           >
-            <Button
-              variant="primary"
-              size="lg"
-              onClick={() => navigate('vocabulary')}
-              icon="🚀"
-            >
+            <Button variant="primary" size="lg" onClick={() => navigate("vocabulary")} icon="🚀">
               Continue Learning
             </Button>
           </motion.div>
@@ -331,12 +328,13 @@ export default function VocabularyCollection({
             <div className="w-full max-w-md rounded-3xl border border-[#2a4151] bg-[#122733] p-8 text-center shadow-2xl">
               <div className="mb-4 flex items-center justify-center text-7xl leading-none">🔋</div>
               <h3 className="font-baloo text-3xl font-bold">0 Batteries Left</h3>
-              <p className="theme-muted mt-3 font-semibold">
-                You can keep reviewing everything you already learned, but new words are locked until you recharge or upgrade to premium.
+              <p className="theme-text-soft mt-3 font-semibold">
+                You can keep reviewing everything you already learned, but new words are locked
+                until you recharge or upgrade to premium.
               </p>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                 <button
-                  onClick={() => navigate('premium')}
+                  onClick={() => navigate("premium")}
                   className="flex-1 rounded-2xl border-b-4 border-[#FF9126] bg-[#FF9126] px-6 py-4 font-bold text-[#4a2a00] shadow-lg"
                 >
                   Upgrade to Premium

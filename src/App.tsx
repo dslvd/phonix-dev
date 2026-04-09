@@ -704,7 +704,7 @@ function App() {
   if (isMobile) {
     return (
       // Mobile App Shell
-      <div className={`theme-page min-h-screen ${useCleanUi ? 'clean-ui' : ''}`}>
+      <div className={`min-h-screen `}>
         {/* Active Page Content */}
         {renderPage()}
         {/* Floating Theme Toggle */}
@@ -726,7 +726,7 @@ function App() {
 
   return (
     // Desktop App Shell
-    <div className={`${showDesktopSidebar ? 'theme-shell p-4' : 'theme-page p-6'} ${useCleanUi ? 'clean-ui' : ''} min-h-screen`}>
+    <div className={`${showDesktopSidebar ? 'p-4' : 'p-6'} min-h-screen`}>
       {/* Standalone Theme Toggle (no sidebar layout) */}
       {!showDesktopSidebar && (
         <div className="fixed right-6 top-6 z-[70]">
@@ -752,7 +752,7 @@ function App() {
                     onClick={() => navigate(item.page)}
                     className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm font-bold transition ${
                       isActive
-                        ? 'theme-nav-active'
+                        ? 'bg-[color:color-mix(in_srgb,var(--primary)_18%,var(--surface))] text-[var(--text)] border border-[var(--primary)]'
                         : 'text-muted border-transparent bg-transparent hover:border-[color:var(--border)] hover:bg-[color:var(--surface)]'
                     }`}
                   >

@@ -1,11 +1,11 @@
-import { motion } from 'framer-motion';
-import { useState, useEffect, useRef } from 'react';
-import NavigationHeader from '../components/NavigationHeader';
-import Quiz from '../components/Quiz';
-import Mascot from '../components/Mascot';
-import { Page, AppState, BackpackItem, UpdateStateFn } from '../App';
-import { VocabularyItem } from '../data/vocabulary';
-import { usePremium } from '../lib/usePremium';
+import { motion } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import NavigationHeader from "../components/NavigationHeader";
+import Quiz from "../components/Quiz";
+import Mascot from "../components/Mascot";
+import { Page, AppState, BackpackItem, UpdateStateFn } from "../App";
+import { VocabularyItem } from "../data/vocabulary";
+import { usePremium } from "../lib/usePremium";
 import {
   fetchAIVocabulary,
   getFiveStageLevel,
@@ -14,9 +14,9 @@ import {
   readCachedAIVocabularyOrPairLatest,
   writeCachedAIVocabulary,
   VOCABULARY_PACK_WORD_COUNT,
-} from '../lib/aiVocabulary';
-import { BATTERY_MAX, spendBattery } from '../lib/battery';
-import { pickNextQuizWord, QuizMasteryState, recordQuizOutcome } from '../lib/quizMastery';
+} from "../lib/aiVocabulary";
+import { BATTERY_MAX, spendBattery } from "../lib/battery";
+import { pickNextQuizWord, QuizMasteryState, recordQuizOutcome } from "../lib/quizMastery";
 
 interface VocabularyLearningProps {
   navigate: (page: Page) => void;
@@ -29,42 +29,42 @@ const normalizeComparableText = (value: string) =>
   value
     .toLowerCase()
     .trim()
-    .replace(/[^\p{L}\p{N}\s-]/gu, '')
-    .replace(/\s+/g, ' ');
+    .replace(/[^\p{L}\p{N}\s-]/gu, "")
+    .replace(/\s+/g, " ");
 
 const VOCAB_LEVEL_CHECKPOINTS = [
   {
-    id: 'warm-up-1',
+    id: "warm-up-1",
     target: 6,
-    title: 'Warm Up 1 Complete!',
-    message: 'Great work. You cleared Warm Up 1 and unlocked Word Builder 2.',
-    cta: 'Start Word Builder 2',
+    title: "Warm Up 1 Complete!",
+    message: "Great work. You cleared Warm Up 1 and unlocked Word Builder 2.",
+    cta: "Start Word Builder 2",
     unlocksSentencePhase: false,
   },
   {
-    id: 'word-builder-2',
+    id: "word-builder-2",
     target: 12,
-    title: 'Word Builder 2 Complete!',
-    message: 'Nice progress. You are ready for the next vocabulary challenge.',
-    cta: 'Continue to Level 3',
+    title: "Word Builder 2 Complete!",
+    message: "Nice progress. You are ready for the next vocabulary challenge.",
+    cta: "Continue to Level 3",
     unlocksSentencePhase: false,
   },
   {
-    id: 'phrase-builder-3',
+    id: "phrase-builder-3",
     target: 18,
-    title: 'Level 3 Complete!',
-    message: 'Phase 2 is unlocked. You can jump into Sentence Practice now.',
-    cta: 'Keep Vocabulary Practice',
+    title: "Level 3 Complete!",
+    message: "Phase 2 is unlocked. You can jump into Sentence Practice now.",
+    cta: "Keep Vocabulary Practice",
     unlocksSentencePhase: true,
   },
 ] as const;
 
-const getQuizIntervalForBand = (band: 'beginner' | 'intermediate' | 'advanced') => {
-  if (band === 'beginner') {
+const getQuizIntervalForBand = (band: "beginner" | "intermediate" | "advanced") => {
+  if (band === "beginner") {
     return 3;
   }
 
-  if (band === 'intermediate') {
+  if (band === "intermediate") {
     return 4;
   }
 
@@ -78,26 +78,26 @@ export default function VocabularyLearning({
   premium,
 }: VocabularyLearningProps) {
   const isGuestMode = (() => {
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       return false;
     }
 
-    const rawUser = window.localStorage.getItem('user');
+    const rawUser = window.localStorage.getItem("user");
     if (!rawUser) {
       return false;
     }
 
     try {
       const user = JSON.parse(rawUser) as { name?: string; email?: string };
-      const name = (user.name || '').trim().toLowerCase();
-      const email = (user.email || '').trim();
-      return name === 'guest' || email.length === 0;
+      const name = (user.name || "").trim().toLowerCase();
+      const email = (user.email || "").trim();
+      return name === "guest" || email.length === 0;
     } catch {
       return false;
     }
   })();
-  const targetLanguage = appState.targetLanguage || 'Hiligaynon';
-  const nativeLanguage = appState.nativeLanguage || 'English';
+  const targetLanguage = appState.targetLanguage || "Hiligaynon";
+  const nativeLanguage = appState.nativeLanguage || "English";
   const levelCycle = getVocabularyLevelCycle(appState.learnedWords.length);
   const learnedInCurrentCycle = appState.learnedWords.length % VOCABULARY_PACK_WORD_COUNT;
 
@@ -126,12 +126,14 @@ export default function VocabularyLearning({
 
   useEffect(() => {
     const shouldAllowRefresh = learnedInCurrentCycle === 0;
-    const cached = readCachedAIVocabularyOrPairLatest(targetLanguage, nativeLanguage, { levelCycle });
+    const cached = readCachedAIVocabularyOrPairLatest(targetLanguage, nativeLanguage, {
+      levelCycle,
+    });
     if (cached.length > 0) {
       setAiVocabulary(cached);
     }
 
-    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
       return;
     }
 
@@ -142,7 +144,10 @@ export default function VocabularyLearning({
 
     const loadAIVocabulary = async () => {
       try {
-        const words = await fetchAIVocabulary(targetLanguage, nativeLanguage, { levelCycle, allowRefresh: shouldAllowRefresh });
+        const words = await fetchAIVocabulary(targetLanguage, nativeLanguage, {
+          levelCycle,
+          allowRefresh: shouldAllowRefresh,
+        });
         if (cancelled) {
           return;
         }
@@ -185,51 +190,56 @@ export default function VocabularyLearning({
   }, [levelCycle, updateState]);
 
   const currentLevelWords = (() => {
-    const difficulty = learnedInCurrentCycle < 20 ? 'beginner' : learnedInCurrentCycle < 40 ? 'intermediate' : 'advanced';
+    const difficulty =
+      learnedInCurrentCycle < 20
+        ? "beginner"
+        : learnedInCurrentCycle < 40
+          ? "intermediate"
+          : "advanced";
     return aiVocabulary.filter((item) => item.difficulty === difficulty);
   })();
-  const beginnerWords = aiVocabulary.filter((item) => item.difficulty === 'beginner');
-  const intermediateWords = aiVocabulary.filter((item) => item.difficulty === 'intermediate');
-  const advancedWords = aiVocabulary.filter((item) => item.difficulty === 'advanced');
+  const beginnerWords = aiVocabulary.filter((item) => item.difficulty === "beginner");
+  const intermediateWords = aiVocabulary.filter((item) => item.difficulty === "intermediate");
+  const advancedWords = aiVocabulary.filter((item) => item.difficulty === "advanced");
 
   const beginnerCount = beginnerWords.length || 20;
   const intermediateCount = intermediateWords.length || 20;
   const advancedCount = advancedWords.length || 7;
 
   const learnedCount = learnedInCurrentCycle;
-  const currentDifficultyBand: 'beginner' | 'intermediate' | 'advanced' =
+  const currentDifficultyBand: "beginner" | "intermediate" | "advanced" =
     learnedCount < beginnerCount
-      ? 'beginner'
+      ? "beginner"
       : learnedCount < beginnerCount + intermediateCount
-      ? 'intermediate'
-      : 'advanced';
+        ? "intermediate"
+        : "advanced";
 
   useEffect(() => {
     setWordsBeforeQuiz(getQuizIntervalForBand(currentDifficultyBand));
   }, [currentDifficultyBand]);
 
   const bandProgress =
-    currentDifficultyBand === 'beginner'
+    currentDifficultyBand === "beginner"
       ? learnedCount
-      : currentDifficultyBand === 'intermediate'
-      ? Math.max(0, learnedCount - beginnerCount)
-      : Math.max(0, learnedCount - beginnerCount - intermediateCount);
+      : currentDifficultyBand === "intermediate"
+        ? Math.max(0, learnedCount - beginnerCount)
+        : Math.max(0, learnedCount - beginnerCount - intermediateCount);
   const bandTotal =
-    currentDifficultyBand === 'beginner'
+    currentDifficultyBand === "beginner"
       ? beginnerCount
-      : currentDifficultyBand === 'intermediate'
-      ? intermediateCount
-      : advancedCount;
+      : currentDifficultyBand === "intermediate"
+        ? intermediateCount
+        : advancedCount;
   const levelStage = getFiveStageLevel(bandProgress, bandTotal);
   const totalVocabularyWords = beginnerCount + intermediateCount + advancedCount;
 
   const fallbackItem: VocabularyItem = {
-    id: 'ai-loading',
-    nativeWord: 'Loading',
-    englishWord: 'Loading',
-    category: 'general',
-    emoji: '🧠',
-    difficulty: 'beginner',
+    id: "ai-loading",
+    nativeWord: "Loading",
+    englishWord: "Loading",
+    category: "general",
+    emoji: "🧠",
+    difficulty: "beginner",
   };
 
   const currentItem = aiVocabulary[appState.currentVocabIndex] || aiVocabulary[0] || fallbackItem;
@@ -240,7 +250,9 @@ export default function VocabularyLearning({
   const nextItem = nextIndex < aiVocabulary.length ? aiVocabulary[nextIndex] : null;
   const nextItemLearned = nextItem ? appState.learnedWords.includes(nextItem.id) : false;
   const introducedVocabulary = aiVocabulary.slice(0, Math.max(appState.currentVocabIndex, 0) + 1);
-  const introducedCurrentBandWords = introducedVocabulary.filter((item) => item.difficulty === currentDifficultyBand);
+  const introducedCurrentBandWords = introducedVocabulary.filter(
+    (item) => item.difficulty === currentDifficultyBand,
+  );
   const backpackDiscoveredVocabulary = aiVocabulary.filter((item) =>
     appState.backpackItems.some((backpackItem) => {
       if (backpackItem.id === `lesson:${item.id}`) {
@@ -248,17 +260,19 @@ export default function VocabularyLearning({
       }
 
       return (
-        normalizeComparableText(backpackItem.nativeText) === normalizeComparableText(item.nativeWord) &&
-        normalizeComparableText(backpackItem.translatedText) === normalizeComparableText(item.englishWord)
+        normalizeComparableText(backpackItem.nativeText) ===
+          normalizeComparableText(item.nativeWord) &&
+        normalizeComparableText(backpackItem.translatedText) ===
+          normalizeComparableText(item.englishWord)
       );
-    })
+    }),
   );
   const quizWordPool =
     introducedCurrentBandWords.length >= 4
       ? introducedCurrentBandWords
       : introducedVocabulary.length >= 4
-      ? introducedVocabulary
-      : currentLevelWords.slice(0, Math.min(currentLevelWords.length, 4));
+        ? introducedVocabulary
+        : currentLevelWords.slice(0, Math.min(currentLevelWords.length, 4));
   const activeCheckpoint =
     activeCheckpointId === null
       ? null
@@ -277,7 +291,12 @@ export default function VocabularyLearning({
   }, [hasAIVocabulary, appState.currentVocabIndex, aiVocabulary.length, updateState]);
 
   useEffect(() => {
-    const stripCodeFence = (text: string) => text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim();
+    const stripCodeFence = (text: string) =>
+      text
+        .replace(/^```json\s*/i, "")
+        .replace(/^```\s*/i, "")
+        .replace(/```$/i, "")
+        .trim();
 
     const parseAIFlashcardPayload = (rawText: string) => {
       const cleaned = stripCodeFence(rawText);
@@ -290,8 +309,8 @@ export default function VocabularyLearning({
           emoji?: string;
         };
       } catch {
-        const start = cleaned.indexOf('{');
-        const end = cleaned.lastIndexOf('}');
+        const start = cleaned.indexOf("{");
+        const end = cleaned.lastIndexOf("}");
 
         if (start === -1 || end === -1 || end <= start) {
           return null;
@@ -316,7 +335,7 @@ export default function VocabularyLearning({
       return;
     }
 
-    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
       return;
     }
 
@@ -325,46 +344,46 @@ export default function VocabularyLearning({
     const buildAIFlashcard = async () => {
       try {
         const prompt = [
-          'You are generating one language-learning flashcard item.',
+          "You are generating one language-learning flashcard item.",
           `Difficulty level: ${currentItem.difficulty}.`,
-          `Target language: ${appState.targetLanguage || 'Hiligaynon'}.`,
-          `Learner native language: ${appState.nativeLanguage || 'English'}.`,
+          `Target language: ${appState.targetLanguage || "Hiligaynon"}.`,
+          `Learner native language: ${appState.nativeLanguage || "English"}.`,
           `Reference native word: ${currentItem.nativeWord}.`,
           `Reference English word: ${currentItem.englishWord}.`,
           `Reference category: ${currentItem.category}.`,
-          '',
-          'Return STRICT JSON only with this shape:',
-          '{',
+          "",
+          "Return STRICT JSON only with this shape:",
+          "{",
           '  "nativeWord": "string",',
           '  "englishWord": "string",',
           '  "category": "string",',
           '  "emoji": "string"',
-          '}',
-          '',
-          'Rules:',
-          '1. Keep nativeWord and englishWord concise and learner-friendly.',
-          '2. Preserve the same meaning as the reference word pair.',
-          '3. category should stay simple (one short word or phrase).',
-        ].join('\n');
+          "}",
+          "",
+          "Rules:",
+          "1. Keep nativeWord and englishWord concise and learner-friendly.",
+          "2. Preserve the same meaning as the reference word pair.",
+          "3. category should stay simple (one short word or phrase).",
+        ].join("\n");
 
-        const response = await fetch('/api/ai', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const response = await fetch("/api/ai", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ prompt }),
         });
 
         if (!response.ok) {
-          throw new Error('ai-flashcard-request-failed');
+          throw new Error("ai-flashcard-request-failed");
         }
 
         const data = await response.json();
-        const payload = parseAIFlashcardPayload(String(data?.text || ''));
+        const payload = parseAIFlashcardPayload(String(data?.text || ""));
 
-        const nativeWord = (payload?.nativeWord || '').trim();
-        const englishWord = (payload?.englishWord || '').trim();
+        const nativeWord = (payload?.nativeWord || "").trim();
+        const englishWord = (payload?.englishWord || "").trim();
 
         if (!nativeWord || !englishWord) {
-          throw new Error('ai-flashcard-invalid-payload');
+          throw new Error("ai-flashcard-invalid-payload");
         }
 
         const sameNativeMeaning =
@@ -373,7 +392,7 @@ export default function VocabularyLearning({
           normalizeComparableText(englishWord) === normalizeComparableText(currentItem.englishWord);
 
         if (!sameNativeMeaning || !sameEnglishMeaning) {
-          throw new Error('ai-flashcard-meaning-drift');
+          throw new Error("ai-flashcard-meaning-drift");
         }
 
         const nextFlashcard: VocabularyItem = {
@@ -431,15 +450,18 @@ export default function VocabularyLearning({
     clearReviewState();
   };
 
-  const buildQuizPoolSnapshot = (baseWord: VocabularyItem, sourcePoolOverride?: VocabularyItem[]) => {
+  const buildQuizPoolSnapshot = (
+    baseWord: VocabularyItem,
+    sourcePoolOverride?: VocabularyItem[],
+  ) => {
     const sourcePool =
       sourcePoolOverride && sourcePoolOverride.length > 0
         ? sourcePoolOverride
         : quizWordPool.length > 0
-        ? quizWordPool
-        : currentLevelWords;
+          ? quizWordPool
+          : currentLevelWords;
     const deduped = sourcePool.filter(
-      (item, index, array) => array.findIndex((entry) => entry.id === item.id) === index
+      (item, index, array) => array.findIndex((entry) => entry.id === item.id) === index,
     );
 
     if (deduped.some((item) => item.id === baseWord.id)) {
@@ -453,7 +475,7 @@ export default function VocabularyLearning({
     const reviewSource = sourceWords && sourceWords.length > 0 ? sourceWords : introducedVocabulary;
     const recentWords = reviewSource.slice(-Math.max(wordsBeforeQuiz, 3));
     const deduped = recentWords.filter(
-      (item, index, array) => array.findIndex((entry) => entry.id === item.id) === index
+      (item, index, array) => array.findIndex((entry) => entry.id === item.id) === index,
     );
 
     if (deduped.some((item) => item.id === focusWord.id)) {
@@ -481,7 +503,7 @@ export default function VocabularyLearning({
 
   const startSmartReviewSession = (
     excludeWordIds: string[] = [],
-    candidatePool: VocabularyItem[] = quizWordPool
+    candidatePool: VocabularyItem[] = quizWordPool,
   ) => {
     const exclude = new Set(excludeWordIds);
     const availableWords = candidatePool.filter((item) => !exclude.has(item.id));
@@ -492,8 +514,7 @@ export default function VocabularyLearning({
 
     const shuffledWords = [...availableWords].sort(() => Math.random() - 0.5);
     const selectedWord =
-      shuffledWords.find((item) => item.id !== lastQuizWordId) ||
-      shuffledWords[0];
+      shuffledWords.find((item) => item.id !== lastQuizWordId) || shuffledWords[0];
 
     if (!selectedWord) {
       return false;
@@ -503,7 +524,10 @@ export default function VocabularyLearning({
     return true;
   };
 
-  const startSmartPracticeQuizSession = (candidatePool: VocabularyItem[], excludeWordIds: string[] = []) => {
+  const startSmartPracticeQuizSession = (
+    candidatePool: VocabularyItem[],
+    excludeWordIds: string[] = [],
+  ) => {
     const selectedWord = pickNextQuizWord({
       candidates: candidatePool,
       state: quizMastery,
@@ -555,7 +579,7 @@ export default function VocabularyLearning({
         id: lessonBackpackId,
         nativeText: currentItem.nativeWord,
         translatedText: currentItem.englishWord,
-        source: 'lesson',
+        source: "lesson",
         createdAt: new Date().toISOString(),
         difficulty: currentItem.difficulty,
         emoji: currentItem.emoji,
@@ -575,7 +599,9 @@ export default function VocabularyLearning({
       setConsecutiveWords(nextConsecutiveWords);
 
       const nextLearnedCount = Math.min(VOCABULARY_PACK_WORD_COUNT, learnedInCurrentCycle + 1);
-      const reachedCheckpoint = VOCAB_LEVEL_CHECKPOINTS.find((checkpoint) => checkpoint.target === nextLearnedCount);
+      const reachedCheckpoint = VOCAB_LEVEL_CHECKPOINTS.find(
+        (checkpoint) => checkpoint.target === nextLearnedCount,
+      );
       const checkpointKey = reachedCheckpoint ? `${levelCycle}:${reachedCheckpoint.id}` : null;
       if (reachedCheckpoint && checkpointKey && !shownCheckpointIdsRef.current.has(checkpointKey)) {
         shownCheckpointIdsRef.current.add(checkpointKey);
@@ -591,7 +617,7 @@ export default function VocabularyLearning({
 
     const shouldStartQuiz = isNewDiscovery && nextConsecutiveWords >= wordsBeforeQuiz;
     if (shouldStartQuiz) {
-      const started = startSmartReviewSession([currentItem.id, nextItem?.id || '']);
+      const started = startSmartReviewSession([currentItem.id, nextItem?.id || ""]);
       if (started) {
         return;
       }
@@ -618,7 +644,7 @@ export default function VocabularyLearning({
           batteriesRemaining: appState.batteriesRemaining,
           batteryResetAt: appState.batteryResetAt,
         },
-        1
+        1,
       );
       updateState((prev) => ({
         ...prev,
@@ -629,7 +655,7 @@ export default function VocabularyLearning({
       if (nextBatteryState.batteriesRemaining === 0) {
         if (isPracticeQuizSession) {
           setQuizMastery((previous) =>
-            recordQuizOutcome(previous, answeredWord.id, correct, quizRound)
+            recordQuizOutcome(previous, answeredWord.id, correct, quizRound),
           );
           setQuizRound((previous) => previous + 1);
         }
@@ -641,11 +667,11 @@ export default function VocabularyLearning({
     } else {
       // Premium users keep learning without losing batteries.
     }
-    
+
     // Reset quiz mode and counter
     if (isPracticeQuizSession) {
       setQuizMastery((previous) =>
-        recordQuizOutcome(previous, answeredWord.id, correct, quizRound)
+        recordQuizOutcome(previous, answeredWord.id, correct, quizRound),
       );
       setQuizRound((previous) => previous + 1);
     }
@@ -658,12 +684,12 @@ export default function VocabularyLearning({
         backpackDiscoveredVocabulary.length >= 2
           ? backpackDiscoveredVocabulary
           : backpackDiscoveredVocabulary.length === 1
-          ? backpackDiscoveredVocabulary
-          : introducedVocabulary.length >= 2
-          ? introducedVocabulary
-          : introducedVocabulary.length === 1
-          ? introducedVocabulary
-          : [currentItem];
+            ? backpackDiscoveredVocabulary
+            : introducedVocabulary.length >= 2
+              ? introducedVocabulary
+              : introducedVocabulary.length === 1
+                ? introducedVocabulary
+                : [currentItem];
 
       const restarted = startSmartPracticeQuizSession(practicePool, [answeredWord.id]);
       if (!restarted) {
@@ -671,7 +697,7 @@ export default function VocabularyLearning({
       }
       return;
     }
-    
+
     // Move to next word after quiz
     moveToNextWordOrComplete();
   };
@@ -690,12 +716,12 @@ export default function VocabularyLearning({
   const playAudio = (text: string, lang: string, e?: React.MouseEvent<HTMLElement>) => {
     e?.preventDefault();
     e?.stopPropagation();
-    if ('speechSynthesis' in window) {
+    if ("speechSynthesis" in window) {
       // Cancel any ongoing speech
       window.speechSynthesis.cancel();
-      
+
       const utterance = new SpeechSynthesisUtterance(text);
-      
+
       // Configure language voice based on the clicked word
       utterance.lang = lang;
       utterance.rate = 0.85;
@@ -707,24 +733,24 @@ export default function VocabularyLearning({
         const robotVoice = voices.find((voice) => {
           const name = voice.name.toLowerCase();
           return (
-            name.includes('robot') ||
-            name.includes('siri') ||
-            name.includes('fred') ||
-            name.includes('david') ||
-            name.includes('zira') ||
-            name.includes('microsoft') ||
-            name.includes('google us english')
+            name.includes("robot") ||
+            name.includes("siri") ||
+            name.includes("fred") ||
+            name.includes("david") ||
+            name.includes("zira") ||
+            name.includes("microsoft") ||
+            name.includes("google us english")
           );
         });
 
         const preferredVoice = voices.find((voice) => {
           const lang = voice.lang.toLowerCase();
-          const target = lang.startsWith('fil') || lang.startsWith('tl') || lang.includes('ph');
-          const english = lang.startsWith('en');
-          return utterance.lang.startsWith('en') ? english : target;
+          const target = lang.startsWith("fil") || lang.startsWith("tl") || lang.includes("ph");
+          const english = lang.startsWith("en");
+          return utterance.lang.startsWith("en") ? english : target;
         });
 
-        const englishFallback = voices.find((voice) => voice.lang.toLowerCase().startsWith('en'));
+        const englishFallback = voices.find((voice) => voice.lang.toLowerCase().startsWith("en"));
         utterance.voice = robotVoice || preferredVoice || englishFallback || voices[0] || null;
         window.speechSynthesis.speak(utterance);
       };
@@ -738,33 +764,33 @@ export default function VocabularyLearning({
       } else {
         speakWithBestVoice();
       }
-      
+
       // Add event listeners for debugging
-      utterance.onstart = () => console.log('Speech started');
-      utterance.onend = () => console.log('Speech ended');
-      utterance.onerror = (e) => console.error('Speech error:', e);
+      utterance.onstart = () => console.log("Speech started");
+      utterance.onend = () => console.log("Speech ended");
+      utterance.onerror = (e) => console.error("Speech error:", e);
     } else {
-      console.error('Speech synthesis not supported');
-      alert('Audio playback not supported in this browser. Try Chrome or Safari.');
+      console.error("Speech synthesis not supported");
+      alert("Audio playback not supported in this browser. Try Chrome or Safari.");
     }
   };
 
   const mascotMessage = (() => {
     if (isQuizMode) {
-      return nativeLanguage.trim().toLowerCase() === 'filipino'
-        ? 'Pwede akong magbigay ng clue, hindi sagot.'
-        : 'I can give a clue, not the answer.';
+      return nativeLanguage.trim().toLowerCase() === "filipino"
+        ? "Pwede akong magbigay ng clue, hindi sagot."
+        : "I can give a clue, not the answer.";
     }
 
     if (isReviewMode) {
-      return nativeLanguage.trim().toLowerCase() === 'filipino'
-        ? 'Handa ka na ba? I-review muna natin ito.'
-        : 'Ready? Let’s review these first.';
+      return nativeLanguage.trim().toLowerCase() === "filipino"
+        ? "Handa ka na ba? I-review muna natin ito."
+        : "Ready? Let’s review these first.";
     }
 
-    return nativeLanguage.trim().toLowerCase() === 'filipino'
-      ? 'Magtanong ka tungkol sa word o clue.'
-      : 'Ask me about the word or clues.';
+    return nativeLanguage.trim().toLowerCase() === "filipino"
+      ? "Magtanong ka tungkol sa word o clue."
+      : "Ask me about the word or clues.";
   })();
 
   const vocabularyPageContext = [
@@ -776,35 +802,35 @@ export default function VocabularyLearning({
     `Current difficulty band: ${currentDifficultyBand}.`,
     `Current batteries: ${appState.batteriesRemaining}/${BATTERY_MAX}.`,
     premium.isPremium
-      ? 'Learner has premium and unlimited batteries.'
-      : 'Learner is free tier. Mistakes can reduce batteries and premium unlocks unlimited batteries.',
+      ? "Learner has premium and unlimited batteries."
+      : "Learner is free tier. Mistakes can reduce batteries and premium unlocks unlimited batteries.",
     isQuizMode
       ? `Learner is in quiz mode right now. Quiz word is ${quizWord?.nativeWord || displayedItem.nativeWord} = ${
           quizWord?.englishWord || displayedItem.englishWord
         }. Never reveal the exact answer. Give only clues, hints, elimination help, pronunciation help, or category guidance.`
-      : 'Learner is not in quiz mode. You may teach normally and explain the current word clearly.',
+      : "Learner is not in quiz mode. You may teach normally and explain the current word clearly.",
     isReviewMode
       ? `Learner is reviewing these words before quiz: ${reviewWords
           .map((word) => `${word.nativeWord}=${word.englishWord}`)
-          .join(', ')}.`
-      : '',
+          .join(", ")}.`
+      : "",
     isPracticeQuizSession
       ? `Quiz Me mode is active. This is a mastery-based review session over backpack-discovered words. Current discovered pool size: ${backpackDiscoveredVocabulary.length}.`
-      : 'Normal lesson flow is active.',
-    'If asked about batteries, explain that mistakes can drain batteries and premium gives unlimited batteries.',
-    'If asked directly for a quiz answer, refuse and give a clue instead.',
-    'If asked how the lesson works, explain flashcards first, then review, then quiz.',
+      : "Normal lesson flow is active.",
+    "If asked about batteries, explain that mistakes can drain batteries and premium gives unlimited batteries.",
+    "If asked directly for a quiz answer, refuse and give a clue instead.",
+    "If asked how the lesson works, explain flashcards first, then review, then quiz.",
   ]
     .filter(Boolean)
-    .join('\n');
+    .join("\n");
 
   return (
     // Vocabulary Learning Page Container
-    <div className="theme-page min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col">
       {/* Top Navigation with Progress + Battery */}
       <NavigationHeader
-        onBack={() => navigate('dashboard')}
-        onLogout={() => navigate('landing')}
+        onBack={() => navigate("dashboard")}
+        onLogout={() => navigate("landing")}
         title="Vocabulary Learning"
         showProgress={true}
         currentProgress={Math.max(0, Math.min(learnedInCurrentCycle, totalVocabularyWords))}
@@ -819,20 +845,24 @@ export default function VocabularyLearning({
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="max-w-lg w-full">
           {/* Entrance Spacer Animation */}
-          <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} className="mb-6" />
+          <motion.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6"
+          />
 
           {/* Page States: Loading, Review, Quiz, Flashcard */}
           {!hasAIVocabulary ? (
             <motion.div
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              className="theme-surface rounded-3xl border p-8 text-center"
+              className="theme-bg-surface rounded-3xl border p-8 text-center"
             >
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-[#FF9126] bg-[#1d3443] text-2xl">
                 ⚡
               </div>
               <h2 className="mt-4 font-baloo text-3xl font-bold">Preparing AI lesson</h2>
-              <p className="theme-muted mt-2 text-sm font-semibold">
+              <p className="theme-text-soft mt-2 text-sm font-semibold">
                 The AI vocabulary set is loading now. This starts as soon as the request is ready.
               </p>
             </motion.div>
@@ -841,14 +871,14 @@ export default function VocabularyLearning({
             <motion.div
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
-              className="theme-surface rounded-3xl border p-8 shadow-2xl"
+              className="theme-bg-surface rounded-3xl border p-8 shadow-2xl"
             >
               <div className="text-center">
                 <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#ffd166] to-[#ff9126] px-5 py-2 text-sm font-bold uppercase tracking-[0.08em] text-[#4a2a00]">
                   Review First
                 </div>
                 <h2 className="mt-4 font-baloo text-4xl font-bold">Remember These Words</h2>
-                <p className="theme-muted mt-2 text-sm font-semibold">
+                <p className="theme-text-soft mt-2 text-sm font-semibold">
                   Quick recap before the next quiz challenge.
                 </p>
               </div>
@@ -857,21 +887,21 @@ export default function VocabularyLearning({
                 {reviewWords.map((word) => (
                   <div
                     key={word.id}
-                    className={`theme-surface-soft flex items-center justify-between rounded-2xl border px-5 py-4 ${
-                      pendingQuizWord?.id === word.id ? 'ring-2 ring-[#56b8e8]/35' : ''
+                    className={`theme-bg-surface flex items-center justify-between rounded-2xl border px-5 py-4 ${
+                      pendingQuizWord?.id === word.id ? "ring-2 ring-[#56b8e8]/35" : ""
                     }`}
                   >
                     <div className="flex items-center gap-4">
                       <div className="text-5xl leading-none">{word.emoji}</div>
                       <div>
                         <p className="font-baloo text-3xl font-bold">{word.nativeWord}</p>
-                        <p className="theme-muted text-sm font-semibold">{word.englishWord}</p>
+                        <p className="theme-text-soft text-sm font-semibold">{word.englishWord}</p>
                       </div>
                     </div>
                     <button
                       type="button"
-                      onClick={(e) => playAudio(word.nativeWord, 'fil-PH', e)}
-                      className="theme-nav-button flex h-11 w-11 items-center justify-center rounded-full border text-xl shadow-sm transition hover:border-[#FF9126]"
+                      onClick={(e) => playAudio(word.nativeWord, "fil-PH", e)}
+                      className="theme-bg-surface flex h-11 w-11 items-center justify-center rounded-full border text-xl shadow-sm transition hover:border-[#FF9126]"
                       title={`Play ${word.nativeWord}`}
                       aria-label={`Play ${word.nativeWord}`}
                     >
@@ -891,16 +921,18 @@ export default function VocabularyLearning({
 
                     clearReviewState();
                   }}
-                  className="theme-nav-button rounded-2xl border px-6 py-4 text-sm font-bold uppercase tracking-[0.08em]"
+                  className="theme-bg-surface rounded-2xl border px-6 py-4 text-sm font-bold uppercase tracking-[0.08em]"
                 >
-                  {isPracticeQuizSession ? 'Exit Quiz Me' : 'Back to Cards'}
+                  {isPracticeQuizSession ? "Exit Quiz Me" : "Back to Cards"}
                 </button>
                 <button
                   onClick={() => {
                     if (pendingQuizWord) {
                       startQuizSession(
                         pendingQuizWord,
-                        isPracticeQuizSession && introducedVocabulary.length > 0 ? introducedVocabulary : undefined
+                        isPracticeQuizSession && introducedVocabulary.length > 0
+                          ? introducedVocabulary
+                          : undefined,
                       );
                     }
                   }}
@@ -918,7 +950,7 @@ export default function VocabularyLearning({
                 <div className="mb-4 flex justify-end">
                   <button
                     onClick={exitPracticeQuizSession}
-                    className="theme-nav-button rounded-2xl border px-4 py-2 text-xs font-bold uppercase tracking-[0.08em]"
+                    className="theme-bg-surface rounded-2xl border px-4 py-2 text-xs font-bold uppercase tracking-[0.08em]"
                   >
                     Exit Quiz
                   </button>
@@ -929,8 +961,8 @@ export default function VocabularyLearning({
                 currentWord={quizWord || displayedItem}
                 allWords={quizPoolSnapshot.length > 0 ? quizPoolSnapshot : quizWordPool}
                 onAnswer={handleQuizAnswer}
-                targetLanguage={appState.targetLanguage || 'Hiligaynon'}
-                nativeLanguage={appState.nativeLanguage || 'English'}
+                targetLanguage={appState.targetLanguage || "Hiligaynon"}
+                nativeLanguage={appState.nativeLanguage || "English"}
                 useAI={true}
                 difficultyBand={currentDifficultyBand}
                 levelStage={levelStage}
@@ -939,236 +971,238 @@ export default function VocabularyLearning({
           ) : (
             // Regular Flashcard Mode
             <>
-          <motion.div
-            key={displayedItem.id}
-            initial={{ opacity: 0, scale: 0.8, rotateY: -90 }}
-            animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-            exit={{ opacity: 0, scale: 0.8, rotateY: 90 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-          >
-            {/* Premium Glassmorphism Card */}
-            <div className="relative group">
-              {/* Glow effect */}
               <motion.div
-                animate={{
-                  scale: [1, 1.05, 1],
-                  opacity: [0.5, 0.8, 0.5]
-                }}
-                transition={{ duration: 3, repeat: Infinity }}
-                className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-[#FF9126] via-[#ffb35a] to-[#56b8e8] opacity-50 blur-2xl"
-              />
-              
-              <div className="theme-surface relative rounded-3xl border p-8 shadow-2xl">
-                {/* Emoji Illustration with particle effect */}
-                <div className="relative mb-8 flex justify-center items-center">
+                key={displayedItem.id}
+                initial={{ opacity: 0, scale: 0.8, rotateY: -90 }}
+                animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+                exit={{ opacity: 0, scale: 0.8, rotateY: 90 }}
+                transition={{ type: "spring", stiffness: 200, damping: 20 }}
+              >
+                {/* Premium Glassmorphism Card */}
+                <div className="relative group">
+                  {/* Glow effect */}
                   <motion.div
-                    animate={{ 
-                      scale: [1, 1.15, 1],
-                      rotate: [0, 5, -5, 0]
+                    animate={{
+                      scale: [1, 1.05, 1],
+                      opacity: [0.5, 0.8, 0.5],
                     }}
-                    transition={{ duration: 4, repeat: Infinity }}
-                    className="text-[150px] leading-none flex items-center justify-center"
-                  >
-                    {displayedItem.emoji}
-                  </motion.div>
-                  
-                  {/* Floating particles */}
-                  {[...Array(3)].map((_, i) => (
-                    <motion.div
-                      key={i}
-                      animate={{
-                        y: [-20, -60, -20],
-                        x: [0, (i - 1) * 20, 0],
-                        opacity: [0, 1, 0]
-                      }}
-                      transition={{
-                        duration: 3,
-                        repeat: Infinity,
-                        delay: i * 0.8
-                      }}
-                      className="absolute top-0 left-1/2 -translate-x-1/2 text-2xl flex items-center justify-center"
-                    >
-                      ✨
-                    </motion.div>
-                  ))}
-                </div>
+                    transition={{ duration: 3, repeat: Infinity }}
+                    className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-[#FF9126] via-[#ffb35a] to-[#56b8e8] opacity-50 blur-2xl"
+                  />
 
-                {/* Native Word Section */}
-                <div className="mb-8">
-                  <motion.p 
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="theme-muted mb-3 text-sm font-bold uppercase tracking-wider"
-                  >
-                    {appState.targetLanguage}
-                  </motion.p>
-                  <div className="flex items-center justify-center gap-4">
-                    <motion.h2 
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.3, type: 'spring' }}
-                      className="select-none font-baloo text-6xl font-bold bg-gradient-to-r from-[#FF9126] to-[#FF9126] bg-clip-text text-transparent"
-                    >
-                      {displayedItem.nativeWord}
-                    </motion.h2>
-                    <button
-                      type="button"
-                      onClick={(e) => playAudio(displayedItem.nativeWord, 'fil-PH', e)}
-                      className="theme-nav-button flex h-12 w-12 items-center justify-center rounded-full border text-xl shadow-md transition hover:border-[#FF9126] hover:shadow-lg"
-                      title={`Play ${appState.targetLanguage} pronunciation`}
-                      aria-label={`Play ${appState.targetLanguage} pronunciation`}
-                    >
-                      🔊
-                    </button>
-                  </div>
-                </div>
-
-                {/* English Translation Section */}
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="relative"
-                >
-                  <div className="theme-surface-soft rounded-2xl border p-6 shadow-inner">
-                    <p className="theme-muted mb-2 text-xs font-bold uppercase tracking-wider">
-                      {appState.nativeLanguage}
-                    </p>
-                    <div className="flex items-center justify-between gap-4">
-                      <h3 className="select-none font-baloo text-5xl font-bold">
-                        {displayedItem.englishWord}
-                      </h3>
-                      <button
-                        type="button"
-                        onClick={(e) => playAudio(displayedItem.englishWord, 'en-US', e)}
-                        className="theme-nav-button flex h-12 w-12 shrink-0 items-center justify-center rounded-full border text-xl shadow-md transition hover:border-[#56b8e8] hover:shadow-lg"
-                        title={`Play ${appState.nativeLanguage} pronunciation`}
-                        aria-label={`Play ${appState.nativeLanguage} pronunciation`}
+                  <div className="theme-bg-surface relative rounded-3xl border p-8 shadow-2xl">
+                    {/* Emoji Illustration with particle effect */}
+                    <div className="relative mb-8 flex justify-center items-center">
+                      <motion.div
+                        animate={{
+                          scale: [1, 1.15, 1],
+                          rotate: [0, 5, -5, 0],
+                        }}
+                        transition={{ duration: 4, repeat: Infinity }}
+                        className="text-[150px] leading-none flex items-center justify-center"
                       >
-                        🔊
-                      </button>
+                        {displayedItem.emoji}
+                      </motion.div>
+
+                      {/* Floating particles */}
+                      {[...Array(3)].map((_, i) => (
+                        <motion.div
+                          key={i}
+                          animate={{
+                            y: [-20, -60, -20],
+                            x: [0, (i - 1) * 20, 0],
+                            opacity: [0, 1, 0],
+                          }}
+                          transition={{
+                            duration: 3,
+                            repeat: Infinity,
+                            delay: i * 0.8,
+                          }}
+                          className="absolute top-0 left-1/2 -translate-x-1/2 text-2xl flex items-center justify-center"
+                        >
+                          ✨
+                        </motion.div>
+                      ))}
+                    </div>
+
+                    {/* Native Word Section */}
+                    <div className="mb-8">
+                      <motion.p
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="theme-text-soft mb-3 text-sm font-bold uppercase tracking-wider"
+                      >
+                        {appState.targetLanguage}
+                      </motion.p>
+                      <div className="flex items-center justify-center gap-4">
+                        <motion.h2
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: 0.3, type: "spring" }}
+                          className="select-none font-baloo text-6xl font-bold bg-gradient-to-r from-[#FF9126] to-[#FF9126] bg-clip-text text-transparent"
+                        >
+                          {displayedItem.nativeWord}
+                        </motion.h2>
+                        <button
+                          type="button"
+                          onClick={(e) => playAudio(displayedItem.nativeWord, "fil-PH", e)}
+                          className="theme-bg-surface flex h-12 w-12 items-center justify-center rounded-full border text-xl shadow-md transition hover:border-[#FF9126] hover:shadow-lg"
+                          title={`Play ${appState.targetLanguage} pronunciation`}
+                          aria-label={`Play ${appState.targetLanguage} pronunciation`}
+                        >
+                          🔊
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* English Translation Section */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 }}
+                      className="relative"
+                    >
+                      <div className="theme-bg-surface rounded-2xl border p-6 shadow-inner">
+                        <p className="theme-text-soft mb-2 text-xs font-bold uppercase tracking-wider">
+                          {appState.nativeLanguage}
+                        </p>
+                        <div className="flex items-center justify-between gap-4">
+                          <h3 className="select-none font-baloo text-5xl font-bold">
+                            {displayedItem.englishWord}
+                          </h3>
+                          <button
+                            type="button"
+                            onClick={(e) => playAudio(displayedItem.englishWord, "en-US", e)}
+                            className="theme-bg-surface flex h-12 w-12 shrink-0 items-center justify-center rounded-full border text-xl shadow-md transition hover:border-[#56b8e8] hover:shadow-lg"
+                            title={`Play ${appState.nativeLanguage} pronunciation`}
+                            aria-label={`Play ${appState.nativeLanguage} pronunciation`}
+                          >
+                            🔊
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+
+                    {/* Category Badge */}
+                    <div className="mt-6 flex justify-center">
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.5, type: "spring" }}
+                        className="inline-flex items-center gap-2 rounded-full border border-[#FF9126] bg-gradient-to-r from-[#FF9126] to-[#ffb35a] px-4 py-2"
+                      >
+                        <span className="text-xs font-bold uppercase tracking-wide text-[#4a2a00]">
+                          {displayedItem.category}
+                        </span>
+                      </motion.div>
                     </div>
                   </div>
-                </motion.div>
+                </div>
+              </motion.div>
 
-                {/* Category Badge */}
-                <div className="mt-6 flex justify-center">
+              {/* Premium Navigation Buttons */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                className="mt-8"
+              >
+                <div className="grid gap-3 sm:grid-cols-3">
                   <motion.div
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.5, type: 'spring' }}
-                    className="inline-flex items-center gap-2 rounded-full border border-[#FF9126] bg-gradient-to-r from-[#FF9126] to-[#ffb35a] px-4 py-2"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="sm:col-span-1"
                   >
-                    <span className="text-xs font-bold uppercase tracking-wide text-[#4a2a00]">
-                      {displayedItem.category}
-                    </span>
+                    <button
+                      onClick={handlePrevious}
+                      disabled={appState.currentVocabIndex === 0}
+                      className={`w-full py-4 px-6 rounded-2xl font-bold text-lg transition-all ${
+                        appState.currentVocabIndex === 0
+                          ? "theme-bg-surface cursor-not-allowed"
+                          : "theme-bg-surface border text-sm hover:border-[#FF9126] hover:shadow-lg"
+                      }`}
+                    >
+                      ← Previous
+                    </button>
+                  </motion.div>
+
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="sm:col-span-1"
+                  >
+                    <button
+                      onClick={() => {
+                        const practicePool =
+                          backpackDiscoveredVocabulary.length >= 2
+                            ? backpackDiscoveredVocabulary
+                            : backpackDiscoveredVocabulary.length === 1
+                              ? backpackDiscoveredVocabulary
+                              : introducedVocabulary.length >= 2
+                                ? introducedVocabulary
+                                : introducedVocabulary.length === 1
+                                  ? introducedVocabulary
+                                  : [currentItem];
+                        setIsPracticeQuizSession(true);
+                        const started = startSmartPracticeQuizSession(practicePool);
+                        if (!started) {
+                          startQuizSession(currentItem, practicePool);
+                        }
+                      }}
+                      className="w-full rounded-2xl border border-[#56b8e8] bg-[#173b52] px-6 py-4 text-sm font-bold uppercase tracking-[0.08em] text-[#c9efff] transition hover:border-[#7ed6ff]"
+                    >
+                      Quiz Me
+                    </button>
+                  </motion.div>
+
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="sm:col-span-1"
+                  >
+                    <button
+                      onClick={handleNext}
+                      className="w-full py-4 px-6 rounded-2xl font-bold text-lg bg-gradient-to-r from-[#FF9126] to-[#ffb35a] shadow-lg hover:shadow-2xl transition-all relative overflow-hidden group"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-[#FF9126] to-[#FF9126] opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <span className="relative z-10 text-white transition-colors group-hover:text-[#fff3de]">
+                        Next →
+                      </span>
+                    </button>
                   </motion.div>
                 </div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Premium Navigation Buttons */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="mt-8"
-          >
-            <div className="grid gap-3 sm:grid-cols-3">
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="sm:col-span-1"
-              >
-                <button
-                  onClick={handlePrevious}
-                  disabled={appState.currentVocabIndex === 0}
-                  className={`w-full py-4 px-6 rounded-2xl font-bold text-lg transition-all ${
-                    appState.currentVocabIndex === 0
-                      ? 'theme-lock-button cursor-not-allowed'
-                      : 'theme-nav-button border text-sm hover:border-[#FF9126] hover:shadow-lg'
-                  }`}
-                >
-                  ← Previous
-                </button>
               </motion.div>
 
+              {/* Premium Progress Indicator */}
               <motion.div
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="sm:col-span-1"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.7 }}
+                className="mt-6 flex justify-center gap-2"
               >
-                <button
-                  onClick={() => {
-                    const practicePool =
-                      backpackDiscoveredVocabulary.length >= 2
-                        ? backpackDiscoveredVocabulary
-                        : backpackDiscoveredVocabulary.length === 1
-                        ? backpackDiscoveredVocabulary
-                        : introducedVocabulary.length >= 2
-                        ? introducedVocabulary
-                        : introducedVocabulary.length === 1
-                        ? introducedVocabulary
-                        : [currentItem];
-                    setIsPracticeQuizSession(true);
-                    const started = startSmartPracticeQuizSession(practicePool);
-                    if (!started) {
-                      startQuizSession(currentItem, practicePool);
-                    }
-                  }}
-                  className="w-full rounded-2xl border border-[#56b8e8] bg-[#173b52] px-6 py-4 text-sm font-bold uppercase tracking-[0.08em] text-[#c9efff] transition hover:border-[#7ed6ff]"
-                >
-                  Quiz Me
-                </button>
+                {aiVocabulary.slice(0, Math.min(10, aiVocabulary.length)).map((item, index) => (
+                  <motion.div
+                    key={item.id}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.7 + index * 0.05 }}
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      index === appState.currentVocabIndex
+                        ? "w-8 bg-gradient-to-r from-[#FF9126] to-[#ffb35a] shadow-lg"
+                        : appState.learnedWords.includes(item.id)
+                          ? "w-2 bg-gradient-to-r from-[#FAC775] to-[#ffb35a]"
+                          : "bg-gray-300 w-2"
+                    }`}
+                  />
+                ))}
+                {aiVocabulary.length > 10 && (
+                  <div className="theme-text-soft ml-2 self-center text-xs">
+                    +{aiVocabulary.length - 10} more
+                  </div>
+                )}
               </motion.div>
-
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="sm:col-span-1"
-              >
-                <button
-                  onClick={handleNext}
-                  className="w-full py-4 px-6 rounded-2xl font-bold text-lg bg-gradient-to-r from-[#FF9126] to-[#ffb35a] shadow-lg hover:shadow-2xl transition-all relative overflow-hidden group"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#FF9126] to-[#FF9126] opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <span className="relative z-10 text-white transition-colors group-hover:text-[#fff3de]">Next →</span>
-                </button>
-              </motion.div>
-            </div>
-          </motion.div>
-
-          {/* Premium Progress Indicator */}
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.7 }}
-            className="mt-6 flex justify-center gap-2"
-          >
-            {aiVocabulary.slice(0, Math.min(10, aiVocabulary.length)).map((item, index) => (
-              <motion.div
-                key={item.id}
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.7 + index * 0.05 }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  index === appState.currentVocabIndex
-                    ? 'w-8 bg-gradient-to-r from-[#FF9126] to-[#ffb35a] shadow-lg'
-                    : appState.learnedWords.includes(item.id)
-                    ? 'w-2 bg-gradient-to-r from-[#FAC775] to-[#ffb35a]'
-                    : 'bg-gray-300 w-2'
-                }`}
-              />
-            ))}
-            {aiVocabulary.length > 10 && (
-              <div className="theme-muted ml-2 self-center text-xs">
-                +{aiVocabulary.length - 10} more
-              </div>
-            )}
-          </motion.div>
-          </>
+            </>
           )}
         </div>
       </div>
@@ -1180,14 +1214,15 @@ export default function VocabularyLearning({
             <div className="mb-4 flex items-center justify-center text-7xl leading-none">🪫</div>
             <h3 className="font-baloo text-3xl font-bold text-gray-800">Out of Batteries!</h3>
             <p className="mt-3 text-gray-600 font-semibold">
-              Every mistake costs 1 battery. Upgrade to premium for unlimited batteries, or come back later and keep practicing.
+              Every mistake costs 1 battery. Upgrade to premium for unlimited batteries, or come
+              back later and keep practicing.
             </p>
             <p className="mt-2 text-sm font-semibold text-gray-500">
               Batteries refill automatically after 3 hours.
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <button
-                onClick={() => navigate('premium')}
+                onClick={() => navigate("premium")}
                 className="flex-1 rounded-2xl bg-gradient-to-r from-primary to-secondary px-6 py-4 font-bold text-white shadow-lg"
               >
                 Get Unlimited Batteries
@@ -1195,7 +1230,7 @@ export default function VocabularyLearning({
               <button
                 onClick={() => {
                   setShowOutOfBatteriesModal(false);
-                  navigate('dashboard');
+                  navigate("dashboard");
                 }}
                 className="flex-1 rounded-2xl bg-gray-100 px-6 py-4 font-bold"
               >
@@ -1213,13 +1248,14 @@ export default function VocabularyLearning({
             <div className="mb-4 flex items-center justify-center text-7xl leading-none">🎉</div>
             <h3 className="font-baloo text-3xl font-bold text-gray-800">Level Complete!</h3>
             <p className="mt-3 text-gray-600 font-semibold">
-              Nice work. You finished this level pack. Want to review the words you learned? Check your Backpack.
+              Nice work. You finished this level pack. Want to review the words you learned? Check
+              your Backpack.
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <button
                 onClick={() => {
                   setShowLevelCompleteModal(false);
-                  navigate('collection');
+                  navigate("collection");
                 }}
                 className="flex-1 rounded-2xl bg-gradient-to-r from-primary to-secondary px-6 py-4 font-bold text-white shadow-lg"
               >
@@ -1228,7 +1264,7 @@ export default function VocabularyLearning({
               <button
                 onClick={() => {
                   setShowLevelCompleteModal(false);
-                  navigate('sentence');
+                  navigate("sentence");
                 }}
                 className="flex-1 rounded-2xl bg-gray-100 px-6 py-4 font-bold text-gray-700"
               >
@@ -1244,14 +1280,16 @@ export default function VocabularyLearning({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
           <div className="max-w-md w-full rounded-3xl border-4 border-primary bg-white p-8 text-center shadow-2xl">
             <div className="mb-4 flex items-center justify-center text-7xl leading-none">🏁</div>
-            <h3 className="font-baloo text-3xl font-bold text-gray-800">{activeCheckpoint.title}</h3>
+            <h3 className="font-baloo text-3xl font-bold text-gray-800">
+              {activeCheckpoint.title}
+            </h3>
             <p className="mt-3 text-gray-600 font-semibold">{activeCheckpoint.message}</p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               {activeCheckpoint.unlocksSentencePhase && (
                 <button
                   onClick={() => {
                     setActiveCheckpointId(null);
-                    navigate('sentence');
+                    navigate("sentence");
                   }}
                   className="flex-1 rounded-2xl bg-gradient-to-r from-primary to-secondary px-6 py-4 font-bold text-white shadow-lg"
                 >
@@ -1261,7 +1299,9 @@ export default function VocabularyLearning({
               <button
                 onClick={() => setActiveCheckpointId(null)}
                 className={`flex-1 rounded-2xl px-6 py-4 font-bold ${
-                  activeCheckpoint.unlocksSentencePhase ? 'bg-gray-100 text-gray-700' : 'bg-gradient-to-r from-primary to-secondary text-white shadow-lg'
+                  activeCheckpoint.unlocksSentencePhase
+                    ? "bg-gray-100 text-gray-700"
+                    : "bg-gradient-to-r from-primary to-secondary text-white shadow-lg"
                 }`}
               >
                 {activeCheckpoint.cta}
