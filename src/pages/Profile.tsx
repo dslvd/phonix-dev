@@ -70,7 +70,7 @@ export default function Profile({ navigate, appState, updateState, premium }: Pr
         <motion.div
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl border-b-4 border-[#FF9126] bg-gradient-to-b from-[#FF9126] to-[#FF9126] px-5 py-4"
+          className="rounded-2xl border-b-4 bg-[color:var(--primary)] px-5 py-4"
         >
           <p className="text-xs font-bold uppercase tracking-[0.15em] ">Your account</p>
           <h1 className="mt-1 font-baloo text-4xl font-bold">Profile</h1>
@@ -168,7 +168,7 @@ export default function Profile({ navigate, appState, updateState, premium }: Pr
             transition={{ delay: 0.4 }}
             className="theme-bg-surface rounded-2xl border p-4"
           >
-            <div className="rounded-2xl border-b-4 border-[#FF9126] bg-gradient-to-b from-[#FF9126] to-[#FF9126] p-4">
+            <div className="rounded-2xl border-b-4 bg-[color:var(--primary)] p-4">
               <p className="text-xs font-bold uppercase tracking-[0.15em]">Now learning</p>
               <h3 className="mt-1 font-baloo text-4xl font-bold">
                 {appState.targetLanguage || "Hiligaynon"}
@@ -261,7 +261,7 @@ export default function Profile({ navigate, appState, updateState, premium }: Pr
                 <p className="theme-text-soft mt-2 text-sm font-semibold">
                   Get unlimited batteries + premium features
                 </p>
-                <span className="mt-4 inline-block rounded-xl border border-[#2a4151] bg-[#56b8e8] px-5 py-2.5 text-sm font-bold uppercase tracking-[0.08em] text-[#0a344a]">
+                <span className="mt-4 inline-block rounded-xl border border-[#2a4151] bg-[color:var(--primary)] px-5 py-2.5 text-sm font-bold uppercase tracking-[0.08em] text-[#0a344a]">
                   Upgrade now
                 </span>
               </div>
