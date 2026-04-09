@@ -831,7 +831,7 @@ export default function VocabularyLearning({
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-[#FF9126] bg-[#1d3443] text-2xl">
                 ⚡
               </div>
-              <h2 className="theme-title mt-4 font-baloo text-3xl font-bold">Preparing AI lesson</h2>
+              <h2 className="mt-4 font-baloo text-3xl font-bold">Preparing AI lesson</h2>
               <p className="theme-muted mt-2 text-sm font-semibold">
                 The AI vocabulary set is loading now. This starts as soon as the request is ready.
               </p>
@@ -847,7 +847,7 @@ export default function VocabularyLearning({
                 <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#ffd166] to-[#ff9126] px-5 py-2 text-sm font-bold uppercase tracking-[0.08em] text-[#4a2a00]">
                   Review First
                 </div>
-                <h2 className="theme-title mt-4 font-baloo text-4xl font-bold">Remember These Words</h2>
+                <h2 className="mt-4 font-baloo text-4xl font-bold">Remember These Words</h2>
                 <p className="theme-muted mt-2 text-sm font-semibold">
                   Quick recap before the next quiz challenge.
                 </p>
@@ -864,7 +864,7 @@ export default function VocabularyLearning({
                     <div className="flex items-center gap-4">
                       <div className="text-5xl leading-none">{word.emoji}</div>
                       <div>
-                        <p className="theme-title font-baloo text-3xl font-bold">{word.nativeWord}</p>
+                        <p className="font-baloo text-3xl font-bold">{word.nativeWord}</p>
                         <p className="theme-muted text-sm font-semibold">{word.englishWord}</p>
                       </div>
                     </div>
@@ -1036,7 +1036,7 @@ export default function VocabularyLearning({
                       {appState.nativeLanguage}
                     </p>
                     <div className="flex items-center justify-between gap-4">
-                      <h3 className="theme-title select-none font-baloo text-5xl font-bold">
+                      <h3 className="select-none font-baloo text-5xl font-bold">
                         {displayedItem.englishWord}
                       </h3>
                       <button
@@ -1197,7 +1197,7 @@ export default function VocabularyLearning({
                   setShowOutOfBatteriesModal(false);
                   navigate('dashboard');
                 }}
-                className="flex-1 rounded-2xl bg-gray-100 px-6 py-4 font-bold text-gray-700"
+                className="flex-1 rounded-2xl bg-gray-100 px-6 py-4 font-bold"
               >
                 Back to Dashboard
               </button>

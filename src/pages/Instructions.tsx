@@ -63,7 +63,7 @@ export default function Instructions({ navigate, appState }: InstructionsProps) 
 
   return (
     // Instructions Page Container
-    <div className="theme-page min-h-screen px-4 py-5 text-slate-100 lg:px-6">
+    <div className="theme-page min-h-screen px-4 py-5 lg:px-6">
       {/* Top Navigation */}
       <NavigationHeader
         onBack={() => navigate('dashboard')}
@@ -80,8 +80,8 @@ export default function Instructions({ navigate, appState }: InstructionsProps) 
           animate={{ opacity: 1, y: 0 }}
           className="theme-summary-card rounded-2xl border-b-4 px-5 py-4"
         >
-          <p className="theme-summary-label text-xs font-bold uppercase tracking-[0.15em]">Site Guide</p>
-          <h1 className="theme-title mt-1 font-baloo text-4xl font-bold">Full Instructions</h1>
+          <p className="text-xs font-bold uppercase tracking-[0.15em]">Site Guide</p>
+          <h1 className="mt-1 font-baloo text-4xl font-bold">Full Instructions</h1>
           <p className="theme-muted mt-2 text-sm font-semibold">
             Language: {appState.nativeLanguage || 'English'} {'->'} {appState.targetLanguage || 'Hiligaynon'}
           </p>
@@ -100,7 +100,7 @@ export default function Instructions({ navigate, appState }: InstructionsProps) 
               <div className="flex items-start gap-3">
                 <div className="text-3xl leading-none">{card.icon}</div>
                 <div>
-                  <h2 className="theme-title font-baloo text-2xl font-bold">{card.title}</h2>
+                  <h2 className="font-baloo text-2xl font-bold">{card.title}</h2>
                   <p className="theme-text-soft mt-2 font-semibold leading-7">{card.body}</p>
                 </div>
               </div>
@@ -115,7 +115,7 @@ export default function Instructions({ navigate, appState }: InstructionsProps) 
           transition={{ delay: 0.2 }}
           className="theme-surface mt-5 rounded-2xl border p-5"
         >
-          <h2 className="theme-title font-baloo text-3xl font-bold">Guest vs Logged-in</h2>
+          <h2 className="font-baloo text-3xl font-bold">Guest vs Logged-in</h2>
           <ul className="theme-text-soft mt-3 space-y-2 text-sm font-semibold">
             <li>Guest mode is interactive: dashboard, lessons, map progression, and browsing features.</li>
             <li>Logged-in mode enables cloud progress sync, leaderboard ranking, and full account tracking.</li>
@@ -130,7 +130,7 @@ export default function Instructions({ navigate, appState }: InstructionsProps) 
           transition={{ delay: 0.26 }}
           className="theme-surface mt-5 rounded-2xl border p-5"
         >
-          <h2 className="theme-title font-baloo text-3xl font-bold">XP Rules</h2>
+          <h2 className="font-baloo text-3xl font-bold">XP Rules</h2>
           <ul className="theme-text-soft mt-3 space-y-2 text-sm font-semibold">
             <li>New vocabulary discovery: +10 XP</li>
             <li>Reviewing known vocabulary: +2 XP</li>
@@ -143,14 +143,14 @@ export default function Instructions({ navigate, appState }: InstructionsProps) 
         <div className="mt-6 flex flex-wrap gap-3 pb-6">
           <button
             onClick={() => navigate('dashboard')}
-            className="rounded-xl border-b-4 border-[#FF9126] bg-[#FF9126] px-5 py-3 text-sm font-bold uppercase tracking-[0.08em] text-[#4a2a00]"
+            className="rounded-xl border-b-4 border-[#FF9126] bg-[#FF9126] px-5 py-3 text-sm font-bold uppercase tracking-[0.08em]"
           >
             Back to Dashboard
           </button>
           {isGuestMode && (
             <button
               onClick={() => navigate('landing')}
-              className="rounded-xl border border-[#2a4151] bg-[#56b8e8] px-5 py-3 text-sm font-bold uppercase tracking-[0.08em] text-[#0a344a]"
+              className="rounded-xl border border-[#2a4151] bg-[#56b8e8] px-5 py-3 text-sm font-bold uppercase tracking-[0.08em]"
             >
               Create Account
             </button>

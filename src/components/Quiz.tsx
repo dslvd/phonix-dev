@@ -290,12 +290,12 @@ export default function Quiz({
         className="text-center"
       >
         <div className="inline-block px-6 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full mb-4 shadow-lg">
-          <span className="font-baloo text-white font-bold text-lg flex items-center gap-2 leading-none">
+          <span className="font-baloo font-bold text-lg flex items-center gap-2 leading-none">
             <span className="text-2xl leading-none flex items-center justify-center">🎯</span>
             Quiz Challenge!
           </span>
         </div>
-        <h3 className="theme-title mb-2 font-baloo text-2xl font-bold">
+        <h3 className="mb-2 font-baloo text-2xl font-bold">
           {challengeText}
         </h3>
       </motion.div>
@@ -309,7 +309,7 @@ export default function Quiz({
         >
           {currentWord.emoji}
         </motion.div>
-        <h2 className="theme-title font-baloo text-4xl font-bold">
+        <h2 className="font-baloo text-4xl font-bold">
           {currentWord.englishWord}
         </h2>
       </Card>
@@ -330,7 +330,7 @@ export default function Quiz({
             >
               <div className="flex items-center gap-4">
                 <div className="text-left flex-1">
-                  <p className="theme-title font-baloo text-2xl font-bold">
+                  <p className="font-baloo text-2xl font-bold">
                     {word.nativeWord}
                   </p>
                 </div>

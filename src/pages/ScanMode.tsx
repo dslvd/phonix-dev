@@ -1085,7 +1085,7 @@ const translateManualText = async () => {
   return (
     // Scan Mode Page Container
     <div
-      className={`theme-page min-h-screen text-slate-100 ${isDragActive ? 'ring-4 ring-[#56b8e8]/50 ring-inset' : ''}`}
+      className={`theme-page min-h-screen ${isDragActive ? 'ring-4 ring-[#56b8e8]/50 ring-inset' : ''}`}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDropAttachment}
@@ -1118,7 +1118,7 @@ const translateManualText = async () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-6"
         >
-          <h1 className="theme-title mb-2 flex items-center justify-center gap-3 font-baloo text-4xl font-bold">
+          <h1 className="mb-2 flex items-center justify-center gap-3 font-baloo text-4xl font-bold">
             <span>📸</span>
             Scan Mode
             <span>📄</span>
@@ -1151,7 +1151,7 @@ const translateManualText = async () => {
                 <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-1.5">
                     <span className="text-sm leading-none text-[#5ea4ff]">📷</span>
-                    <h3 className="theme-title font-baloo text-lg font-bold">Live Camera</h3>
+                    <h3 className="font-baloo text-lg font-bold">Live Camera</h3>
                   </div>
                   <span className="rounded-full bg-[#dff7e6] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[#39a860]">
                     {cameraActive ? 'ACTIVE' : 'READY'}
@@ -1160,7 +1160,7 @@ const translateManualText = async () => {
               </div>
 
               {/* Camera Preview Area */}
-              <div className="relative h-[260px] overflow-hidden rounded-lg bg-gray-900 sm:h-[290px]">
+              <div className="relative h-[260px] overflow-hidden rounded-lg bg-gray-900 text-[#f5f7fa] sm:h-[290px]">
                 <video
                   ref={videoRef}
                   autoPlay
@@ -1180,7 +1180,7 @@ const translateManualText = async () => {
                 {!cameraActive && !cameraLoading ? (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-4">
                     <div className="text-6xl animate-bounce leading-none flex items-center justify-center">📄</div>
-                    <h3 className="text-center font-baloo text-xl font-bold text-white">
+                    <h3 className="text-center font-baloo text-xl font-bold">
                       Ready to Scan Text?
                     </h3>
                     <Button
@@ -1190,9 +1190,9 @@ const translateManualText = async () => {
                     >
                       🎥 Start Camera
                     </Button>
-                    <div className="space-y-1 rounded-lg bg-gray-800/50 p-3 px-4 text-center text-xs text-white">
+                    <div className="space-y-1 rounded-lg bg-gray-800/50 p-3 px-4 text-center text-xs">
                       <p className="font-bold">You&apos;ll be asked for camera permission</p>
-                      <p className="theme-muted">Point at text or a document -&gt; OCR translates instantly!</p>
+                      <p className="text-[#f5f7fa]/50">Point at text or a document -&gt; OCR translates instantly!</p>
                     </div>
                   </div>
                 ) : cameraLoading ? (
@@ -1204,7 +1204,7 @@ const translateManualText = async () => {
                     >
                       📹
                     </motion.div>
-                    <p className="text-white font-baloo text-xl font-bold">Starting camera...</p>
+                    <p className="font-baloo text-xl font-bold">Starting camera...</p>
                     <p className="theme-muted text-sm">This may take a few seconds</p>
                   </div>
                 ) : null}
@@ -1219,7 +1219,7 @@ const translateManualText = async () => {
                           exit={{ opacity: 0 }}
                           className="absolute inset-0 flex items-center justify-center bg-slate-950/18"
                         >
-                          <div className="text-white text-2xl font-bold font-baloo flex items-center gap-3">
+                          <div className="text-2xl font-bold font-baloo flex items-center gap-3">
                             <motion.div
                               animate={{ rotate: 360 }}
                               transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
@@ -1259,7 +1259,7 @@ const translateManualText = async () => {
                       type="button"
                       onClick={handleSwapCamera}
                       disabled={cameraLoading || isScanning}
-                      className="absolute bottom-4 right-4 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-slate-900/65 text-lg text-white shadow-lg transition hover:scale-105 hover:bg-slate-900/80 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="absolute bottom-4 right-4 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-slate-900/65 text-lg shadow-lg transition hover:scale-105 hover:bg-slate-900/80 disabled:cursor-not-allowed disabled:opacity-50"
                       aria-label="Swap camera"
                       title="Swap camera"
                     >
@@ -1326,7 +1326,7 @@ const translateManualText = async () => {
 
             <div className="grid items-stretch gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
               <Card className="theme-surface-soft min-w-0 flex h-full flex-col border p-5">
-                <h3 className="theme-title mb-2 flex items-center gap-2 font-baloo text-xl font-bold">
+                <h3 className="mb-2 flex items-center gap-2 font-baloo text-xl font-bold">
                   <span className="text-[#FFB23F]">{paperclipIcon}</span>
                   Upload File
                 </h3>
@@ -1350,7 +1350,7 @@ const translateManualText = async () => {
                     {activeScanAction === 'upload' ? 'Translating...' : pendingAttachment ? 'Translate' : 'Browse Files'}
                   </div>
                   {!pendingAttachment && (
-                    <div className="theme-muted mt-1 text-sm font-semibold">
+                    <div className="text-[#1f2933] mt-1 text-sm font-semibold">
                       or drag & drop here
                     </div>
                   )}
@@ -1374,7 +1374,7 @@ const translateManualText = async () => {
               </Card>
 
               <Card className="theme-surface-soft min-w-0 flex h-full flex-col border p-5">
-                <h3 className="theme-title mb-2 flex items-center gap-2 font-baloo text-xl font-bold">
+                <h3 className="mb-2 flex items-center gap-2 font-baloo text-xl font-bold">
                   <span>✎</span>
                   Type Manually
                 </h3>
@@ -1427,7 +1427,7 @@ const translateManualText = async () => {
                   <span className="text-[#FFB23F]">✨</span>
                   <h3
                     className={`font-baloo text-xl font-bold ${
-                      scanResult ? 'text-[#2f61d4]' : 'theme-title'
+                      scanResult ? 'text-[#2f61d4]' : ''
                     }`}
                   >
                     {scanResult ? 'Translation Ready' : 'Translation Result'}
@@ -1494,7 +1494,7 @@ const translateManualText = async () => {
                   <Button
                     variant="primary"
                     onClick={saveScan}
-                    className="w-full border-b-4 border-[#d97b12] bg-[#ff9126] text-white hover:bg-[#ff9d41]"
+                    className="w-full border-b-4 border-[#d97b12] bg-[#ff9126] hover:bg-[#ff9d41]"
                   >
                     💾 Save to Collection
                   </Button>
@@ -1504,7 +1504,7 @@ const translateManualText = async () => {
                   <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-[#f5f8fd] text-4xl">
                     👀
                   </div>
-                  <h4 className="theme-title font-baloo text-2xl font-bold">Waiting for input</h4>
+                  <h4 className="font-baloo text-2xl font-bold">Waiting for input</h4>
                   <p className="theme-muted mx-auto mt-3 max-w-xs text-sm font-semibold leading-7">
                     Start the camera, upload a file, or type text to see the translation here.
                   </p>
@@ -1546,7 +1546,7 @@ const translateManualText = async () => {
                           : 'Camera OCR'}
                     </p>
                     <p className="theme-muted mb-1 font-semibold">Detected Text:</p>
-                    <p className="theme-title mb-4 max-h-36 overflow-y-auto break-words whitespace-pre-wrap pr-1 text-sm font-semibold leading-7">
+                    <p className="mb-4 max-h-36 overflow-y-auto break-words whitespace-pre-wrap pr-1 text-sm font-semibold leading-7">
                       {result.detectedText}
                     </p>
 
@@ -1586,7 +1586,7 @@ const translateManualText = async () => {
                   <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-[#f5f8fd] text-4xl">
                     👀
                   </div>
-                  <h4 className="theme-title font-baloo text-2xl font-bold">Waiting for input</h4>
+                  <h4 className="font-baloo text-2xl font-bold">Waiting for input</h4>
                   <p className="theme-muted mx-auto mt-3 max-w-xs text-sm font-semibold leading-7">
                     Start the camera, upload a file, or type text to see the translation here.
                   </p>
@@ -1607,7 +1607,7 @@ const translateManualText = async () => {
                     <div>
                       <div className="text-center">
                       <div className="text-5xl mb-3 leading-none flex items-center justify-center">✨</div>
-                      <h3 className="theme-title mb-2 font-baloo text-2xl font-bold">
+                      <h3 className="mb-2 font-baloo text-2xl font-bold">
                         Translation Ready!
                       </h3>
 
@@ -1621,7 +1621,7 @@ const translateManualText = async () => {
 
                       <div className="theme-surface-soft mb-4 rounded-2xl border p-4 text-left">
                         <p className="theme-muted mb-1 font-semibold">Detected Text:</p>
-                        <p className="theme-title mb-4 max-h-40 overflow-y-auto break-words whitespace-pre-wrap pr-1 text-sm font-semibold leading-7">
+                        <p className="mb-4 max-h-40 overflow-y-auto break-words whitespace-pre-wrap pr-1 text-sm font-semibold leading-7">
                           {scanResult!.detectedText}
                         </p>
 
@@ -1682,7 +1682,7 @@ const translateManualText = async () => {
             {/* Collection */}
             <Card className="theme-surface min-w-0 max-w-full overflow-hidden border p-0">
               <div className="flex items-center justify-between gap-3 border-b border-[#e6eef9] px-5 py-4">
-                <h3 className="theme-title flex items-center gap-2 font-baloo text-xl font-bold">
+                <h3 className="flex items-center gap-2 font-baloo text-xl font-bold">
                   <span className="text-[#7e93b4]">📄</span>
                   Collection
                 </h3>
@@ -1697,7 +1697,7 @@ const translateManualText = async () => {
                     <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#f5f8fd] text-3xl">
                       👀
                     </div>
-                    <p className="theme-title font-semibold">No saved items yet</p>
+                    <p className="font-semibold">No saved items yet</p>
                     <p className="theme-muted mt-2 text-sm">
                       Save a translation and it will appear here.
                     </p>
@@ -1774,7 +1774,7 @@ const translateManualText = async () => {
                 <div className="flex items-center justify-between gap-3 border-b border-[#dce7fb] bg-[#f7faff] px-5 py-4">
                   <div className="flex items-center gap-2">
                     <span className="text-[#b8c5da]">📄</span>
-                    <h3 className="theme-title font-baloo text-xl font-bold">Collection Item</h3>
+                    <h3 className="font-baloo text-xl font-bold">Collection Item</h3>
                   </div>
                   <button
                     type="button"
@@ -1834,7 +1834,7 @@ const translateManualText = async () => {
           >
             <Card className="theme-surface-soft border shadow-2xl">
               <div className="mb-3 flex items-start justify-between gap-3">
-                <h4 className="theme-title flex items-center gap-2 font-baloo text-lg font-bold">
+                <h4 className="flex items-center gap-2 font-baloo text-lg font-bold">
                   <span>💡</span>
                   Quick Tips
                 </h4>
@@ -1888,7 +1888,7 @@ const translateManualText = async () => {
             >
               <Card className="theme-surface border p-6 text-center">
                 <div className="text-6xl leading-none">🔐</div>
-                <h3 className="theme-title mt-3 font-baloo text-3xl font-bold">Log in to continue</h3>
+                <h3 className="mt-3 font-baloo text-3xl font-bold">Log in to continue</h3>
                 <p className="theme-muted mt-2 font-semibold">
                   AI features like scan, upload, and smart translation are available to logged-in users.
                 </p>
@@ -1934,7 +1934,7 @@ const translateManualText = async () => {
               className="max-w-md w-full"
             >
               <Card className="theme-surface border-2 border-[#FF9126] shadow-2xl">
-                <div className="text-center text-white">
+                <div className="text-center">
                   <motion.div
                     animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.2, 1] }}
                     transition={{ duration: 0.5 }}
@@ -1954,7 +1954,7 @@ const translateManualText = async () => {
                   <div className="theme-surface-soft mb-6 rounded-xl border p-4">
                     <div className="flex items-center justify-center gap-2 mb-3">
                       <span className="text-3xl leading-none flex items-center justify-center">✨</span>
-                      <h3 className="theme-title text-xl font-bold">Premium Features</h3>
+                      <h3 className="text-xl font-bold">Premium Features</h3>
                       <span className="text-3xl leading-none flex items-center justify-center">✨</span>
                     </div>
                     <ul className="theme-text-soft space-y-2 text-left text-sm">

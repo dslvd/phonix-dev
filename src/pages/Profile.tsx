@@ -55,7 +55,7 @@ export default function Profile({ navigate, appState, updateState, premium }: Pr
 
   return (
     // Profile Page Container
-    <div className="theme-page min-h-screen px-4 py-5 text-slate-100 lg:px-6">
+    <div className="theme-page min-h-screen px-4 py-5  lg:px-6">
       {/* Top Navigation */}
       <NavigationHeader
         onBack={() => navigate('dashboard')}
@@ -71,9 +71,9 @@ export default function Profile({ navigate, appState, updateState, premium }: Pr
           animate={{ opacity: 1, y: 0 }}
           className="rounded-2xl border-b-4 border-[#FF9126] bg-gradient-to-b from-[#FF9126] to-[#FF9126] px-5 py-4"
         >
-          <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#fff3de]">Your account</p>
-          <h1 className="mt-1 font-baloo text-4xl font-bold text-white">Profile</h1>
-          <p className="text-sm font-bold text-[#ffd9b0]">Manage your learning journey</p>
+          <p className="text-xs font-bold uppercase tracking-[0.15em] ">Your account</p>
+          <h1 className="mt-1 font-baloo text-4xl font-bold">Profile</h1>
+          <p className="text-sm font-bold">Manage your learning journey</p>
         </motion.div>
 
         {/* Main Two-Column Layout */}
@@ -85,7 +85,7 @@ export default function Profile({ navigate, appState, updateState, premium }: Pr
             transition={{ delay: 0.3 }}
             className="theme-surface rounded-2xl border p-4"
           >
-            <h2 className="theme-title text-xl font-bold">Account Info</h2>
+            <h2 className="text-xl font-bold">Account Info</h2>
 
               {userData ? (
                 <div className="mt-4 space-y-4">
@@ -132,7 +132,7 @@ export default function Profile({ navigate, appState, updateState, premium }: Pr
                       </div>
                     ) : (
                       <div className="theme-surface-soft flex items-center justify-between rounded-xl border px-4 py-3">
-                        <p className="theme-title font-baloo text-lg font-semibold">{userData.name}</p>
+                        <p className="font-baloo text-lg font-semibold">{userData.name}</p>
                         <motion.button
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
@@ -168,15 +168,15 @@ export default function Profile({ navigate, appState, updateState, premium }: Pr
             className="theme-surface rounded-2xl border p-4"
           >
             <div className="rounded-2xl border-b-4 border-[#FF9126] bg-gradient-to-b from-[#FF9126] to-[#FF9126] p-4">
-              <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#fff3de]">Now learning</p>
-              <h3 className="mt-1 font-baloo text-4xl font-bold text-white">{appState.targetLanguage || 'Hiligaynon'}</h3>
-              <p className="text-sm font-bold text-[#ffd9b0]">Ready to practice</p>
+              <p className="text-xs font-bold uppercase tracking-[0.15em]">Now learning</p>
+              <h3 className="mt-1 font-baloo text-4xl font-bold">{appState.targetLanguage || 'Hiligaynon'}</h3>
+              <p className="text-sm font-bold">Ready to practice</p>
             </div>
 
             <div className="mt-3 space-y-2.5">
               <div className="theme-surface-soft rounded-xl border p-3">
                 <p className="theme-muted text-xs font-bold uppercase tracking-[0.12em]">Words learned</p>
-                <p className="theme-title mt-1 font-baloo text-4xl font-bold">{appState.learnedWords.length}</p>
+                <p className="mt-1 font-baloo text-4xl font-bold">{appState.learnedWords.length}</p>
               </div>
 
               <div className="theme-surface-soft rounded-xl border p-3">
@@ -212,7 +212,7 @@ export default function Profile({ navigate, appState, updateState, premium }: Pr
 
               <div className="theme-surface-soft rounded-xl border p-3">
                 <p className="theme-muted text-xs font-bold uppercase tracking-[0.12em]">Current mode</p>
-                <p className="theme-title mt-1 font-baloo text-2xl font-bold capitalize">{appState.mode || 'not set'}</p>
+                <p className="mt-1 font-baloo text-2xl font-bold capitalize">{appState.mode || 'not set'}</p>
               </div>
             </div>
           </motion.div>
@@ -238,7 +238,7 @@ export default function Profile({ navigate, appState, updateState, premium }: Pr
                 >
                   ✨
                 </motion.div>
-                <h3 className="theme-title font-baloo text-3xl font-bold">
+                <h3 className="font-baloo text-3xl font-bold">
                   Unlock Unlimited Batteries!
                 </h3>
                 <p className="theme-muted mt-2 text-sm font-semibold">
@@ -263,7 +263,7 @@ export default function Profile({ navigate, appState, updateState, premium }: Pr
           >
             <div>
               <div className="mb-2 text-4xl leading-none">🎒</div>
-              <h3 className="theme-title font-baloo text-xl font-bold">My Vocabulary</h3>
+              <h3 className="font-baloo text-xl font-bold">My Vocabulary</h3>
               <p className="theme-muted mt-1 text-sm font-semibold">View all learned words</p>
             </div>
           </button>
@@ -274,7 +274,7 @@ export default function Profile({ navigate, appState, updateState, premium }: Pr
           >
             <div>
               <div className="mb-2 text-4xl leading-none">📘</div>
-              <h3 className="theme-title font-baloo text-xl font-bold">How It Works</h3>
+              <h3 className="font-baloo text-xl font-bold">How It Works</h3>
               <p className="theme-muted mt-1 text-sm font-semibold">See full app instructions</p>
             </div>
           </button>
@@ -285,7 +285,7 @@ export default function Profile({ navigate, appState, updateState, premium }: Pr
           >
             <div>
               <div className="mb-2 text-4xl leading-none">⚙️</div>
-              <h3 className="theme-title font-baloo text-xl font-bold">Change Language</h3>
+              <h3 className="font-baloo text-xl font-bold">Change Language</h3>
               <p className="theme-muted mt-1 text-sm font-semibold">Update your learning preferences</p>
             </div>
           </button>
