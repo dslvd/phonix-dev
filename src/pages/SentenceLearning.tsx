@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
-import Card from '../components/Card';
-import NavigationHeader from '../components/NavigationHeader';
-import Mascot from '../components/Mascot';
-import { Page, AppState, UpdateStateFn } from '../App';
-import { sentenceData, vocabularyData } from '../data/vocabulary';
+import { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import Card from "../components/Card";
+import NavigationHeader from "../components/NavigationHeader";
+import Mascot from "../components/Mascot";
+import { Page, AppState, UpdateStateFn } from "../App";
+import { sentenceData, vocabularyData } from "../data/vocabulary";
 
 interface SentenceLearningProps {
   navigate: (page: Page) => void;
@@ -18,12 +18,12 @@ export default function SentenceLearning({
   updateState,
 }: SentenceLearningProps) {
   const [currentIndex, setCurrentIndex] = useState(() => {
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       return 0;
     }
 
-    const rawStartIndex = window.sessionStorage.getItem('phonix-sentence-start-index');
-    const parsed = Number.parseInt(rawStartIndex || '0', 10);
+    const rawStartIndex = window.sessionStorage.getItem("phonix-sentence-start-index");
+    const parsed = Number.parseInt(rawStartIndex || "0", 10);
     return Number.isFinite(parsed)
       ? Math.max(0, Math.min(parsed, Math.max(0, sentenceData.length - 1)))
       : 0;
@@ -35,48 +35,56 @@ export default function SentenceLearning({
   const currentSentence = sentenceData[currentIndex];
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.sessionStorage.removeItem('phonix-sentence-start-index');
+    if (typeof window !== "undefined") {
+      window.sessionStorage.removeItem("phonix-sentence-start-index");
     }
   }, []);
 
   const question = useMemo(() => {
-    const stopWords = new Set(['ang', 'sang', 'ako', 'si', 'sa', 'ni', 'kay', 'nga']);
+    const stopWords = new Set(["ang", "sang", "ako", "si", "sa", "ni", "kay", "nga"]);
     const words = currentSentence.nativeSentence.split(/\s+/);
-    const cleanWords = words.map((word) => word.replace(/[^A-Za-zÀ-ÿ'-]/g, '').toLowerCase());
+    const cleanWords = words.map((word) => word.replace(/[^A-Za-zÀ-ÿ'-]/g, "").toLowerCase());
 
     const candidateIndexes = cleanWords
       .map((word, index) => ({ word, index }))
       .filter(({ word }) => word.length > 2 && !stopWords.has(word))
       .map(({ index }) => index);
 
-    const blankIndex = candidateIndexes.length > 0 ? candidateIndexes[0] : Math.max(0, words.length - 1);
-    const correctWord = words[blankIndex].replace(/[^A-Za-zÀ-ÿ'-]/g, '');
+    const blankIndex =
+      candidateIndexes.length > 0 ? candidateIndexes[0] : Math.max(0, words.length - 1);
+    const correctWord = words[blankIndex].replace(/[^A-Za-zÀ-ÿ'-]/g, "");
 
     const distractors = vocabularyData
       .map((item) => item.nativeWord)
       .filter((word) => word.toLowerCase() !== correctWord.toLowerCase())
       .slice(currentIndex, currentIndex + 30)
-      .filter((word, index, array) => array.findIndex((entry) => entry.toLowerCase() === word.toLowerCase()) === index)
+      .filter(
+        (word, index, array) =>
+          array.findIndex((entry) => entry.toLowerCase() === word.toLowerCase()) === index,
+      )
       .slice(0, 3);
 
     while (distractors.length < 3) {
-      const fallback = vocabularyData[(distractors.length + currentIndex) % vocabularyData.length]?.nativeWord || 'Pulong';
+      const fallback =
+        vocabularyData[(distractors.length + currentIndex) % vocabularyData.length]?.nativeWord ||
+        "Pulong";
       if (fallback.toLowerCase() !== correctWord.toLowerCase()) {
         distractors.push(fallback);
       }
     }
 
     const options = [correctWord, ...distractors].sort((a, b) => {
-      const seed = (currentSentence.id + a + b).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      const seed = (currentSentence.id + a + b)
+        .split("")
+        .reduce((acc, char) => acc + char.charCodeAt(0), 0);
       return seed % 3 === 0 ? -1 : 1;
     });
 
     const maskedWords = [...words];
-    maskedWords[blankIndex] = '_____';
+    maskedWords[blankIndex] = "_____";
 
     return {
-      maskedSentence: maskedWords.join(' '),
+      maskedSentence: maskedWords.join(" "),
       correctWord,
       options,
     };
@@ -117,10 +125,10 @@ export default function SentenceLearning({
       return;
     }
 
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(option);
-      utterance.lang = 'fil-PH';
+      utterance.lang = "fil-PH";
       utterance.rate = 0.85;
       utterance.pitch = 0.75;
       utterance.volume = 1.0;
@@ -157,14 +165,14 @@ export default function SentenceLearning({
   const playAudio = (text: string, e?: React.MouseEvent<HTMLButtonElement>) => {
     e?.preventDefault();
     e?.stopPropagation();
-    if ('speechSynthesis' in window) {
+    if ("speechSynthesis" in window) {
       // Cancel any ongoing speech
       window.speechSynthesis.cancel();
-      
+
       const utterance = new SpeechSynthesisUtterance(text);
-      
+
       // Configure for Hiligaynon/Filipino pronunciation
-      utterance.lang = 'fil-PH'; // Filipino language code
+      utterance.lang = "fil-PH"; // Filipino language code
       utterance.rate = 0.8;
       utterance.pitch = 0.75;
       utterance.volume = 1.0;
@@ -174,22 +182,22 @@ export default function SentenceLearning({
         const robotVoice = voices.find((voice) => {
           const name = voice.name.toLowerCase();
           return (
-            name.includes('robot') ||
-            name.includes('siri') ||
-            name.includes('fred') ||
-            name.includes('david') ||
-            name.includes('zira') ||
-            name.includes('microsoft') ||
-            name.includes('google us english')
+            name.includes("robot") ||
+            name.includes("siri") ||
+            name.includes("fred") ||
+            name.includes("david") ||
+            name.includes("zira") ||
+            name.includes("microsoft") ||
+            name.includes("google us english")
           );
         });
 
         const filipinoVoice = voices.find((voice) => {
           const lang = voice.lang.toLowerCase();
-          return lang.includes('fil') || lang.includes('tl') || lang.includes('ph');
+          return lang.includes("fil") || lang.includes("tl") || lang.includes("ph");
         });
 
-        const englishFallback = voices.find((voice) => voice.lang.toLowerCase().startsWith('en'));
+        const englishFallback = voices.find((voice) => voice.lang.toLowerCase().startsWith("en"));
         utterance.voice = robotVoice || filipinoVoice || englishFallback || voices[0] || null;
         window.speechSynthesis.speak(utterance);
       };
@@ -207,39 +215,39 @@ export default function SentenceLearning({
   };
 
   const playMaskedSentenceAudio = (e?: React.MouseEvent<HTMLButtonElement>) => {
-    const spokenSentence = question.maskedSentence.replace(/_{3,}/g, 'blangko');
+    const spokenSentence = question.maskedSentence.replace(/_{3,}/g, "blangko");
     playAudio(spokenSentence, e);
   };
 
-  const responseLanguage = appState.nativeLanguage || 'English';
+  const responseLanguage = appState.nativeLanguage || "English";
   const sentenceMascotMessage =
-    responseLanguage.trim().toLowerCase() === 'filipino'
-      ? 'Pwede akong magbigay ng clue sa pangungusap na ito.'
-      : 'I can give clues for this sentence.';
+    responseLanguage.trim().toLowerCase() === "filipino"
+      ? "Pwede akong magbigay ng clue sa pangungusap na ito."
+      : "I can give clues for this sentence.";
 
   const sentencePageContext = [
-    'Current page: sentence practice.',
-    `Target language: ${appState.targetLanguage || 'Hiligaynon'}.`,
+    "Current page: sentence practice.",
+    `Target language: ${appState.targetLanguage || "Hiligaynon"}.`,
     `Response language: ${responseLanguage}.`,
     `Current masked sentence: ${question.maskedSentence}.`,
     `Correct hidden word: ${question.correctWord}.`,
     `English hint sentence: ${currentSentence.englishSentence}.`,
-    `Current sentence options: ${question.options.join(', ')}.`,
+    `Current sentence options: ${question.options.join(", ")}.`,
     showResult
-      ? `The learner has already answered. Selected option: ${selectedOption || 'none'}.`
-      : 'The learner has not answered yet.',
-    'This page is a quiz/fill-in-the-blank practice. Never reveal the exact hidden answer directly unless the learner has already answered and asks for an explanation.',
-    'If the learner asks for help before answering, provide only clues, grammar hints, elimination help, or meaning hints.',
-    'If the learner asks how the page works, explain that they choose the missing word, then check the answer.',
-  ].join('\n');
+      ? `The learner has already answered. Selected option: ${selectedOption || "none"}.`
+      : "The learner has not answered yet.",
+    "This page is a quiz/fill-in-the-blank practice. Never reveal the exact hidden answer directly unless the learner has already answered and asks for an explanation.",
+    "If the learner asks for help before answering, provide only clues, grammar hints, elimination help, or meaning hints.",
+    "If the learner asks how the page works, explain that they choose the missing word, then check the answer.",
+  ].join("\n");
 
   return (
     // Sentence Learning Page Container
-    <div className="theme-page min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col">
       {/* Top Navigation with Progress */}
       <NavigationHeader
-        onBack={() => navigate('vocabulary')}
-        onLogout={() => navigate('landing')}
+        onBack={() => navigate("vocabulary")}
+        onLogout={() => navigate("landing")}
         title="Sentence Practice"
         showProgress={true}
         currentProgress={currentIndex + 1}
@@ -254,7 +262,7 @@ export default function SentenceLearning({
             key={currentSentence.id}
             initial={{ opacity: 0, y: 28 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ type: 'spring', stiffness: 140 }}
+            transition={{ type: "spring", stiffness: 140 }}
           >
             <Card className="text-center">
               {/* Illustration */}
@@ -270,8 +278,8 @@ export default function SentenceLearning({
               </motion.div>
 
               {/* Native Sentence */}
-              <div className="theme-surface-soft mb-8 rounded-2xl border p-6">
-                <p className="theme-muted mb-3 text-sm font-bold">
+              <div className="theme-bg-surface mb-8 rounded-2xl border p-6">
+                <p className="theme-text-soft mb-3 text-sm font-bold">
                   {appState.targetLanguage} Fill in the blank:
                 </p>
                 <div className="flex items-center justify-center gap-4">
@@ -288,8 +296,8 @@ export default function SentenceLearning({
               </div>
 
               {/* English Translation */}
-              <div className="theme-surface rounded-2xl border p-6 shadow-lg">
-                <p className="theme-muted mb-3 text-sm font-bold">
+              <div className="theme-bg-surface rounded-2xl border p-6 shadow-lg">
+                <p className="theme-text-soft mb-3 text-sm font-bold">
                   {appState.nativeLanguage} Hint:
                 </p>
                 <div className="flex items-center justify-center gap-4">
@@ -308,18 +316,19 @@ export default function SentenceLearning({
               {/* Answer Option Buttons */}
               <div className="mt-6 flex flex-wrap justify-center gap-3">
                 {question.options.map((option) => {
-                  const isCorrectOption = option.toLowerCase() === question.correctWord.toLowerCase();
+                  const isCorrectOption =
+                    option.toLowerCase() === question.correctWord.toLowerCase();
                   const isSelected = selectedOption?.toLowerCase() === option.toLowerCase();
 
                   const stateClass = !showResult
                     ? isSelected
-                      ? 'border border-[#56b8e8] bg-[#173b52] text-[#d4efff]'
-                      : 'theme-nav-button hover:border-[#56b8e8]'
+                      ? "border border-[#56b8e8] bg-[#173b52] text-[#d4efff]"
+                      : "theme-bg-surface hover:border-[#56b8e8]"
                     : isCorrectOption
-                    ? 'border border-green-500 bg-green-100 text-green-900'
-                    : isSelected
-                    ? 'border border-red-500 bg-red-100 text-red-900'
-                    : 'theme-nav-button opacity-70';
+                      ? "border border-green-500 bg-green-100 text-green-900"
+                      : isSelected
+                        ? "border border-red-500 bg-red-100 text-red-900"
+                        : "theme-bg-surface opacity-70";
 
                   return (
                     <button
@@ -336,11 +345,11 @@ export default function SentenceLearning({
 
               {/* Answer Feedback */}
               {showResult && (
-                <div className="theme-surface-soft mt-4 rounded-xl border p-4">
+                <div className="theme-bg-surface mt-4 rounded-xl border p-4">
                   <p className="text-lg font-bold">
-                    {isCorrectAnswer ? 'Correct! Great job!' : 'Nice try!'}
+                    {isCorrectAnswer ? "Correct! Great job!" : "Nice try!"}
                   </p>
-                  <p className="theme-muted mt-1 font-semibold">
+                  <p className="theme-text-soft mt-1 font-semibold">
                     Correct answer: {question.correctWord}
                   </p>
                 </div>
@@ -355,10 +364,10 @@ export default function SentenceLearning({
                 key={index}
                 className={`w-3 h-3 rounded-full transition-all ${
                   index === currentIndex
-                    ? 'bg-secondary w-6'
+                    ? "bg-secondary w-6"
                     : index < currentIndex
-                    ? 'bg-success'
-                    : 'bg-gray-300'
+                      ? "bg-success"
+                      : "bg-gray-300"
                 }`}
               />
             ))}
@@ -371,20 +380,24 @@ export default function SentenceLearning({
         <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3">
           <button
             onClick={showResult ? handlePrevious : handleSkip}
-            className="theme-nav-button rounded-2xl border px-6 py-3 text-sm font-bold uppercase tracking-[0.08em]"
+            className="theme-bg-surface rounded-2xl border px-6 py-3 text-sm font-bold uppercase tracking-[0.08em]"
           >
-            {showResult ? 'Previous' : 'Skip'}
+            {showResult ? "Previous" : "Skip"}
           </button>
           <button
             onClick={showResult ? handleNext : handleCheckAnswer}
             disabled={!showResult && !selectedOption}
             className={`rounded-2xl px-8 py-3 text-sm font-bold uppercase tracking-[0.08em] transition ${
               !showResult && !selectedOption
-                ? 'theme-lock-button cursor-not-allowed border'
-                : 'bg-gradient-to-r from-primary to-secondary text-white shadow-lg'
+                ? "theme-bg-surface cursor-not-allowed border"
+                : "bg-gradient-to-r from-primary to-secondary text-white shadow-lg"
             }`}
           >
-            {showResult ? (currentIndex === sentenceData.length - 1 ? 'Finish' : 'Continue') : 'Check'}
+            {showResult
+              ? currentIndex === sentenceData.length - 1
+                ? "Finish"
+                : "Continue"
+              : "Check"}
           </button>
         </div>
       </div>
@@ -394,15 +407,18 @@ export default function SentenceLearning({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
           <div className="max-w-md w-full rounded-3xl border-4 border-primary bg-white p-8 text-center shadow-2xl">
             <div className="mb-4 flex items-center justify-center text-7xl leading-none">🎉</div>
-            <h3 className="font-baloo text-3xl font-bold text-gray-800">Sentence Level Complete!</h3>
+            <h3 className="font-baloo text-3xl font-bold text-gray-800">
+              Sentence Level Complete!
+            </h3>
             <p className="mt-3 text-gray-600 font-semibold">
-              Great job finishing sentence practice. Want to review the words you learned? Check your Backpack.
+              Great job finishing sentence practice. Want to review the words you learned? Check
+              your Backpack.
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <button
                 onClick={() => {
                   setShowLevelCompleteModal(false);
-                  navigate('collection');
+                  navigate("collection");
                 }}
                 className="flex-1 rounded-2xl bg-gradient-to-r from-primary to-secondary px-6 py-4 font-bold text-white shadow-lg"
               >
@@ -411,7 +427,7 @@ export default function SentenceLearning({
               <button
                 onClick={() => {
                   setShowLevelCompleteModal(false);
-                  navigate('dashboard');
+                  navigate("dashboard");
                 }}
                 className="flex-1 rounded-2xl bg-gray-100 px-6 py-4 font-bold"
               >

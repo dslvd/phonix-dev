@@ -367,7 +367,7 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
 
   return (
     // Dashboard Page Container
-    <div className="theme-page min-h-screen px-4 py-5 lg:px-6">
+    <div className="min-h-screen px-4 py-5 lg:px-6">
       {/* Dashboard Content Wrapper */}
       <div className="mx-auto max-w-6xl">
         {/* Main Grid: Primary Content + Optional Right Rail */}
@@ -379,26 +379,26 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
               <motion.div
                 initial={{ opacity: 0, y: -14 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="theme-surface mb-5 rounded-2xl border p-5"
+                className="theme-bg-surface mb-5 rounded-2xl border p-5"
               >
                 <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#FAC775]">Welcome to Phonix</p>
                 <h2 className="mt-1 font-baloo text-3xl font-bold">Learn Hiligaynon fast with guided lessons and AI support</h2>
-                <p className="theme-muted mt-2 text-sm font-semibold">
+                <p className="theme-text-soft mt-2 text-sm font-semibold">
                   Practice words, run quick quizzes, scan real-world text, and build your vocabulary step by step.
                 </p>
 
                 <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                  <div className="theme-surface-soft rounded-xl border p-3">
+                  <div className="theme-bg-surface rounded-xl border p-3">
                     <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#FAC775]">1. Play Lessons</p>
-                    <p className="theme-muted mt-1 text-sm font-semibold">Finish fun word missions and unlock new checkpoints.</p>
+                    <p className="theme-text-soft mt-1 text-sm font-semibold">Finish fun word missions and unlock new checkpoints.</p>
                   </div>
-                  <div className="theme-surface-soft rounded-xl border p-3">
+                  <div className="theme-bg-surface rounded-xl border p-3">
                     <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#FAC775]">2. Explore</p>
-                    <p className="theme-muted mt-1 text-sm font-semibold">Scan real text to discover extra words from daily life.</p>
+                    <p className="theme-text-soft mt-1 text-sm font-semibold">Scan real text to discover extra words from daily life.</p>
                   </div>
-                  <div className="theme-surface-soft rounded-xl border p-3">
+                  <div className="theme-bg-surface rounded-xl border p-3">
                     <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#FAC775]">3. Keep Streak</p>
-                    <p className="theme-muted mt-1 text-sm font-semibold">Stay consistent and grow your streak, stars, and XP.</p>
+                    <p className="theme-text-soft mt-1 text-sm font-semibold">Stay consistent and grow your streak, stars, and XP.</p>
                   </div>
                 </div>
 
@@ -461,14 +461,14 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
             )}
 
             {/* Learning Roadmap Section */}
-            <div className="theme-surface mt-5 rounded-3xl border px-4 py-6 sm:px-6">
+            <div className="theme-bg-surface mt-5 rounded-3xl border px-4 py-6 sm:px-6">
               {/* Roadmap Header */}
               <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#FAC775]">Roadmap</p>
                   <h3 className="mt-1 font-baloo text-4xl font-bold">Your learning route</h3>
                 </div>
-                <p className="theme-muted text-sm font-semibold">Tap a tile to jump back into vocabulary practice.</p>
+                <p className="theme-text-soft text-sm font-semibold">Tap a tile to jump back into vocabulary practice.</p>
               </div>
 
               <div className="relative mx-auto max-w-4xl">
@@ -495,7 +495,7 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
                             className={`flex h-10 w-10 items-center justify-center rounded-full border-4 text-lg shadow-lg transition sm:h-16 sm:w-16 sm:text-3xl ${
                               node.unlocked
                                 ? `bg-gradient-to-br ${node.tone} border-white/70 hover:scale-105`
-                                : 'theme-lock-button cursor-not-allowed'
+                                : 'theme-bg-surface cursor-not-allowed'
                             }`}
                             aria-label={node.title}
                           >
@@ -504,15 +504,15 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
                         </div>
 
                         <div className={`flex-1 ${isOdd ? 'sm:pr-12' : 'sm:pl-12'}`}>
-                          <div className={`theme-surface-soft rounded-3xl border p-4 sm:p-5 ${isCurrent ? 'ring-2 ring-[#56b8e8]' : ''}`}>
+                          <div className={`theme-bg-surface rounded-3xl border p-4 sm:p-5 ${isCurrent ? 'ring-2 ring-[#56b8e8]' : ''}`}>
                             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                               <div>
-                                <p className="theme-muted text-[11px] font-bold uppercase tracking-[0.16em]">{node.hint}</p>
+                                <p className="theme-text-soft text-[11px] font-bold uppercase tracking-[0.16em]">{node.hint}</p>
                                 <h4 className="mt-1 font-baloo text-2xl font-bold">{node.title}</h4>
                                 <p className="theme-text-soft mt-2 text-sm font-semibold leading-7">{node.description}</p>
                               </div>
                               <div className="rounded-full border border-[color:var(--theme-border)] px-3 py-1.5 text-right">
-                                <p className="theme-muted text-[11px] font-bold uppercase tracking-[0.08em]">Level</p>
+                                <p className="theme-text-soft text-[11px] font-bold uppercase tracking-[0.08em]">Level</p>
                                 <p className="font-baloo text-lg font-bold">{index + 1}/{roadmapNodes.length}</p>
                               </div>
                             </div>
@@ -525,8 +525,8 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
                             </div>
 
                             <div className="mt-3 flex items-center justify-between text-xs font-semibold">
-                              <p className="theme-muted">{node.progress}/{node.total} completed</p>
-                              <p className={`font-bold ${node.unlocked ? 'text-[#7ed6ff]' : 'theme-muted'}`}>
+                              <p className="theme-text-soft">{node.progress}/{node.total} completed</p>
+                              <p className={`font-bold ${node.unlocked ? 'text-[#7ed6ff]' : 'theme-text-soft'}`}>
                                 {node.unlocked ? (isCurrent ? 'Continue here' : 'Unlocked') : 'Locked'}
                               </p>
                             </div>
@@ -545,10 +545,10 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
             <aside className="space-y-4">
               {/* Leaderboard Card */}
               {!isGuestMode && (
-                <div className="theme-surface rounded-2xl border p-4">
+                <div className="theme-bg-surface rounded-2xl border p-4">
                   <h3 className="text-xl font-bold">Leaderboard</h3>
                   {leaderboardEntries.length === 0 ? (
-                    <p className="theme-muted mt-2 text-sm font-semibold">
+                    <p className="theme-text-soft mt-2 text-sm font-semibold">
                       Keep learning. Your rank appears after progress sync.
                     </p>
                   ) : (
@@ -564,13 +564,13 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
                         return (
                           <div
                             key={`${entry.userKey}-${entry.rank}`}
-                            className={`theme-surface-soft flex items-center justify-between rounded-xl border px-3 py-2 ${
+                            className={`theme-bg-surface flex items-center justify-between rounded-xl border px-3 py-2 ${
                               isCurrentUser ? 'border-[#56b8e8]' : ''
                             }`}
                           >
                             <div>
                               <p className="text-sm font-bold">#{entry.rank} {leaderboardName}</p>
-                              <p className="theme-muted text-xs font-semibold">
+                              <p className="theme-text-soft text-xs font-semibold">
                                 {entry.learnedWords} words • {entry.stars} stars • 🔥 {entry.currentStreak}
                               </p>
                             </div>
@@ -582,7 +582,7 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
                   )}
                   <button
                     onClick={() => navigate('instructions')}
-                    className="theme-nav-button mt-3 w-full rounded-xl border px-3 py-2 text-sm font-bold uppercase tracking-[0.08em]"
+                    className="theme-bg-surface mt-3 w-full rounded-xl border px-3 py-2 text-sm font-bold uppercase tracking-[0.08em]"
                   >
                     How It Works
                   </button>
@@ -591,7 +591,7 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
 
               {/* Current Learning Stats Card */}
               {!isGuestMode && (
-                <div className="theme-surface rounded-2xl border p-4">
+                <div className="theme-bg-surface rounded-2xl border p-4">
                   <div className="rounded-2xl border-b-4 border-[#FF9126] bg-gradient-to-b from-[#FF9126] to-[#FF9126] p-4">
                     <p className="text-xs font-bold uppercase tracking-[0.15em]">Now learning</p>
                     <h3 className="mt-1 font-baloo text-4xl font-bold">{appState.targetLanguage || 'Hiligaynon'}</h3>
@@ -599,18 +599,18 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
                   </div>
 
                   <div className="mt-3 space-y-2.5">
-                    <div className="theme-surface-soft rounded-xl border p-3">
-                      <p className="theme-muted text-xs font-bold uppercase tracking-[0.12em]">Words learned</p>
+                    <div className="theme-bg-surface rounded-xl border p-3">
+                      <p className="theme-text-soft text-xs font-bold uppercase tracking-[0.12em]">Words learned</p>
                       <p className="mt-1 font-baloo text-4xl font-bold">{appState.learnedWords.length}</p>
                     </div>
 
-                    <div className="theme-surface-soft rounded-xl border p-3">
-                      <p className="theme-muted text-xs font-bold uppercase tracking-[0.12em]">Stars earned</p>
+                    <div className="theme-bg-surface rounded-xl border p-3">
+                      <p className="theme-text-soft text-xs font-bold uppercase tracking-[0.12em]">Stars earned</p>
                       <p className="mt-1 font-baloo text-4xl font-bold text-[#ffd166]">{appState.stars}</p>
                     </div>
 
-                    <div className="theme-surface-soft rounded-xl border p-3">
-                      <p className="theme-muted text-xs font-bold uppercase tracking-[0.12em]">Batteries</p>
+                    <div className="theme-bg-surface rounded-xl border p-3">
+                      <p className="theme-text-soft text-xs font-bold uppercase tracking-[0.12em]">Batteries</p>
                       <p className="mt-1 font-baloo text-[1.85rem] leading-none font-bold text-[#ffb86b]">
                         {premium.isPremium
                           ? '∞ Unlimited Batteries'
@@ -620,18 +620,18 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
                       </p>
                     </div>
 
-                    <div className="theme-surface-soft rounded-xl border p-3">
-                      <p className="theme-muted text-xs font-bold uppercase tracking-[0.12em]">Streak</p>
+                    <div className="theme-bg-surface rounded-xl border p-3">
+                      <p className="theme-text-soft text-xs font-bold uppercase tracking-[0.12em]">Streak</p>
                       <p className="mt-1 font-baloo text-[1.85rem] leading-none font-bold text-[#ff8e6d]">
                         🔥 {appState.currentStreak} {appState.currentStreak === 1 ? 'day' : 'days'}
                       </p>
-                      <p className="theme-muted mt-1 text-xs font-semibold">
+                      <p className="theme-text-soft mt-1 text-xs font-semibold">
                         Best: {appState.longestStreak} {appState.longestStreak === 1 ? 'day' : 'days'}
                       </p>
                     </div>
 
-                    <div className="theme-surface-soft rounded-xl border p-3">
-                      <p className="theme-muted text-xs font-bold uppercase tracking-[0.12em]">XP</p>
+                    <div className="theme-bg-surface rounded-xl border p-3">
+                      <p className="theme-text-soft text-xs font-bold uppercase tracking-[0.12em]">XP</p>
                       <p className="mt-1 font-baloo text-4xl font-bold text-[#7ed6ff]">{appState.totalXP}</p>
                     </div>
                   </div>
@@ -640,9 +640,9 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
 
               {/* Guest Save Progress Card */}
               {!hasLoggedInUser && (
-                <div className="theme-surface rounded-2xl border p-4">
+                <div className="theme-bg-surface rounded-2xl border p-4">
                   <h3 className="text-xl font-bold">Save your progress</h3>
-                  <p className="theme-muted mt-2 text-sm font-semibold">Keep your streak and lesson path synced.</p>
+                  <p className="theme-text-soft mt-2 text-sm font-semibold">Keep your streak and lesson path synced.</p>
                   <div className="mt-4 space-y-2">
                     <button
                       onClick={() => navigate('landing')}

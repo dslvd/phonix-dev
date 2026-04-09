@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -12,7 +12,7 @@
   --border: #2c3d4b;
 }
 
-[data-theme='light'] {
+[data-theme="light"] {
   --bg: #f7f9fc;
   --text: #1f2933;
   --primary: #ff9126;
@@ -59,12 +59,10 @@
 
   .btn-secondary {
     background-color: var(--surface);
-    border-color: var(--border);
   }
 
   .btn-ghost {
     background-color: transparent;
-    border-color: var(--border);
   }
 
   .text-muted {
@@ -73,74 +71,11 @@
 }
 
 @layer utilities {
-  .theme-page {
-    background-color: var(--bg);
-  }
-
-  .theme-shell {
-    background-color: var(--bg);
-  }
-
-  .theme-surface {
+  .theme-bg-surface {
     background-color: var(--surface);
-    border-color: var(--border);
-    box-shadow: none;
-  }
-
-  .theme-surface-strong {
-    background-color: var(--surface);
-    border-color: var(--border);
-    box-shadow: none;
-  }
-
-  .theme-surface-soft {
-    background-color: var(--surface);
-    border-color: var(--border);
-    box-shadow: none;
-  }
-
-  .theme-summary-card {
-    background-color: var(--surface);
-    border-color: var(--border);
-    box-shadow: none;
-  }
-
-  .theme-summary-banner {
-    background-color: var(--surface);
-    border-color: var(--border);
-    box-shadow: none;
-  }
-
-  .theme-quiz-correct {
-    background-color: var(--surface);
-    border-color: var(--border);
-    box-shadow: none;
-  }
-
-  .theme-muted {
-    color: color-mix(in srgb, var(--text) 68%, transparent);
   }
 
   .theme-text-soft {
     color: color-mix(in srgb, var(--text) 68%, transparent);
-  }
-
-  .theme-nav-button {
-    background-color: var(--surface);
-    border-color: var(--border);
-  }
-
-  .theme-lock-button {
-    background-color: var(--surface);
-    border-color: var(--border);
-  }
-
-  .theme-nav-active {
-    background-color: color-mix(in srgb, var(--primary) 18%, var(--surface));
-    border-color: var(--primary);
-  }
-
-  .clean-ui [class*='shadow'] {
-    box-shadow: none !important;
   }
 }
