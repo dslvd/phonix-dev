@@ -115,7 +115,7 @@ export default function Landing({ navigate, resetAppState }: LandingProps) {
         <div className="text-center mb-8">
           <div className="inline-block">
             <div className="mb-4 p-2">
-              <h1 className="font-baloo text-5xl font-bold leading-none text-[#FF9126]">Phonix</h1>
+              <h1 className="font-montserrat text-5xl font-black leading-none text-[#FF7100]">phonix</h1>
             </div>
           </div>
           <p className="text-sm font-semibold text-[#8bb1c7]">
