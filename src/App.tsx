@@ -396,8 +396,11 @@ function App() {
         aria-pressed={theme === 'light'}
         title="Light mode"
       >
-        <img src = "/assets/LightMode.png"/>
-        </button>
+        <img
+          src="/assets/LightMode.png"
+          style={{ filter: theme === 'light' ? 'brightness(0.25)' : 'none' }}
+        />
+      </button>
       <button
         onClick={() => setTheme('dark')}
         className={`grid h-9 w-9 place-items-center rounded-full text-lg leading-none font-bold transition sm:h-10 sm:w-10 ${
@@ -408,11 +411,13 @@ function App() {
         aria-pressed={theme === 'dark'}
         title="Dark mode"
       >
-      <img src = "/assets/DarkMode.png"/>
+        <img
+          src="/assets/DarkMode.png"
+          style={{ filter: theme === 'light' ? 'brightness(0.25)' : 'none' }}
+        />
       </button>
     </div>
   );
-
   const updateState: UpdateStateFn = (updates) => {
     setAppState((prev) => {
       const nextUpdates = typeof updates === 'function' ? updates(prev) : updates;
