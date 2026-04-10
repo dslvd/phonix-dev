@@ -111,7 +111,6 @@ export default function ScanMode({ navigate, appState, updateState, premium }: S
   const [error, setError] = useState<string | null>(null);
   const [savedScans, setSavedScans] = useState<ScanResult[]>([]);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [showQuickTips, setShowQuickTips] = useState(true);
   const [showLoginRequiredModal, setShowLoginRequiredModal] = useState(false);
   const [manualText, setManualText] = useState("");
   const [pendingAttachment, setPendingAttachment] = useState<PendingAttachment | null>(null);
@@ -1897,52 +1896,6 @@ const translatePendingAttachment = async () => {
                 </div>
               </Card>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Quick Tips Floating Panel */}
-      <AnimatePresence>
-        {showQuickTips && (
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 16, scale: 0.96 }}
-            className="fixed bottom-24 right-4 z-40 w-[min(360px,calc(100vw-2rem))] lg:bottom-6 lg:right-6"
-          >
-            <Card className="theme-bg-surface border shadow-2xl">
-              <div className="mb-3 flex items-start justify-between gap-3">
-                <h4 className="flex items-center gap-2 font-baloo text-lg font-bold">
-                  <span>💡</span>
-                  Quick Tips
-                </h4>
-                <button
-                  onClick={() => setShowQuickTips(false)}
-                  className="theme-text-soft rounded-full px-2 py-1 text-sm font-bold transition hover:text-primary"
-                  aria-label="Close quick tips"
-                >
-                  x
-                </button>
-              </div>
-              <ul className="theme-text-soft space-y-2 text-sm font-semibold">
-                <li className="flex gap-2">
-                  <span>✨</span>
-                  <span>Use good lighting for documents</span>
-                </li>
-                <li className="flex gap-2">
-                  <span>📄</span>
-                  <span>Keep text inside the center guide box</span>
-                </li>
-                <li className="flex gap-2">
-                  <span>📷</span>
-                  <span>Hold the camera steady before scanning</span>
-                </li>
-                <li className="flex gap-2">
-                  <span>🔊</span>
-                  <span>Tap the speaker icon to hear the translation</span>
-                </li>
-              </ul>
-            </Card>
           </motion.div>
         )}
       </AnimatePresence>
