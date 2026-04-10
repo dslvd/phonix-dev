@@ -398,7 +398,7 @@ function App() {
       >
         <img
           src="/assets/LightMode.png"
-          style={{ filter: theme === 'light' ? 'brightness(0.25)' : 'none' }}
+          style={{ filter: theme === 'light' ? 'brightness(0.25)' : 'none' , width: '30px', height: '30px' }}
         />
       </button>
       <button
@@ -413,7 +413,7 @@ function App() {
       >
         <img
           src="/assets/DarkMode.png"
-          style={{ filter: theme === 'light' ? 'brightness(0.25)' : 'none' }}
+          style={{ filter: theme === 'light' ? 'brightness(0.25)' : 'none' , width: '30px', height: '30px'}}
         />
       </button>
    </div>
