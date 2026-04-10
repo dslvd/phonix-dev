@@ -1,6 +1,6 @@
-import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
-import { formatBatteryCountdown } from '../lib/battery';
+import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { formatBatteryCountdown } from "../lib/battery";
 
 interface NavigationHeaderProps {
   onBack?: () => void;
@@ -38,11 +38,11 @@ export default function NavigationHeader({
   const [now, setNow] = useState(() => Date.now());
 
   const storedStats = (() => {
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       return { streakCount: 0, starCount: 0 };
     }
 
-    const rawState = window.localStorage.getItem('phonix-app-state');
+    const rawState = window.localStorage.getItem("phonix-app-state");
     if (!rawState) {
       return { streakCount: 0, starCount: 0 };
     }
@@ -50,8 +50,8 @@ export default function NavigationHeader({
     try {
       const state = JSON.parse(rawState) as { currentStreak?: number; stars?: number };
       return {
-        streakCount: typeof state.currentStreak === 'number' ? state.currentStreak : 0,
-        starCount: typeof state.stars === 'number' ? state.stars : 0,
+        streakCount: typeof state.currentStreak === "number" ? state.currentStreak : 0,
+        starCount: typeof state.stars === "number" ? state.stars : 0,
       };
     } catch {
       return { streakCount: 0, starCount: 0 };
@@ -62,7 +62,7 @@ export default function NavigationHeader({
   const displayStarCount = starCount || storedStats.starCount;
 
   useEffect(() => {
-    if (typeof batteryResetAt !== 'string' || isPremium) {
+    if (typeof batteryResetAt !== "string" || isPremium) {
       return;
     }
 
@@ -72,80 +72,88 @@ export default function NavigationHeader({
   }, [batteryResetAt, isPremium]);
 
   return (
-    <div className="theme-surface-strong sticky inset-x-0 top-0 z-50 w-full border-b">
-      <div className="flex w-full items-center justify-between gap-3 px-4 py-3">
-        <div className="flex min-w-0 items-center gap-2.5">
-          {onBack ? (
-            <motion.button
-              whileHover={{ scale: 1.03, x: -1 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={onBack}
-              className="theme-nav-button flex h-10 w-10 items-center justify-center rounded-xl border text-xl leading-none transition"
-              aria-label="Go back"
-            >
-              ←
-            </motion.button>
-          ) : (
-            <h1 className="font-montserrat text-2xl font-black text-[#FF7100]">phonix</h1>
-          )}
+    <>
+      <div aria-hidden="true" className="h-[73px] md:hidden" />
 
-          {title && (
-            <h2 className="theme-title truncate font-baloo text-lg font-bold sm:text-xl">
-              {title}
-            </h2>
-          )}
-        </div>
 
-        {showProgress && (
-          <div className="theme-nav-button hidden items-center rounded-full border px-3 py-1.5 md:flex">
-            <span className="theme-muted mr-2 text-[11px] font-bold uppercase tracking-[0.08em]">Progress</span>
-            <span className="theme-title text-sm font-bold">
-              {currentProgress} / {totalProgress}
-            </span>
-          </div>
-        )}
+      <div className="fixed inset-x-0 top-0 z-50 px-4 pt-3 md:static">
+        <div className="theme-bg-surface w-full border rounded-2xl">
+          <div className="flex w-full items-center justify-between gap-3 px-4 py-3">
+            {/* ...all your content stays the same... */}
+            <div className="flex min-w-0 items-center gap-2.5">
+              {onBack ? (
+                <motion.button
+                  whileHover={{ scale: 1.03, x: -1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={onBack}
+                  className="theme-bg-surface flex h-10 w-10 items-center justify-center rounded-xl border text-xl leading-none transition"
+                  aria-label="Go back"
+                >
+                  ←
+                </motion.button>
+              ) : (
+                <h1 className="font-baloo text-2xl font-bold text-[#FF9126]">Phonix</h1>
+              )}
 
-        {typeof batteryCurrent === 'number' && typeof batteryMax === 'number' && (
-          <div className="theme-nav-button flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-bold">
-            <span>{isPremium ? '🔋' : batteryCurrent <= 0 ? '🪫' : '🔋'}</span>
-            <span>
-              {isPremium
-                ? '∞'
-                : batteryResetAt && batteryCurrent < batteryMax
-                ? `${batteryCurrent}/${batteryMax} · ${formatBatteryCountdown(batteryResetAt, now)}`
-                : `${batteryCurrent}/${batteryMax}`}
-            </span>
-          </div>
-        )}
+              {title && <h2 className="truncate font-baloo text-lg font-bold sm:text-xl">{title}</h2>}
+            </div>
 
-        <div className="flex items-center gap-2">
-          {showStats && (
-            <>
-              <div className="theme-nav-button flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-bold">
-                <span>🔥</span>
-                <span>{displayStreakCount}</span>
+            {showProgress && (
+              <div className="theme-bg-surface hidden items-center rounded-full border px-3 py-1.5 md:flex">
+                <span className="theme-text-soft mr-2 text-[11px] font-bold uppercase tracking-[0.08em]">
+                  Progress
+                </span>
+                <span className="text-sm font-bold">
+                  {currentProgress} / {totalProgress}
+                </span>
               </div>
-              <div className="theme-nav-button flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-bold">
-                <span>⭐</span>
-                <span>{displayStarCount}</span>
-              </div>
-            </>
-          )}
+            )}
 
-          {onProfile && (
-            <motion.button
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={onProfile}
-              className="theme-nav-button flex h-10 w-10 items-center justify-center rounded-xl border text-lg leading-none transition-colors hover:text-[#2f9de4]"
-              title="Profile"
-              aria-label="Open profile"
-            >
-              👤
-            </motion.button>
-          )}
+            <div className="flex items-center gap-2">
+              {typeof batteryCurrent === "number" && typeof batteryMax === "number" && (
+                <div className="theme-bg-surface flex items-center gap-1.5 rounded-full border px-3 py-2.5 text-xs font-bold">
+                  <span>{isPremium ? "🔋" : batteryCurrent <= 0 ? "🪫" : "🔋"}</span>
+                  <span>
+                    {isPremium
+                      ? "∞"
+                      : batteryResetAt && batteryCurrent < batteryMax
+                        ? `${batteryCurrent}/${batteryMax} · ${formatBatteryCountdown(batteryResetAt, now)}`
+                        : `${batteryCurrent}/${batteryMax}`}
+                  </span>
+                </div>
+              )}
+
+
+
+              {showStats && (
+                <>
+                  <div className="theme-bg-surface flex items-center gap-1 rounded-full border px-2.5 py-2.5 text-xs font-bold">
+                  <span>🔥</span>
+                  <span>{displayStreakCount}</span>
+                  </div>
+                  <div className="theme-bg-surface flex items-center gap-1 rounded-full border px-2.5 py-2.5 text-xs font-bold">
+                    <span>⭐</span>
+                    <span>{displayStarCount}</span>
+                  </div>
+                </>
+              )}
+
+              {onProfile && (
+                <motion.button
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={onProfile}
+                  className="theme-bg-surface flex h-10 w-10 items-center justify-center rounded-xl border text-lg leading-none transition-colors hover:text-[#2f9de4]"
+                  title="Profile"
+                  aria-label="Open profile"
+                >
+                  👤
+                </motion.button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

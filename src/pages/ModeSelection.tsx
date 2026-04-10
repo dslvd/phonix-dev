@@ -21,7 +21,7 @@ export default function ModeSelection({ navigate, updateState }: ModeSelectionPr
 
   return (
     // Mode Selection Page Container
-    <div className="theme-page min-h-screen text-slate-100">
+    <div className="min-h-screen">
       {/* Top Navigation */}
       <NavigationHeader
         onBack={() => navigate('setup')}

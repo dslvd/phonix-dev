@@ -41,7 +41,7 @@ export default function EnergyBar({ current, max, isPremium, onUpgrade }: Energy
           >
             {isPremium ? '🔋' : isCritical ? '🪫' : isLow ? '🔋' : '🔋'}
           </motion.span>
-          <span className="theme-title font-bold">
+          <span className="font-bold">
             {isPremium ? 'Unlimited Batteries' : 'Batteries'}
           </span>
         </div>
@@ -153,7 +153,7 @@ export default function EnergyBar({ current, max, isPremium, onUpgrade }: Energy
           animate={{ opacity: 1, scale: 1 }}
           className="flex items-center justify-center gap-2 mt-2"
         >
-          <div className="bg-gradient-to-r from-yellow-400 to-amber-500 text-white px-4 py-1 rounded-full text-xs font-bold shadow-lg">
+          <div className="bg-gradient-to-r from-yellow-400 to-amber-500 px-4 py-1 rounded-full text-xs font-bold shadow-lg">
              UNLIMITED BATTERIES 
           </div>
         </motion.div>
