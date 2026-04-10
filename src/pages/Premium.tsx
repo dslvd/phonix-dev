@@ -66,7 +66,7 @@ export default function Premium({ navigate, premium }: PremiumProps) {
 
   return (
     // Premium Page Container
-    <div className="theme-page min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden">
       {/* BACKGROUND */}
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(72,187,255,0.08),transparent_30%),#0f1b24] -z-10" />
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(251,191,36,0.15),transparent_50%)] -z-10" />
@@ -110,9 +110,7 @@ export default function Premium({ navigate, premium }: PremiumProps) {
             Unlimited Batteries
           </h1>
 
-          <p className="theme-title mb-6 text-2xl font-semibold">
-            Unlock Your Full Learning Potential
-          </p>
+          <p className="mb-6 text-2xl font-semibold">Unlock Your Full Learning Potential</p>
 
           {restoreSuccess && (
             <div className="mb-6 bg-green-900/30 border border-green-400/40 rounded-xl p-3 inline-block">
@@ -121,15 +119,15 @@ export default function Premium({ navigate, premium }: PremiumProps) {
           )}
 
           {/* Pricing Card */}
-          <Card className="theme-surface-strong shadow-2xl">
+          <Card className="theme-bg-surface shadow-2xl">
             <div className="p-8 text-center">
               <div className="text-6xl mb-3">🎁</div>
 
-              <p className="theme-muted mb-2 text-lg font-bold">LIMITED TIME OFFER</p>
+              <p className="theme-text-soft mb-2 text-lg font-bold">LIMITED TIME OFFER</p>
 
               <div className="flex justify-center items-end gap-2 mb-4">
-                <span className="theme-muted text-2xl opacity-70 line-through">₱299.99</span>
-                <span className="theme-title font-baloo text-6xl font-bold">FREE</span>
+                <span className="theme-text-soft text-2xl opacity-70 line-through">₱299.99</span>
+                <span className="font-baloo text-6xl font-bold">FREE</span>
               </div>
 
               <div className="mt-2 flex flex-col items-center gap-3">
@@ -138,7 +136,7 @@ export default function Premium({ navigate, premium }: PremiumProps) {
                   whileTap={{ scale: 0.95 }}
                   onClick={handleUnlockPremium}
                   disabled={loading || purchasing || isPremium}
-                  className="rounded-2xl bg-[#FF9126] px-12 py-4 text-xl font-bold text-[#4a2a00] shadow-2xl hover:brightness-105 disabled:opacity-50"
+                  className="rounded-2xl bg-[color:var(--primary)] px-12 py-4 text-xl font-bold shadow-2xl hover:brightness-105 disabled:opacity-50"
                 >
                   {isPremium
                     ? "Premium Unlocked"
@@ -165,7 +163,7 @@ export default function Premium({ navigate, premium }: PremiumProps) {
 
         {/* Premium Features Section */}
         <motion.div className="mb-12">
-          <h2 className="theme-title mb-8 text-center text-4xl font-bold">Premium Features</h2>
+          <h2 className="mb-8 text-center text-4xl font-bold">Premium Features</h2>
 
           <div className="flex flex-wrap justify-center gap-6">
             {features.map((feature) => (
@@ -183,7 +181,7 @@ export default function Premium({ navigate, premium }: PremiumProps) {
                     {feature.title}
                   </h3>
 
-                  <p className="theme-muted">{feature.description}</p>
+                  <p className="theme-text-soft">{feature.description}</p>
                 </div>
               </Card>
             ))}
@@ -192,9 +190,7 @@ export default function Premium({ navigate, premium }: PremiumProps) {
 
         {/* Testimonials Section */}
         <motion.div className="mb-12">
-          <h2 className="theme-title mb-8 text-center font-baloo text-4xl font-bold">
-            What Learners Say
-          </h2>
+          <h2 className="mb-8 text-center font-baloo text-4xl font-bold">What Learners Say</h2>
 
           <div className="grid md:grid-cols-2 gap-6">
             {[
@@ -225,9 +221,9 @@ export default function Premium({ navigate, premium }: PremiumProps) {
                       ))}
                     </div>
 
-                    <p className="theme-title mb-2 italic">"{testimonial.quote}"</p>
+                    <p className="mb-2 italic">"{testimonial.quote}"</p>
 
-                    <p className="theme-muted text-sm font-bold">- {testimonial.name}</p>
+                    <p className="theme-text-soft text-sm font-bold">- {testimonial.name}</p>
                   </div>
                 </div>
               </Card>
@@ -237,7 +233,7 @@ export default function Premium({ navigate, premium }: PremiumProps) {
 
         {/* FAQ Section */}
         <motion.div>
-          <h2 className="theme-title mb-8 text-center font-baloo text-4xl font-bold">
+          <h2 className="mb-8 text-center font-baloo text-4xl font-bold">
             Frequently Asked Questions
           </h2>
 
@@ -257,8 +253,8 @@ export default function Premium({ navigate, premium }: PremiumProps) {
               },
             ].map((faq, index) => (
               <Card key={index} className="bg-white/10 border border-white/20">
-                <h3 className="theme-title mb-2 font-bold">{faq.q}</h3>
-                <p className="theme-muted">{faq.a}</p>
+                <h3 className="mb-2 font-bold">{faq.q}</h3>
+                <p className="theme-text-soft">{faq.a}</p>
               </Card>
             ))}
           </div>

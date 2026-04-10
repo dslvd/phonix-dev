@@ -1,19 +1,19 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --bg: #0b071f;
+:root { /*Dark mode ni*/
+  --bg: linear-gradient(#0b071f 60%, #231833 100%);
   --text: #f5f7fa;
   --primary: #ff9126;
   --surface: #171130;
   --border: #2c3d4b;
 }
 
-[data-theme='light'] {
-  --bg: #f7f9fc;
+[data-theme="light"] {
+  --bg: linear-gradient(#f7f9fc 60%, #FFFFFF 100%);
   --text: #1f2933;
   --primary: #ff9126;
   --surface: #ffffff;
@@ -21,32 +21,32 @@
 }
 
 @layer base {
-  html {
-    background-color: var(--bg);
+  html, body {
+    min-height: 100%;
+    margin: 0;
   }
-
   body {
     @apply min-h-screen font-nunito antialiased;
-    background-color: var(--bg);
+    background: var(--bg);    
     color: var(--text);
   }
-
+  [data-theme="light"] body {
+    background: var(--bg);
   * {
-    border-color: var(--border);
+      border-color: var(--border);
+    }
   }
 }
 
 @layer components {
   .card {
     background-color: var(--surface);
-    color: var(--text);
     border: 1px solid var(--border);
     @apply rounded-3xl;
   }
 
   .btn {
     background-color: var(--primary);
-    color: var(--text);
     border: 1px solid transparent;
     @apply inline-flex items-center justify-center gap-2 rounded-2xl px-6 py-3 font-bold transition;
   }
@@ -61,14 +61,10 @@
 
   .btn-secondary {
     background-color: var(--surface);
-    color: var(--text);
-    border-color: var(--border);
   }
 
   .btn-ghost {
     background-color: transparent;
-    color: var(--text);
-    border-color: var(--border);
   }
 
   .text-muted {
@@ -77,49 +73,11 @@
 }
 
 @layer utilities {
-  .theme-page,
-  .theme-shell {
-    background-color: var(--bg);
-    color: var(--text);
-  }
-
-  .theme-surface,
-  .theme-surface-strong,
-  .theme-surface-soft,
-  .theme-summary-card,
-  .theme-summary-banner,
-  .theme-quiz-correct {
+  .theme-bg-surface {
     background-color: var(--surface);
-    color: var(--text);
-    border-color: var(--border);
-    box-shadow: none;
   }
 
-  .theme-title,
-  .theme-summary-label,
-  .theme-summary-value {
-    color: var(--text);
-  }
-
-  .theme-muted,
   .theme-text-soft {
     color: color-mix(in srgb, var(--text) 68%, transparent);
-  }
-
-  .theme-nav-button,
-  .theme-lock-button {
-    background-color: var(--surface);
-    color: var(--text);
-    border-color: var(--border);
-  }
-
-  .theme-nav-active {
-    background-color: color-mix(in srgb, var(--primary) 18%, var(--surface));
-    color: var(--text);
-    border-color: var(--primary);
-  }
-
-  .clean-ui [class*='shadow'] {
-    box-shadow: none !important;
   }
 }

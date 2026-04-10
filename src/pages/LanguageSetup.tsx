@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import Button from '../components/Button';
-import Card from '../components/Card';
-import NavigationHeader from '../components/NavigationHeader';
-import { Page, AppState } from '../App';
+import { useState } from "react";
+import { motion } from "framer-motion";
+import Button from "../components/Button";
+import Card from "../components/Card";
+import NavigationHeader from "../components/NavigationHeader";
+import { Page, AppState } from "../App";
 
 interface LanguageSetupProps {
   navigate: (page: Page) => void;
@@ -11,25 +11,25 @@ interface LanguageSetupProps {
 }
 
 export default function LanguageSetup({ navigate, updateState }: LanguageSetupProps) {
-  const [nativeLanguage, setNativeLanguage] = useState('');
-  const [targetLanguage, setTargetLanguage] = useState('');
-  const nativeLanguageOptions = ['English', 'Filipino'];
-  const targetLanguageOptions = ['Hiligaynon'];
+  const [nativeLanguage, setNativeLanguage] = useState("");
+  const [targetLanguage, setTargetLanguage] = useState("");
+  const nativeLanguageOptions = ["English", "Filipino"];
+  const targetLanguageOptions = ["Hiligaynon"];
 
   const handleSubmit = () => {
     if (nativeLanguage && targetLanguage) {
       updateState({ nativeLanguage, targetLanguage });
-      navigate('mode');
+      navigate("mode");
     }
   };
 
   return (
     // Page Container
-    <div className="theme-page min-h-screen text-slate-100">
+    <div className="min-h-screen">
       {/* Top Navigation */}
       <NavigationHeader
-        onBack={() => navigate('landing')}
-        onLogout={() => navigate('landing')}
+        onBack={() => navigate("landing")}
+        onLogout={() => navigate("landing")}
         showStats={false}
       />
 
@@ -43,10 +43,8 @@ export default function LanguageSetup({ navigate, updateState }: LanguageSetupPr
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-8"
           >
-            <h1 className="theme-title mb-2 font-baloo text-4xl font-bold">
-              Language Setup 🌍
-            </h1>
-            <p className="theme-muted">Tell us about your language journey!</p>
+            <h1 className="mb-2 font-baloo text-4xl font-bold">Language Setup 🌍</h1>
+            <p className="theme-text-soft">Tell us about your language journey!</p>
           </motion.div>
 
           {/* Native Language Selector */}
@@ -57,15 +55,14 @@ export default function LanguageSetup({ navigate, updateState }: LanguageSetupPr
             className="mb-6"
           >
             <label className="block mb-3">
-              <span className="theme-title flex items-center gap-2 text-lg font-bold">
-                <span>🗣️</span>
-                I speak...
+              <span className="flex items-center gap-2 text-lg font-bold">
+                <span>🗣️</span>I speak...
               </span>
             </label>
             <select
               value={nativeLanguage}
               onChange={(e) => setNativeLanguage(e.target.value)}
-              className="theme-surface-soft w-full rounded-2xl border px-6 py-4 text-lg font-semibold outline-none transition-all focus:border-[#56b8e8]"
+              className="theme-bg-surface w-full rounded-2xl border px-6 py-4 text-lg font-semibold outline-none transition-all focus:border-[#56b8e8]"
             >
               <option value="" disabled>
                 Select a language
@@ -86,15 +83,14 @@ export default function LanguageSetup({ navigate, updateState }: LanguageSetupPr
             className="mb-8"
           >
             <label className="block mb-3">
-              <span className="theme-title flex items-center gap-2 text-lg font-bold">
-                <span>🎯</span>
-                I want to learn...
+              <span className="flex items-center gap-2 text-lg font-bold">
+                <span>🎯</span>I want to learn...
               </span>
             </label>
             <select
               value={targetLanguage}
               onChange={(e) => setTargetLanguage(e.target.value)}
-              className="theme-surface-soft w-full rounded-2xl border px-6 py-4 text-lg font-semibold outline-none transition-all focus:border-[#56b8e8]"
+              className="theme-bg-surface w-full rounded-2xl border px-6 py-4 text-lg font-semibold outline-none transition-all focus:border-[#56b8e8]"
             >
               <option value="" disabled>
                 Select a language

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import Landing from './pages/Landing';
 import LanguageSetup from './pages/LanguageSetup';
 import ModeSelection from './pages/ModeSelection';
@@ -188,6 +189,7 @@ function App() {
     return window.innerWidth < 1024;
   });
   const [currentPage, setCurrentPage] = useState<Page>(getInitialPage);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [hasHydratedFromCloud, setHasHydratedFromCloud] = useState(false);
   const [theme, setTheme] = useState<ThemeMode>(getStoredTheme);
   const [appState, setAppState] = useState<AppState>(() => {
@@ -396,8 +398,11 @@ function App() {
         aria-pressed={theme === 'light'}
         title="Light mode"
       >
-        <img src = "/assets/LightMode.png"/>
-        </button>
+        <img
+          src="/assets/LightMode.png"
+          style={{ filter: theme === 'light' ? 'brightness(0.25)' : 'none' , width: '30px', height: '30px' }}
+        />
+      </button>
       <button
         onClick={() => setTheme('dark')}
         className={`grid h-9 w-9 place-items-center rounded-full text-lg leading-none font-bold transition sm:h-10 sm:w-10 ${
@@ -408,11 +413,14 @@ function App() {
         aria-pressed={theme === 'dark'}
         title="Dark mode"
       >
-      <img src = "/assets/DarkMode.png"/>
+        <img
+          src="/assets/DarkMode.png"
+          style={{ filter: theme === 'light' ? 'brightness(0.25)' : 'none' , width: '30px', height: '30px'}}
+        />
       </button>
-    </div>
+   </div>
   );
-
+  
   const updateState: UpdateStateFn = (updates) => {
     setAppState((prev) => {
       const nextUpdates = typeof updates === 'function' ? updates(prev) : updates;
@@ -561,7 +569,6 @@ function App() {
 
   const showDesktopSidebar = currentPage === 'dashboard' || currentPage === 'admin';
   const keepMainPanel = currentPage === 'dashboard';
-  const useCleanUi = currentPage !== 'dashboard';
   const shouldShowGlobalMascot = !['landing', 'setup', 'mode', 'scan', 'vocabulary', 'sentence'].includes(currentPage);
   const globalMascotPageContext = (() => {
     const batteryLine = premium.isPremium
@@ -667,6 +674,8 @@ function App() {
     desktopNavItems.splice(3, 0, { label: 'Profile', icon: '👤', page: 'profile' });
   }
 
+  const showMobileNav = !['landing', 'setup', 'mode'].includes(currentPage);
+
   const renderPage = () => {
     // Route-to-page component switcher
     switch (currentPage) {
@@ -704,9 +713,99 @@ function App() {
   if (isMobile) {
     return (
       // Mobile App Shell
-      <div className={`theme-page min-h-screen ${useCleanUi ? 'clean-ui' : ''}`}>
+      <div className={`min-h-screen `}>
         {/* Active Page Content */}
         {renderPage()}
+        {showMobileNav && (
+          <>
+            <div className="fixed left-4 top-4 z-[80]">
+              <button
+                onClick={() => setMobileNavOpen(true)}
+                className="theme-bg-surface flex h-12 w-12 items-center justify-center rounded-2xl border shadow-[0_18px_36px_rgba(15,27,36,0.22)]"
+                aria-label="Open navigation menu"
+              >
+                <span className="text-[1.35rem] leading-none">☰</span>
+              </button>
+            </div>
+
+            <AnimatePresence>
+              {mobileNavOpen && (
+                <>
+                  <motion.button
+                    type="button"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setMobileNavOpen(false)}
+                    className="fixed inset-0 z-[88] bg-slate-950/40"
+                    aria-label="Close navigation menu"
+                  />
+                  <motion.aside
+                    initial={{ x: -280, opacity: 0.9 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ x: -280, opacity: 0.9 }}
+                    transition={{ type: 'spring', stiffness: 340, damping: 34 }}
+                    className="theme-bg-surface fixed inset-y-0 left-0 z-[89] flex w-[min(290px,82vw)] flex-col border-r px-4 pb-5 pt-6 shadow-[0_28px_70px_rgba(15,27,36,0.28)]"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h1 className="font-montserrat text-3xl font-black" style={{ color: 'var(--primary)' }}>
+                          phonix
+                        </h1>
+                        <p className="text-muted text-[11px] font-bold uppercase tracking-[0.16em]">
+                          AI-driven learning app
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setMobileNavOpen(false)}
+                        className="theme-bg-surface flex h-10 w-10 items-center justify-center rounded-xl border text-lg"
+                        aria-label="Close navigation menu"
+                      >
+                        ×
+                      </button>
+                    </div>
+
+                    <nav className="mt-6 space-y-2">
+                      {desktopNavItems.map((item) => {
+                        const isActive = currentPage === item.page;
+                        return (
+                          <button
+                            key={item.page}
+                            onClick={() => {
+                              setMobileNavOpen(false);
+                              navigate(item.page);
+                            }}
+                            className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm font-bold transition ${
+                              isActive
+                                ? 'bg-[color:color-mix(in_srgb,var(--primary)_18%,var(--surface))] text-[var(--text)] border border-[var(--primary)]'
+                                : 'text-muted border-transparent bg-transparent hover:border-[color:var(--border)] hover:bg-[color:var(--surface)]'
+                            }`}
+                          >
+                            <span className="text-lg leading-none">{item.icon}</span>
+                            <span className="uppercase tracking-[0.08em]">{item.label}</span>
+                          </button>
+                        );
+                      })}
+                    </nav>
+
+                    <div className="mt-auto space-y-3">
+                      <button
+                        onClick={() => {
+                          setMobileNavOpen(false);
+                          resetAppState();
+                          navigate('landing');
+                        }}
+                        className="btn btn-secondary w-full rounded-xl px-4 py-3 text-sm uppercase tracking-[0.08em]"
+                      >
+                        {isGuestMode ? 'Exit Guest Mode' : 'Log Out'}
+                      </button>
+                    </div>
+                  </motion.aside>
+                </>
+              )}
+            </AnimatePresence>
+          </>
+        )}
         {/* Floating Theme Toggle */}
         <div className="fixed right-4 top-4 z-[70]">
           {themeToggle}
@@ -726,7 +825,7 @@ function App() {
 
   return (
     // Desktop App Shell
-    <div className={`${showDesktopSidebar ? 'theme-shell p-4' : 'theme-page p-6'} ${useCleanUi ? 'clean-ui' : ''} min-h-screen`}>
+    <div className={`${showDesktopSidebar ? 'p-4' : 'p-6'} min-h-screen`}>
       {/* Standalone Theme Toggle (no sidebar layout) */}
       {!showDesktopSidebar && (
         <div className="fixed right-6 top-6 z-[70]">
@@ -752,7 +851,7 @@ function App() {
                     onClick={() => navigate(item.page)}
                     className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm font-bold transition ${
                       isActive
-                        ? 'theme-nav-active'
+                        ? 'bg-[color:color-mix(in_srgb,var(--primary)_18%,var(--surface))] text-[var(--text)] border border-[var(--primary)]'
                         : 'text-muted border-transparent bg-transparent hover:border-[color:var(--border)] hover:bg-[color:var(--surface)]'
                     }`}
                   >
