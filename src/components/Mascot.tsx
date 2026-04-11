@@ -34,6 +34,7 @@ export default function Mascot({
   pageContext = "",
   responseLanguage = "English",
 }: MascotProps) {
+  const AUTO_HIDE_MESSAGE_MS = 3000;
   const isFilipino = responseLanguage.trim().toLowerCase() === "filipino";
   const isGuestMode = (() => {
     if (typeof window === "undefined") {
@@ -55,6 +56,7 @@ export default function Mascot({
     }
   })();
   const [isOpen, setIsOpen] = useState(false);
+  const [showBubble, setShowBubble] = useState(Boolean(message));
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -110,6 +112,20 @@ export default function Mascot({
       return [{ ...first, text: cleanAssistantText(message) }, ...rest];
     });
   }, [message]);
+
+  useEffect(() => {
+    if (!message || isOpen || position !== "bottom") {
+      setShowBubble(false);
+      return;
+    }
+
+    setShowBubble(true);
+    const timeoutId = window.setTimeout(() => {
+      setShowBubble(false);
+    }, AUTO_HIDE_MESSAGE_MS);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [message, isOpen, position]);
 
   const handleAsk = async () => {
     const trimmedQuery = query.trim();
@@ -280,21 +296,27 @@ export default function Mascot({
 
       <div className={`${positionClasses[position]} z-[65] select-none`}>
         <AnimatePresence>
-          {!isOpen && message && position === "bottom" && (
-            <motion.button
-              type="button"
+          {!isOpen && showBubble && message && position === "bottom" && (
+            <motion.div
               initial={{ opacity: 0, y: 10, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.96 }}
               transition={{ delay: 0.2 }}
-              onClick={() => setIsOpen(true)}
               className="theme-bg-surface absolute bottom-full right-0 mb-3 w-[11.5rem] rounded-[20px] border px-3.5 py-2.5 text-left text-xs font-bold leading-snug shadow-[0_18px_35px_rgba(15,27,36,0.24)] md:w-[13rem]"
             >
+              <button
+                type="button"
+                onClick={() => setShowBubble(false)}
+                className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold text-[color:var(--text)]/70 transition hover:bg-black/5 hover:text-[color:var(--text)]"
+                aria-label="Dismiss mascot message"
+              >
+                x
+              </button>
               <span className="block whitespace-normal break-words">
                 {cleanAssistantText(message)}
               </span>
               <span className="absolute -bottom-2 right-8 h-0 w-0 border-l-[10px] border-r-[10px] border-t-[12px] border-l-transparent border-r-transparent border-t-[color:var(--surface)]" />  
-            </motion.button>
+            </motion.div>
           )}
         </AnimatePresence>
 
