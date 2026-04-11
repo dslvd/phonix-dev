@@ -1,5 +1,4 @@
-import { VocabularyItem } from '../data/vocabulary';
-import { buildPhaseOneSupportWords } from './phaseOneSupportWords';
+import { VocabularyItem, buildPhaseOneSupportWords } from '../data/vocabulary';
 
 type Difficulty = VocabularyItem['difficulty'];
 
