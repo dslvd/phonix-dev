@@ -212,7 +212,7 @@ async function writeCachedToD1(pairKey: string, text: string, provider: string) 
 
 async function callGemini(prompt: string, apiKey: string) {
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`,
     {
       method: 'POST',
       headers: jsonHeaders,
