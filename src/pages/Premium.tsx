@@ -7,10 +7,11 @@ import { usePremium } from "../lib/usePremium";
 
 interface PremiumProps {
   navigate: (page: Page) => void;
+  openMobileNav?: () => void;
   premium: ReturnType<typeof usePremium>;
 }
 
-export default function Premium({ navigate, premium }: PremiumProps) {
+export default function Premium({ navigate, openMobileNav, premium }: PremiumProps) {
   const { purchase, loading, restore, purchasing, restoring, error, isPremium } = premium;
   const [restoreSuccess, setRestoreSuccess] = useState(false);
 
@@ -95,6 +96,7 @@ export default function Premium({ navigate, premium }: PremiumProps) {
 
       {/* Top Navigation */}
       <NavigationHeader
+        onMenu={openMobileNav}
         onBack={() => navigate("dashboard")}
         onLogout={() => navigate("landing")}
         title="Premium"

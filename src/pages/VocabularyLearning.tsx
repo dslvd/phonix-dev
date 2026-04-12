@@ -20,6 +20,7 @@ import { pickNextQuizWord, QuizMasteryState, recordQuizOutcome } from "../lib/qu
 
 interface VocabularyLearningProps {
   navigate: (page: Page) => void;
+  openMobileNav?: () => void;
   appState: AppState;
   updateState: UpdateStateFn;
   premium: ReturnType<typeof usePremium>;
@@ -73,6 +74,7 @@ const getQuizIntervalForBand = (band: "beginner" | "intermediate" | "advanced") 
 
 export default function VocabularyLearning({
   navigate,
+  openMobileNav,
   appState,
   updateState,
   premium,
@@ -829,6 +831,7 @@ export default function VocabularyLearning({
     <div className="min-h-screen flex flex-col">
       {/* Top Navigation with Progress + Battery */}
       <NavigationHeader
+        onMenu={openMobileNav}
         onBack={() => navigate("dashboard")}
         onLogout={() => navigate("landing")}
         title="Vocabulary Learning"

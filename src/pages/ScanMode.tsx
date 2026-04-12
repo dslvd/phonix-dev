@@ -18,6 +18,7 @@ import { BATTERY_MAX, spendBattery } from "../lib/battery";
 
 interface ScanModeProps {
   navigate: (page: Page) => void;
+  openMobileNav?: () => void;
   appState: AppState;
   updateState: UpdateStateFn;
   premium: ReturnType<typeof usePremium>;
@@ -42,6 +43,12 @@ interface PendingAttachment {
   type: "file" | "pasted-image" | "pasted-text";
 }
 
+interface FocusIndicator {
+  x: number;
+  y: number;
+  key: number;
+}
+
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.mjs",
   import.meta.url,
@@ -49,7 +56,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
 
 const cleanOCRText = (text: string) => text.replace(/\s+/g, " ").trim();
 
-export default function ScanMode({ navigate, appState, updateState, premium }: ScanModeProps) {
+export default function ScanMode({ navigate, openMobileNav, appState, updateState, premium }: ScanModeProps) {
   const paperclipIcon = (
     <svg
       viewBox="0 0 24 24"
@@ -121,12 +128,14 @@ export default function ScanMode({ navigate, appState, updateState, premium }: S
   );
   const [isCaptureAnimating, setIsCaptureAnimating] = useState(false);
   const [frozenFrame, setFrozenFrame] = useState<string | null>(null);
+  const [focusIndicator, setFocusIndicator] = useState<FocusIndicator | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const guideBoxRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraViewportRef = useRef<HTMLDivElement>(null);
 
   const pause = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
@@ -342,6 +351,56 @@ export default function ScanMode({ navigate, appState, updateState, premium }: S
 
     stopCamera();
     await launchCamera(nextFacingMode);
+  };
+
+  const requestTapFocus = async (clientX: number, clientY: number) => {
+    const viewport = cameraViewportRef.current;
+    const stream = streamRef.current;
+    const track = stream?.getVideoTracks?.()[0];
+
+    if (!viewport || !track) {
+      return;
+    }
+
+    const rect = viewport.getBoundingClientRect();
+    const normalizedX = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    const normalizedY = Math.min(1, Math.max(0, (clientY - rect.top) / rect.height));
+
+    setFocusIndicator({
+      x: normalizedX,
+      y: normalizedY,
+      key: Date.now(),
+    });
+
+    try {
+      const capabilities = (typeof track.getCapabilities === "function"
+        ? track.getCapabilities()
+        : {}) as Record<string, any>;
+
+      const advancedConstraint: Record<string, any> = {};
+
+      if (Array.isArray(capabilities.focusMode)) {
+        if (capabilities.focusMode.includes("single-shot")) {
+          advancedConstraint.focusMode = "single-shot";
+        } else if (capabilities.focusMode.includes("continuous")) {
+          advancedConstraint.focusMode = "continuous";
+        } else if (capabilities.focusMode.includes("manual")) {
+          advancedConstraint.focusMode = "manual";
+        }
+      }
+
+      if ("pointsOfInterest" in capabilities) {
+        advancedConstraint.pointsOfInterest = [{ x: normalizedX, y: normalizedY }];
+      }
+
+      if (Object.keys(advancedConstraint).length > 0) {
+        await track.applyConstraints({
+          advanced: [advancedConstraint],
+        } as MediaTrackConstraints);
+      }
+    } catch {
+      // Best-effort only. Some browsers expose tap feedback without camera focus control.
+    }
   };
 
   const playSuccessSound = () => {
@@ -890,17 +949,20 @@ const translatePendingAttachment = async () => {
         return;
       }
 
-      const previewCanvas = document.createElement("canvas");
-      const previewCtx = previewCanvas.getContext("2d");
+      await pause(700);
 
-      if (previewCtx) {
-        previewCanvas.width = videoWidth;
-        previewCanvas.height = videoHeight;
-        previewCtx.drawImage(video, 0, 0, videoWidth, videoHeight);
-        setFrozenFrame(previewCanvas.toDataURL("image/jpeg", 0.92));
+      const sourceCanvas = document.createElement("canvas");
+      const sourceCtx = sourceCanvas.getContext("2d");
+
+      if (!sourceCtx) {
+        setError("Could not access capture canvas.");
+        return;
       }
 
-      await pause(700);
+      sourceCanvas.width = videoWidth;
+      sourceCanvas.height = videoHeight;
+      sourceCtx.drawImage(video, 0, 0, videoWidth, videoHeight);
+      setFrozenFrame(sourceCanvas.toDataURL("image/jpeg", 0.92));
 
       const videoRect = video.getBoundingClientRect();
       const guideRect = guideBoxRef.current.getBoundingClientRect();
@@ -924,7 +986,17 @@ const translatePendingAttachment = async () => {
       canvas.width = Math.max(1, Math.floor(cropWidth));
       canvas.height = Math.max(1, Math.floor(cropHeight));
 
-      ctx.drawImage(video, cropX, cropY, cropWidth, cropHeight, 0, 0, canvas.width, canvas.height);
+      ctx.drawImage(
+        sourceCanvas,
+        cropX,
+        cropY,
+        cropWidth,
+        cropHeight,
+        0,
+        0,
+        canvas.width,
+        canvas.height,
+      );
 
       const upscaleCanvas = document.createElement("canvas");
       const upscaleCtx = upscaleCanvas.getContext("2d");
@@ -1152,6 +1224,7 @@ const translatePendingAttachment = async () => {
     >
       {/* Top Navigation with Stats */}
       <NavigationHeader
+        onMenu={openMobileNav}
         onBack={() => {
           stopCamera();
           navigate("dashboard");
@@ -1195,10 +1268,10 @@ const translatePendingAttachment = async () => {
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
-            className="min-w-0 space-y-4"
+            className="min-w-0 space-y-3"
           >
             {/* Camera and OCR Workspace Card */}
-            <Card className="theme-bg-surface relative min-h-[380px] border p-5">
+            <Card className="theme-bg-surface relative min-h-[360px] border p-4">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -1207,7 +1280,7 @@ const translatePendingAttachment = async () => {
                 className="hidden"
               />
 
-              <div className="-mx-5 mb-2 border-b border-[#e6eef9] px-5 pb-2 dark:border-white/10">
+              <div className="-mx-4 mb-2 border-b border-[#e6eef9] px-4 pb-1.5 pt-0.5 dark:border-white/10">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-1.5">
                     <span className="text-sm leading-none text-[#5ea4ff]">📷</span>
@@ -1220,7 +1293,17 @@ const translatePendingAttachment = async () => {
               </div>
 
               {/* Camera Preview Area */}
-              <div className="relative h-[260px] overflow-hidden rounded-lg bg-gray-900 text-[#f5f7fa] sm:h-[290px]">
+              <div
+                ref={cameraViewportRef}
+                className="relative h-[260px] overflow-hidden rounded-lg bg-gray-900 text-[#f5f7fa] sm:h-[290px]"
+                onClick={(event) => {
+                  if (!cameraActive || cameraLoading || isScanning || isCaptureAnimating) {
+                    return;
+                  }
+
+                  void requestTapFocus(event.clientX, event.clientY);
+                }}
+              >
                 <video
                   ref={videoRef}
                   autoPlay
@@ -1272,6 +1355,39 @@ const translatePendingAttachment = async () => {
                 {cameraActive && (
                   <>
                     <AnimatePresence>
+                      {focusIndicator && (
+                        <motion.div
+                          key={focusIndicator.key}
+                          initial={{ opacity: 1, scale: 1 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 1, scale: 1 }}
+                          transition={{ duration: 0 }}
+                          className="pointer-events-none absolute z-[3] h-16 w-16 -translate-x-1/2 -translate-y-1/2"
+                          style={{
+                            left: `${focusIndicator.x * 100}%`,
+                            top: `${focusIndicator.y * 100}%`,
+                          }}
+                        >
+                          <span
+                            className="absolute left-0 top-0 h-5 w-5 border-l-[3px] border-t-[3px]"
+                            style={{ borderLeftColor: "#5ea4ff", borderTopColor: "#5ea4ff" }}
+                          />
+                          <span
+                            className="absolute right-0 top-0 h-5 w-5 border-r-[3px] border-t-[3px]"
+                            style={{ borderRightColor: "#5ea4ff", borderTopColor: "#5ea4ff" }}
+                          />
+                          <span
+                            className="absolute bottom-0 left-0 h-5 w-5 border-b-[3px] border-l-[3px]"
+                            style={{ borderBottomColor: "#5ea4ff", borderLeftColor: "#5ea4ff" }}
+                          />
+                          <span
+                            className="absolute bottom-0 right-0 h-5 w-5 border-b-[3px] border-r-[3px]"
+                            style={{ borderBottomColor: "#5ea4ff", borderRightColor: "#5ea4ff" }}
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                    <AnimatePresence>
                       {(isScanning || isCaptureAnimating) && (
                         <motion.div
                           initial={{ opacity: 0 }}
@@ -1295,12 +1411,25 @@ const translatePendingAttachment = async () => {
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <div
                         ref={guideBoxRef}
-                        className="relative h-[74%] w-[96%] max-h-[320px] max-w-[900px] overflow-hidden rounded-[22px] border border-white/55"
+                        className="relative h-[74%] w-[96%] max-h-[320px] max-w-[900px] overflow-hidden rounded-[22px] border"
+                        style={{ borderColor: "rgba(255,255,255,0.55)" }}
                       >
-                        <div className="absolute left-0 top-0 h-10 w-10 rounded-tl-2xl border-l-[3px] border-t-[3px] border-[#5ea4ff]" />
-                        <div className="absolute right-0 top-0 h-10 w-10 rounded-tr-2xl border-r-[3px] border-t-[3px] border-[#5ea4ff]" />
-                        <div className="absolute bottom-0 left-0 h-10 w-10 rounded-bl-2xl border-b-[3px] border-l-[3px] border-[#5ea4ff]" />
-                        <div className="absolute bottom-0 right-0 h-10 w-10 rounded-br-2xl border-b-[3px] border-r-[3px] border-[#5ea4ff]" />
+                        <div
+                          className="absolute left-0 top-0 h-10 w-10 rounded-tl-2xl border-l-[3px] border-t-[3px]"
+                          style={{ borderLeftColor: "#5ea4ff", borderTopColor: "#5ea4ff" }}
+                        />
+                        <div
+                          className="absolute right-0 top-0 h-10 w-10 rounded-tr-2xl border-r-[3px] border-t-[3px]"
+                          style={{ borderRightColor: "#5ea4ff", borderTopColor: "#5ea4ff" }}
+                        />
+                        <div
+                          className="absolute bottom-0 left-0 h-10 w-10 rounded-bl-2xl border-b-[3px] border-l-[3px]"
+                          style={{ borderBottomColor: "#5ea4ff", borderLeftColor: "#5ea4ff" }}
+                        />
+                        <div
+                          className="absolute bottom-0 right-0 h-10 w-10 rounded-br-2xl border-b-[3px] border-r-[3px]"
+                          style={{ borderBottomColor: "#5ea4ff", borderRightColor: "#5ea4ff" }}
+                        />
                         <AnimatePresence>
                           {isCaptureAnimating && (
                             <motion.div
@@ -1334,7 +1463,7 @@ const translatePendingAttachment = async () => {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mt-4 flex justify-center gap-3"
+                  className="mt-3 flex justify-center gap-3"
                 >
                   <Button
                     variant="primary"
@@ -1486,7 +1615,7 @@ const translatePendingAttachment = async () => {
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
-            className="min-w-0 space-y-4"
+            className="min-w-0 space-y-3"
           >
             <Card
               className={`theme-bg-surface min-w-0 max-w-full overflow-hidden p-0 ${
@@ -1494,7 +1623,7 @@ const translatePendingAttachment = async () => {
               }`}
             >
               <div
-                className={`flex items-center justify-between gap-3 px-5 py-4 ${
+                className={`-mt-px flex items-center justify-between gap-3 px-4 pb-1.5 pt-0.5 ${
                   scanResult
                     ? "border-b border-[#dce7fb] bg-[#eef5ff]"
                     : "theme-border border-b bg-white/70 dark:bg-transparent"
@@ -1503,7 +1632,7 @@ const translatePendingAttachment = async () => {
                 <div className="flex items-center gap-2">
                   <span className="text-[#FFB23F]">✨</span>
                   <h3
-                    className={`font-baloo text-xl font-bold ${scanResult ? "text-[#2f61d4]" : ""}`}
+                    className={`font-baloo text-lg font-bold leading-none ${scanResult ? "text-[#2f61d4]" : ""}`}
                   >
                     {scanResult ? "Translation Ready" : "Translation Result"}
                   </h3>
@@ -1521,7 +1650,7 @@ const translatePendingAttachment = async () => {
               </div>
 
               {scanResult ? (
-                <div className="space-y-5 px-5 py-5">
+                <div className="space-y-3 px-4 py-2.5">
                   <div className="text-left">
                     <div className="mb-2 flex items-center justify-between gap-3">
                       <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#6e83ab]">
@@ -1577,12 +1706,12 @@ const translatePendingAttachment = async () => {
                   </Button>
                 </div>
               ) : (
-                <div className="m-5 rounded-[28px] border border-dashed border-[#dfe8f6] px-8 py-12 text-center">
-                  <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-[#f5f8fd] text-4xl">
+                <div className="m-2 rounded-[18px] border border-dashed border-[#dfe8f6] px-4 py-4 text-center">
+                  <div className="mx-auto mb-2.5 flex h-12 w-12 items-center justify-center rounded-full bg-[#f5f8fd] text-xl">
                     👀
                   </div>
-                  <h4 className="font-baloo text-2xl font-bold">Waiting for input</h4>
-                  <p className="theme-text-soft mx-auto mt-3 max-w-xs text-sm font-semibold leading-7">
+                  <h4 className="font-baloo text-base font-bold">Waiting for input</h4>
+                  <p className="theme-text-soft mx-auto mt-1 max-w-xs text-sm font-semibold leading-6">
                     Start the camera, upload a file, or type text to see the translation here.
                   </p>
                 </div>
@@ -1759,8 +1888,8 @@ const translatePendingAttachment = async () => {
 
             {/* Collection */}
             <Card className="theme-bg-surface min-w-0 max-w-full overflow-hidden border p-0">
-              <div className="flex items-center justify-between gap-3 border-b border-[#e6eef9] px-5 py-4">
-                <h3 className="flex items-center gap-2 font-baloo text-xl font-bold">
+              <div className="-mt-px flex items-center justify-between gap-3 border-b border-[#e6eef9] px-4 pb-1.5 pt-0.5">
+                <h3 className="flex items-center gap-2 font-baloo text-lg font-bold leading-none">
                   <span className="text-[#7e93b4]">📄</span>
                   Collection
                 </h3>
@@ -1769,14 +1898,14 @@ const translatePendingAttachment = async () => {
                 </span>
               </div>
 
-              <div className="min-w-0 max-w-full space-y-3 overflow-hidden px-4 py-4">
+              <div className="min-w-0 max-w-full space-y-3 overflow-hidden px-4 py-2.5">
                 {savedScans.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-[#dfe8f6] px-6 py-8 text-center">
-                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#f5f8fd] text-3xl">
+                  <div className="rounded-[18px] border border-dashed border-[#dfe8f6] px-5 py-5 text-center">
+                    <div className="mx-auto mb-2.5 flex h-12 w-12 items-center justify-center rounded-full bg-[#f5f8fd] text-xl">
                       👀
                     </div>
-                    <p className="font-semibold">No saved items yet</p>
-                    <p className="theme-text-soft mt-2 text-sm">
+                    <p className="text-sm font-semibold">No saved items yet</p>
+                    <p className="theme-text-soft mt-1 text-sm">
                       Save a translation and it will appear here.
                     </p>
                   </div>
