@@ -276,23 +276,23 @@ export default function SentenceLearning({
                   rotate: [0, 2, -2, 0],
                 }}
                 transition={{ duration: 3, repeat: Infinity }}
-                className="mb-5 flex items-center justify-center text-7xl leading-none sm:mb-8 sm:text-9xl"
+                className="mb-2 flex items-center justify-center text-[6.5rem] leading-none sm:mb-8 sm:text-9xl"
               >
                 {currentSentence.illustration}
               </motion.div>
 
               {/* Native Sentence */}
-              <div className="theme-bg-surface mb-4 rounded-[28px] border p-4 sm:mb-8 sm:p-6">
-                <p className="theme-text-soft mb-2 text-xs font-bold sm:mb-3 sm:text-sm">
+              <div className="theme-bg-surface mb-1 rounded-[28px] border p-5 sm:mb-8 sm:p-6">
+                <p className="theme-text-soft mb-2 text-sm font-bold sm:mb-3 sm:text-sm">
                   {appState.targetLanguage} Fill in the blank:
                 </p>
                 <div className="flex items-center justify-center gap-3 sm:gap-4">
-                  <h2 className="font-baloo text-[2rem] font-bold leading-tight sm:text-3xl md:text-4xl">
+                  <h2 className="font-baloo text-[2.35rem] font-bold leading-tight sm:text-3xl md:text-4xl">
                     {question.maskedSentence}
                   </h2>
                   <button
                     onClick={(e) => playMaskedSentenceAudio(e)}
-                    className="bg-primary flex-shrink-0 rounded-full p-3 transition-transform hover:scale-110 sm:p-4"
+                    className="bg-primary flex-shrink-0 rounded-full p-4 transition-transform hover:scale-110 sm:p-4"
                   >
                     🔊
                   </button>
@@ -300,17 +300,17 @@ export default function SentenceLearning({
               </div>
 
               {/* English Translation */}
-              <div className="theme-bg-surface rounded-[28px] border p-4 sm:p-6">
-                <p className="theme-text-soft mb-2 text-xs font-bold sm:mb-3 sm:text-sm">
+              <div className="theme-bg-surface rounded-[28px] border p-5 sm:p-6">
+                <p className="theme-text-soft mb-2 text-sm font-bold sm:mb-3 sm:text-sm">
                   {appState.nativeLanguage} Hint:
                 </p>
                 <div className="flex items-center justify-center gap-3 sm:gap-4">
-                  <h3 className="font-baloo text-[2rem] font-bold leading-tight text-secondary sm:text-3xl md:text-4xl">
+                  <h3 className="font-baloo text-[2.35rem] font-bold leading-tight text-secondary sm:text-3xl md:text-4xl">
                     {currentSentence.englishSentence}
                   </h3>
                   <button
                     onClick={(e) => playAudio(currentSentence.englishSentence, e)}
-                    className="bg-secondary flex-shrink-0 rounded-full p-3 text-white transition-transform hover:scale-110 sm:p-4"
+                    className="bg-secondary flex-shrink-0 rounded-full p-4 text-white transition-transform hover:scale-110 sm:p-4"
                   >
                     🔊
                   </button>
