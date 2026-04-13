@@ -104,6 +104,7 @@ const writePersistedCheckpointKeys = (keys: Set<string>) => {
 };
 
 interface PersistedQuizSessionState {
+  levelCycle: number;
   isQuizMode: boolean;
   isReviewMode: boolean;
   isPracticeQuizSession: boolean;
@@ -247,12 +248,22 @@ export default function VocabularyLearning({
     setQuizMastery({});
     setLastQuizWordId(null);
     setQuizSessionKey(0);
+    setIsQuizMode(false);
+    setQuizWord(null);
+    setQuizPoolSnapshot([]);
     setIsPracticeQuizSession(false);
     setIsReviewMode(false);
     setReviewWords([]);
     setPendingQuizWord(null);
+    setConsecutiveWords(0);
     shownCheckpointIdsRef.current = new Set();
     setActiveCheckpointId(null);
+
+    if (typeof window !== "undefined") {
+      window.sessionStorage.removeItem(QUIZ_SESSION_STORAGE_KEY);
+    }
+    pendingQuizSessionRef.current = null;
+    hasRestoredQuizSessionRef.current = true;
   }, [levelCycle, updateState]);
 
   useEffect(() => {
@@ -277,6 +288,15 @@ export default function VocabularyLearning({
 
     const persisted = pendingQuizSessionRef.current;
     if (!persisted) {
+      hasRestoredQuizSessionRef.current = true;
+      return;
+    }
+
+    if (persisted.levelCycle !== levelCycle) {
+      if (typeof window !== "undefined") {
+        window.sessionStorage.removeItem(QUIZ_SESSION_STORAGE_KEY);
+      }
+      pendingQuizSessionRef.current = null;
       hasRestoredQuizSessionRef.current = true;
       return;
     }
@@ -626,6 +646,7 @@ export default function VocabularyLearning({
     }
 
     const persistedState: PersistedQuizSessionState = {
+      levelCycle,
       isQuizMode,
       isReviewMode,
       isPracticeQuizSession,
@@ -650,6 +671,7 @@ export default function VocabularyLearning({
     quizPoolSnapshot,
     reviewWords,
     pendingQuizWord,
+    levelCycle,
     wordsBeforeQuiz,
     consecutiveWords,
     quizRound,
