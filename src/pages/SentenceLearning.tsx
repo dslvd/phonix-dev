@@ -119,7 +119,10 @@ export default function SentenceLearning({
       setSelectedOption(null);
       setShowResult(false);
       setIsCorrectAnswer(null);
+      return;
     }
+
+    navigate("vocabulary");
   };
 
   const handleOptionSelect = (option: string) => {
