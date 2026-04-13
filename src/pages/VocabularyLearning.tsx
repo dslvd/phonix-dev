@@ -1471,6 +1471,12 @@ export default function VocabularyLearning({
               <button
                 onClick={() => {
                   setShowLevelCompleteModal(false);
+                  clearQuizState();
+                  clearReviewState();
+                  setConsecutiveWords(0);
+                  updateState({
+                    currentVocabIndex: 0,
+                  });
                 }}
                 className="flex-1 rounded-2xl bg-gray-100 px-6 py-4 font-bold text-gray-700"
               >
