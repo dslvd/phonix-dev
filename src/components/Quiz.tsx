@@ -399,11 +399,11 @@ export default function Quiz({
       </motion.div>
 
       {/* Word Display */}
-      <Card className="theme-bg-surface flex min-h-[14rem] flex-col justify-center border-2 border-[color:var(--border)] py-6 text-center sm:min-h-0 sm:py-12">
+      <Card className="theme-bg-surface flex min-h-[17rem] flex-col justify-center border-2 border-[color:var(--border)] py-7 text-center sm:min-h-0 sm:py-12">
         <motion.div
           animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
           transition={{ duration: 2, repeat: Infinity }}
-          className="mb-2 flex items-center justify-center text-[88px] leading-none sm:mb-4 sm:text-[120px]"
+          className="mb-3 flex items-center justify-center text-[102px] leading-none sm:mb-4 sm:text-[120px]"
         >
           {currentWord.emoji}
         </motion.div>
@@ -422,9 +422,9 @@ export default function Quiz({
               transition={{ delay: index * 0.1 }}
               onClick={() => handleSelect(word)}
               disabled={showResult}
-              className={`${getButtonStyle(word)} rounded-2xl p-4 transition-all duration-300 disabled:cursor-not-allowed sm:p-6`}
+              className={`${getButtonStyle(word)} min-h-[4.5rem] rounded-2xl p-3 transition-all duration-300 disabled:cursor-not-allowed sm:min-h-0 sm:p-6`}
             >
-              <div className="flex items-center gap-2 sm:gap-4">
+              <div className="flex min-h-full items-center gap-2 sm:gap-4">
                 <div className="text-left flex-1">
                   <p className="font-baloo text-lg font-bold sm:text-2xl">{word.nativeWord}</p>
                 </div>
