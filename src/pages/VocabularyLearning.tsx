@@ -11,7 +11,7 @@ import {
   getFiveStageLevel,
   getVocabularyLevelCycle,
   prefetchAIVocabularyWindow,
-  readCachedAIVocabularyOrPairLatest,
+  readCachedAIVocabulary,
   writeCachedAIVocabulary,
   VOCABULARY_PACK_WORD_COUNT,
 } from "../lib/aiVocabulary";
@@ -188,18 +188,16 @@ export default function VocabularyLearning({
   const pendingQuizSessionRef = useRef<PersistedQuizSessionState | null>(readPersistedQuizSessionState());
   const hasRestoredQuizSessionRef = useRef(false);
   const [aiVocabulary, setAiVocabulary] = useState<VocabularyItem[]>(() => {
-    return readCachedAIVocabularyOrPairLatest(targetLanguage, nativeLanguage, { levelCycle });
+    return readCachedAIVocabulary(targetLanguage, nativeLanguage, { levelCycle });
   });
   const [aiFlashcardItem, setAiFlashcardItem] = useState<VocabularyItem | null>(null);
 
   useEffect(() => {
     const shouldAllowRefresh = learnedInCurrentCycle === 0;
-    const cached = readCachedAIVocabularyOrPairLatest(targetLanguage, nativeLanguage, {
+    const cached = readCachedAIVocabulary(targetLanguage, nativeLanguage, {
       levelCycle,
     });
-    if (cached.length > 0) {
-      setAiVocabulary(cached);
-    }
+    setAiVocabulary(cached);
 
     if (typeof navigator !== "undefined" && !navigator.onLine) {
       return;
@@ -1451,7 +1449,6 @@ export default function VocabularyLearning({
               <button
                 onClick={() => {
                   setShowLevelCompleteModal(false);
-                  navigate("sentence");
                 }}
                 className="flex-1 rounded-2xl bg-gray-100 px-6 py-4 font-bold text-gray-700"
               >
