@@ -258,17 +258,17 @@ export default function SentenceLearning({
       />
 
       {/* Main Sentence Practice Content */}
-      <div className="flex-1 overflow-hidden px-3 pb-32 pt-4 sm:px-4 sm:pb-28 sm:pt-5">
-        <div className="mx-auto flex h-full w-full max-w-3xl flex-col">
+      <div className="flex-1 overflow-hidden px-3 pb-[5.5rem] pt-2 sm:px-4 sm:pb-28 sm:pt-5">
+        <div className="mx-auto flex h-full min-h-0 w-full max-w-3xl flex-col justify-between">
           {/* Active Sentence Card */}
           <motion.div
             key={currentSentence.id}
             initial={{ opacity: 0, y: 28 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 140 }}
-            className="flex-1"
+            className="flex min-h-0 flex-1"
           >
-            <Card className="flex h-full min-h-[31rem] flex-col justify-between rounded-[32px] p-4 text-center shadow-[0_18px_40px_rgba(15,27,36,0.08)] sm:min-h-0 sm:p-6">
+            <Card className="flex h-full min-h-[39rem] flex-1 flex-col justify-between rounded-[32px] p-4 text-center shadow-[0_18px_40px_rgba(15,27,36,0.08)] sm:min-h-0 sm:p-6">
               {/* Illustration */}
               <motion.div
                 animate={{
@@ -362,7 +362,7 @@ export default function SentenceLearning({
           </motion.div>
 
           {/* Progress Dots */}
-          <div className="mt-5 flex justify-center gap-1.5 sm:mt-4 sm:gap-2">
+          <div className="mt-1 flex justify-center gap-1.5 sm:mt-4 sm:gap-2">
             {sentenceData.map((_, index) => (
               <div
                 key={index}
@@ -391,7 +391,7 @@ export default function SentenceLearning({
           <button
             onClick={showResult ? handleNext : handleCheckAnswer}
             disabled={!showResult && !selectedOption}
-            className={`w-[10rem] rounded-2xl px-6 py-3 text-center text-sm font-bold uppercase tracking-[0.08em] transition sm:w-auto sm:min-w-[136px] sm:px-8 ${
+            className={`w-[7rem] rounded-2xl px-4 py-3 text-center text-sm font-bold uppercase tracking-[0.08em] transition sm:w-auto sm:min-w-[136px] sm:px-8 ${
               !showResult && !selectedOption
                 ? "theme-bg-surface cursor-not-allowed border"
                 : "bg-gradient-to-r from-primary to-secondary text-white shadow-lg"
@@ -448,7 +448,7 @@ export default function SentenceLearning({
         animation="float"
         responseLanguage={responseLanguage}
         pageContext={sentencePageContext}
-        containerClassName="bottom-16 right-3 md:bottom-6 md:right-6"
+        containerClassName="bottom-12 right-3 md:bottom-6 md:right-6"
       />
     </div>
   );
