@@ -8,12 +8,14 @@ import { sentenceData, vocabularyData } from "../data/vocabulary";
 
 interface SentenceLearningProps {
   navigate: (page: Page) => void;
+  openMobileNav?: () => void;
   appState: AppState;
   updateState: UpdateStateFn;
 }
 
 export default function SentenceLearning({
   navigate,
+  openMobileNav,
   appState,
   updateState,
 }: SentenceLearningProps) {
@@ -246,6 +248,7 @@ export default function SentenceLearning({
     <div className="min-h-screen flex flex-col">
       {/* Top Navigation with Progress */}
       <NavigationHeader
+        onMenu={openMobileNav}
         onBack={() => navigate("vocabulary")}
         onLogout={() => navigate("landing")}
         title="Sentence Practice"
