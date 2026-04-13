@@ -260,15 +260,16 @@ export default function SentenceLearning({
 
       {/* Main Sentence Practice Content */}
       <div className="flex-1 overflow-hidden px-3 pb-32 pt-4 sm:px-4 sm:pb-28 sm:pt-5">
-        <div className="mx-auto w-full max-w-3xl">
+        <div className="mx-auto flex h-full w-full max-w-3xl flex-col">
           {/* Active Sentence Card */}
           <motion.div
             key={currentSentence.id}
             initial={{ opacity: 0, y: 28 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 140 }}
+            className="flex-1"
           >
-            <Card className="rounded-[32px] p-4 text-center shadow-[0_18px_40px_rgba(15,27,36,0.08)] sm:p-6">
+            <Card className="flex h-full min-h-[31rem] flex-col justify-between rounded-[32px] p-4 text-center shadow-[0_18px_40px_rgba(15,27,36,0.08)] sm:min-h-0 sm:p-6">
               {/* Illustration */}
               <motion.div
                 animate={{
@@ -365,7 +366,7 @@ export default function SentenceLearning({
           </motion.div>
 
           {/* Progress Dots */}
-          <div className="mt-4 flex justify-center gap-1.5 sm:mt-4 sm:gap-2">
+          <div className="mt-5 flex justify-center gap-1.5 sm:mt-4 sm:gap-2">
             {sentenceData.map((_, index) => (
               <div
                 key={index}
@@ -387,16 +388,14 @@ export default function SentenceLearning({
         <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 rounded-[28px] border border-[color:color-mix(in_srgb,var(--primary)_18%,var(--border))] bg-[color:color-mix(in_srgb,var(--surface)_88%,white_12%)] p-2 shadow-[0_20px_45px_rgba(15,27,36,0.16)] backdrop-blur">
           <Button
             onClick={showResult ? handlePrevious : handleSkip}
-            unstyled
-            className="theme-bg-surface rounded-2xl border px-4 py-3 text-sm font-bold uppercase tracking-[0.08em] sm:px-6"
+            className="theme-bg-surface w-[7rem] rounded-2xl border px-4 py-3 text-center text-sm font-bold uppercase tracking-[0.08em] sm:w-auto sm:px-6"
           >
             {showResult ? "Previous" : "Skip"}
           </Button>
           <Button
             onClick={showResult ? handleNext : handleCheckAnswer}
             disabled={!showResult && !selectedOption}
-            unstyled
-            className={`min-w-[136px] rounded-2xl px-6 py-3 text-sm font-bold uppercase tracking-[0.08em] transition sm:px-8 ${
+            className={`w-[10rem] rounded-2xl px-6 py-3 text-center text-sm font-bold uppercase tracking-[0.08em] transition sm:w-auto sm:min-w-[136px] sm:px-8 ${
               !showResult && !selectedOption
                 ? "theme-bg-surface cursor-not-allowed border"
                 : "bg-gradient-to-r from-primary to-secondary text-white shadow-lg"
