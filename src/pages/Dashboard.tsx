@@ -600,11 +600,11 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
                                   {node.description}
                                 </p>
                               </div>
-                              <div className="rounded-full border border-[color:var(--border)] px-3 py-1.5 text-right">
-                                <p className="theme-text-soft text-[11px] font-bold uppercase tracking-[0.08em]">
+                              <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-full border border-[color:var(--border)] text-center sm:h-14 sm:w-14">
+                                <p className="theme-text-soft text-[9px] font-bold uppercase tracking-[0.08em] leading-none">
                                   Level
                                 </p>
-                                <p className="font-baloo text-lg font-bold">
+                                <p className="mt-0.5 font-baloo text-[0.95rem] font-bold leading-none sm:text-[1rem]">
                                   {index + 1}/{roadmapNodes.length}
                                 </p>
                               </div>

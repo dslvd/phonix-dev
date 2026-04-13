@@ -4,6 +4,7 @@ import { formatBatteryCountdown } from "../lib/battery";
 
 interface NavigationHeaderProps {
   onBack?: () => void;
+  onMenu?: () => void;
   onLogout?: () => void;
   onProfile?: () => void;
   title?: string;
@@ -21,6 +22,7 @@ interface NavigationHeaderProps {
 
 export default function NavigationHeader({
   onBack,
+  onMenu,
   onLogout: _onLogout,
   onProfile,
   title,
@@ -81,12 +83,26 @@ export default function NavigationHeader({
           <div className="flex w-full items-center justify-between gap-3 px-4 py-3">
             {/* ...all your content stays the same... */}
             <div className="flex min-w-0 items-center gap-2.5">
+              {onMenu && (
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={onMenu}
+                  className="theme-bg-surface flex h-10 w-10 items-center justify-center rounded-xl border text-xl leading-none transition md:hidden"
+                  aria-label="Open navigation menu"
+                >
+                  ☰
+                </motion.button>
+              )}
+
               {onBack ? (
                 <motion.button
                   whileHover={{ scale: 1.03, x: -1 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={onBack}
-                  className="theme-bg-surface flex h-10 w-10 items-center justify-center rounded-xl border text-xl leading-none transition"
+                  className={`theme-bg-surface h-10 w-10 items-center justify-center rounded-xl border text-xl leading-none transition ${
+                    onMenu ? "hidden md:flex" : "flex"
+                  }`}
                   aria-label="Go back"
                 >
                   ←
