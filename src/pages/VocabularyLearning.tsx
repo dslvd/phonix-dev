@@ -947,10 +947,10 @@ export default function VocabularyLearning({
             </motion.div>
           ) : isQuizMode ? (
             // Quiz Mode
-            <>
+            <div className="flex h-full min-h-0 flex-col justify-center">
               {/* Practice Session Exit Action */}
               {isPracticeQuizSession && (
-                <div className="mb-4 flex justify-end">
+                <div className="mb-2 flex justify-end sm:mb-4">
                   <button
                     onClick={exitPracticeQuizSession}
                     className="theme-bg-surface rounded-2xl border px-4 py-2 text-xs font-bold uppercase tracking-[0.08em]"
@@ -970,7 +970,7 @@ export default function VocabularyLearning({
                 difficultyBand={currentDifficultyBand}
                 levelStage={levelStage}
               />
-            </>
+            </div>
           ) : (
             // Regular Flashcard Mode
             <>
