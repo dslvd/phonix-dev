@@ -73,6 +73,35 @@ const getQuizIntervalForBand = (band: "beginner" | "intermediate" | "advanced") 
 };
 
 const QUIZ_SESSION_STORAGE_KEY = "phonix-vocabulary-quiz-session-v1";
+const CHECKPOINT_STORAGE_KEY = "phonix-vocabulary-shown-checkpoints-v1";
+
+const buildCheckpointKey = (cycle: number, checkpointId: string) => `${cycle}:${checkpointId}`;
+
+const readPersistedCheckpointKeys = () => {
+  if (typeof window === "undefined") {
+    return new Set<string>();
+  }
+
+  const raw = window.localStorage.getItem(CHECKPOINT_STORAGE_KEY);
+  if (!raw) {
+    return new Set<string>();
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as string[];
+    return new Set(Array.isArray(parsed) ? parsed : []);
+  } catch {
+    return new Set<string>();
+  }
+};
+
+const writePersistedCheckpointKeys = (keys: Set<string>) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(CHECKPOINT_STORAGE_KEY, JSON.stringify([...keys]));
+};
 
 interface PersistedQuizSessionState {
   isQuizMode: boolean;
@@ -227,6 +256,21 @@ export default function VocabularyLearning({
     shownCheckpointIdsRef.current = new Set();
     setActiveCheckpointId(null);
   }, [levelCycle, updateState]);
+
+  useEffect(() => {
+    const persistedCheckpointKeys = readPersistedCheckpointKeys();
+    const earnedCheckpointKeys = VOCAB_LEVEL_CHECKPOINTS.filter(
+      (checkpoint) => checkpoint.target <= learnedInCurrentCycle,
+    ).map((checkpoint) => buildCheckpointKey(levelCycle, checkpoint.id));
+
+    const nextCheckpointKeys = new Set([
+      ...persistedCheckpointKeys,
+      ...earnedCheckpointKeys,
+    ]);
+
+    shownCheckpointIdsRef.current = nextCheckpointKeys;
+    writePersistedCheckpointKeys(nextCheckpointKeys);
+  }, [levelCycle, learnedInCurrentCycle]);
 
   useEffect(() => {
     if (hasRestoredQuizSessionRef.current) {
@@ -733,9 +777,12 @@ export default function VocabularyLearning({
       const reachedCheckpoint = VOCAB_LEVEL_CHECKPOINTS.find(
         (checkpoint) => checkpoint.target === nextLearnedCount,
       );
-      const checkpointKey = reachedCheckpoint ? `${levelCycle}:${reachedCheckpoint.id}` : null;
+      const checkpointKey = reachedCheckpoint
+        ? buildCheckpointKey(levelCycle, reachedCheckpoint.id)
+        : null;
       if (reachedCheckpoint && checkpointKey && !shownCheckpointIdsRef.current.has(checkpointKey)) {
         shownCheckpointIdsRef.current.add(checkpointKey);
+        writePersistedCheckpointKeys(shownCheckpointIdsRef.current);
         setActiveCheckpointId(reachedCheckpoint.id);
       }
     } else {
