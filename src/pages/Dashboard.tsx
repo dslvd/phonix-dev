@@ -62,7 +62,7 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
     Intermediate: "Useful phrase-building words for daily conversations.",
     Advanced: "Nuanced vocabulary to speak with confidence and depth.",
   };
-  const [levelDescriptions, setLevelDescriptions] = useState(defaultLevelDescriptions);
+  const levelDescriptions = defaultLevelDescriptions;
 
   useEffect(() => {
     const targetLanguage = appState.targetLanguage || "Hiligaynon";
@@ -113,110 +113,6 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
     levelCycle,
     learnedInCurrentCycle,
   ]);
-
-  useEffect(() => {
-    setLevelDescriptions(defaultLevelDescriptions);
-
-    if (isGuestMode) {
-      return;
-    }
-
-    if (typeof navigator !== "undefined" && !navigator.onLine) {
-      return;
-    }
-
-    let cancelled = false;
-
-    const stripCodeFence = (text: string) =>
-      text
-        .replace(/^```json\s*/i, "")
-        .replace(/^```\s*/i, "")
-        .replace(/```$/i, "")
-        .trim();
-
-    const parsePayload = (rawText: string) => {
-      const cleaned = stripCodeFence(rawText);
-      try {
-        return JSON.parse(cleaned) as Partial<
-          Record<"Beginner" | "Intermediate" | "Advanced", string>
-        >;
-      } catch {
-        const start = cleaned.indexOf("{");
-        const end = cleaned.lastIndexOf("}");
-
-        if (start === -1 || end === -1 || end <= start) {
-          return null;
-        }
-
-        try {
-          return JSON.parse(cleaned.slice(start, end + 1)) as Partial<
-            Record<"Beginner" | "Intermediate" | "Advanced", string>
-          >;
-        } catch {
-          return null;
-        }
-      }
-    };
-
-    const loadAILessonDescriptions = async () => {
-      try {
-        const prompt = [
-          "Create short learning-path descriptions for language learners.",
-          `Target language: ${appState.targetLanguage || "Hiligaynon"}.`,
-          `Learner native language: ${appState.nativeLanguage || "English"}.`,
-          "Return STRICT JSON only with this exact shape:",
-          "{",
-          '  "Beginner": "string",',
-          '  "Intermediate": "string",',
-          '  "Advanced": "string"',
-          "}",
-          "Rules:",
-          "1. One sentence each.",
-          "2. Max 10 words each sentence.",
-          "3. Keep practical and motivating.",
-        ].join("\n");
-
-        const response = await fetch("/api/ai", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt }),
-        });
-
-        if (!response.ok) {
-          throw new Error("ai-learn-page-request-failed");
-        }
-
-        const data = await response.json();
-        const payload = parsePayload(String(data?.text || ""));
-
-        const beginner = (payload?.Beginner || "").trim();
-        const intermediate = (payload?.Intermediate || "").trim();
-        const advanced = (payload?.Advanced || "").trim();
-
-        if (!beginner || !intermediate || !advanced) {
-          throw new Error("ai-learn-page-invalid-payload");
-        }
-
-        if (!cancelled) {
-          setLevelDescriptions({
-            Beginner: beginner,
-            Intermediate: intermediate,
-            Advanced: advanced,
-          });
-        }
-      } catch {
-        if (!cancelled) {
-          setLevelDescriptions(defaultLevelDescriptions);
-        }
-      }
-    };
-
-    loadAILessonDescriptions();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [appState.targetLanguage, appState.nativeLanguage, isGuestMode]);
 
   useEffect(() => {
     if (isGuestMode || !hasLoggedInUser) {
