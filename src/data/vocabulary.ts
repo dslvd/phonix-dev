@@ -447,8 +447,12 @@ export const getAdvancedWords = () => vocabularyData.filter(item => item.difficu
 
 const PHASE_ONE_SUPPORT_IDS = ['cook', 'work', 'hot'] as const;
 
-export const buildPhaseOneSupportWords = (levelCycle: number): VocabularyItem[] =>
-  PHASE_ONE_SUPPORT_IDS.map((supportId, index) => {
+export const buildPhaseOneSupportWords = (levelCycle: number): VocabularyItem[] => {
+  if (levelCycle !== 0) {
+    return [];
+  }
+
+  return PHASE_ONE_SUPPORT_IDS.map((supportId, index) => {
     const item = vocabularyData.find((word) => word.id === supportId);
 
     if (!item) {
@@ -461,6 +465,7 @@ export const buildPhaseOneSupportWords = (levelCycle: number): VocabularyItem[] 
       difficulty: 'beginner',
     };
   });
+};
 
 // Example sentence data
 export const sentenceData: SentenceItem[] = [
