@@ -1455,10 +1455,10 @@ export default function VocabularyLearning({
             <div className="mb-4 flex items-center justify-center text-7xl leading-none">🎉</div>
             <h3 className="font-baloo text-3xl font-bold text-gray-800">Level Complete!</h3>
             <p className="mt-3 text-gray-600 font-semibold">
-              Nice work. You finished this level pack. Want to review the words you learned? Check
-              your Backpack, or click Continue to proceed to sentence practice.
+              Nice work. You finished this level pack. You can review the words you learned in your
+              Backpack, continue learning vocabulary, or proceed to sentence learning.
             </p>
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-6 flex flex-col gap-3">
               <button
                 onClick={() => {
                   setShowLevelCompleteModal(false);
@@ -1471,11 +1471,19 @@ export default function VocabularyLearning({
               <button
                 onClick={() => {
                   setShowLevelCompleteModal(false);
-                  navigate("sentence");
                 }}
                 className="flex-1 rounded-2xl bg-gray-100 px-6 py-4 font-bold text-gray-700"
               >
-                Continue
+                Continue Learning
+              </button>
+              <button
+                onClick={() => {
+                  setShowLevelCompleteModal(false);
+                  navigate("sentence");
+                }}
+                className="flex-1 rounded-2xl border border-primary bg-white px-6 py-4 font-bold text-gray-700"
+              >
+                Proceed to Sentence Learning
               </button>
             </div>
           </div>
