@@ -13,6 +13,7 @@ interface MascotProps {
   animation?: "bounce" | "float" | "wiggle";
   pageContext?: string;
   responseLanguage?: string;
+  containerClassName?: string;
 }
 
 interface ChatMessage {
@@ -33,6 +34,7 @@ export default function Mascot({
   animation = "float",
   pageContext = "",
   responseLanguage = "English",
+  containerClassName = "",
 }: MascotProps) {
   const AUTO_HIDE_MESSAGE_MS = 3000;
   const isFilipino = responseLanguage.trim().toLowerCase() === "filipino";
@@ -294,7 +296,7 @@ export default function Mascot({
         )}
       </AnimatePresence>
 
-      <div className={`${positionClasses[position]} z-[65] select-none`}>
+      <div className={`${positionClasses[position]} ${containerClassName} z-[65] select-none`}>
         <AnimatePresence>
           {!isOpen && showBubble && message && position === "bottom" && (
             <motion.div
