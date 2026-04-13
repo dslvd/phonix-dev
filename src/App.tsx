@@ -675,6 +675,8 @@ function App() {
   }
 
   const showMobileNav = !['landing', 'setup', 'mode'].includes(currentPage);
+  const mobileHasFixedHeader = ['scan', 'vocabulary', 'sentence', 'collection', 'instructions', 'profile', 'premium'].includes(currentPage);
+  const mobileFloatingTopClass = mobileHasFixedHeader ? 'top-[5.5rem]' : 'top-4';
 
   const renderPage = () => {
     // Route-to-page component switcher
@@ -688,21 +690,21 @@ function App() {
       case 'dashboard':
         return <Dashboard navigate={navigate} appState={appState} updateState={updateState} premium={premium}/>;
       case 'scan':
-        return <ScanMode navigate={navigate} appState={appState} updateState={updateState} premium={premium}/>;
+        return <ScanMode navigate={navigate} openMobileNav={() => setMobileNavOpen(true)} appState={appState} updateState={updateState} premium={premium}/>;
       case 'vocabulary':
-        return <VocabularyLearning navigate={navigate} appState={appState} updateState={updateState} premium={premium}/>;
+        return <VocabularyLearning navigate={navigate} openMobileNav={() => setMobileNavOpen(true)} appState={appState} updateState={updateState} premium={premium}/>;
       case 'sentence':
-        return <SentenceLearning navigate={navigate} appState={appState} updateState={updateState} />;
+        return <SentenceLearning navigate={navigate} openMobileNav={() => setMobileNavOpen(true)} appState={appState} updateState={updateState} />;
       case 'collection':
-        return <VocabularyCollection navigate={navigate} appState={appState} updateState={updateState} />;
+        return <VocabularyCollection navigate={navigate} openMobileNav={() => setMobileNavOpen(true)} appState={appState} updateState={updateState} />;
       case 'instructions':
-        return <Instructions navigate={navigate} appState={appState} />;
+        return <Instructions navigate={navigate} openMobileNav={() => setMobileNavOpen(true)} appState={appState} />;
       case 'profile':
         return isGuestMode
           ? <Landing navigate={navigate} resetAppState={resetAppState} />
-          : <Profile navigate={navigate} appState={appState} updateState={updateState} premium={premium}/>;
+          : <Profile navigate={navigate} openMobileNav={() => setMobileNavOpen(true)} appState={appState} updateState={updateState} premium={premium}/>;
       case 'premium':
-        return <Premium navigate={navigate} premium={premium} />;
+        return <Premium navigate={navigate} openMobileNav={() => setMobileNavOpen(true)} premium={premium} />;
       case 'admin':
         return <AdminDashboard navigate={navigate} appState={appState} premium={premium} />;
       default:
@@ -713,12 +715,13 @@ function App() {
   if (isMobile) {
     return (
       // Mobile App Shell
-      <div className={`min-h-screen `}>
+      <div className={`min-h-screen ${showMobileNav && !mobileHasFixedHeader ? 'pt-9' : ''}`}>
         {/* Active Page Content */}
         {renderPage()}
         {showMobileNav && (
           <>
-            <div className="fixed left-4 top-4 z-[80]">
+            {!mobileHasFixedHeader && (
+            <div className={`fixed left-4 ${mobileFloatingTopClass} z-[80]`}>
               <button
                 onClick={() => setMobileNavOpen(true)}
                 className="theme-bg-surface flex h-12 w-12 items-center justify-center rounded-2xl border shadow-[0_18px_36px_rgba(15,27,36,0.22)]"
@@ -728,6 +731,7 @@ function App() {
               </button>
             </div>
 
+            )}
             <AnimatePresence>
               {mobileNavOpen && (
                 <>
@@ -807,7 +811,7 @@ function App() {
           </>
         )}
         {/* Floating Theme Toggle */}
-        <div className="fixed right-4 top-4 z-[70]">
+        <div className={`fixed right-4 ${mobileFloatingTopClass} z-[70]`}>
           {themeToggle}
         </div>
         {/* Global Mascot Assistant */}

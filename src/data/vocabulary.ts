@@ -15,9 +15,33 @@ export interface SentenceItem {
   illustration: string; // emoji or image
   audioUrl?: string;
 }
-
 // Example vocabulary data (Filipino/Hiligaynon to English)
 export const vocabularyData: VocabularyItem[] = [
+  {
+    id: 'cook',
+    nativeWord: 'Luto',
+    englishWord: 'Cook',
+    category: 'actions',
+    emoji: '🍳',
+    difficulty: 'intermediate',
+  },
+  {
+    id: 'work',
+    nativeWord: 'Obra',
+    englishWord: 'Work',
+    category: 'actions',
+    emoji: '💼',
+    difficulty: 'intermediate',
+  },
+  {
+    id: 'hot',
+    nativeWord: 'Init',
+    englishWord: 'Hot',
+    category: 'descriptions',
+    emoji: '☀️',
+    difficulty: 'intermediate',
+  },
+
   // Animals
   // BEGINNER ANIMALS (9 words)
   {
@@ -420,6 +444,23 @@ export const vocabularyData: VocabularyItem[] = [
 export const getBeginnerWords = () => vocabularyData.filter(item => item.difficulty === 'beginner');
 export const getIntermediateWords = () => vocabularyData.filter(item => item.difficulty === 'intermediate');
 export const getAdvancedWords = () => vocabularyData.filter(item => item.difficulty === 'advanced');
+
+const PHASE_ONE_SUPPORT_IDS = ['cook', 'work', 'hot'] as const;
+
+export const buildPhaseOneSupportWords = (levelCycle: number): VocabularyItem[] =>
+  PHASE_ONE_SUPPORT_IDS.map((supportId, index) => {
+    const item = vocabularyData.find((word) => word.id === supportId);
+
+    if (!item) {
+      throw new Error(`Missing phase one support word: ${supportId}`);
+    }
+
+    return {
+      ...item,
+      id: `lvl-${levelCycle + 1}-phase-one-support-${index + 1}-${item.id}`,
+      difficulty: 'beginner',
+    };
+  });
 
 // Example sentence data
 export const sentenceData: SentenceItem[] = [
