@@ -72,6 +72,41 @@ const getQuizIntervalForBand = (band: "beginner" | "intermediate" | "advanced") 
   return 5;
 };
 
+const QUIZ_SESSION_STORAGE_KEY = "phonix-vocabulary-quiz-session-v1";
+
+interface PersistedQuizSessionState {
+  isQuizMode: boolean;
+  isReviewMode: boolean;
+  isPracticeQuizSession: boolean;
+  quizWordId: string | null;
+  quizPoolIds: string[];
+  reviewWordIds: string[];
+  pendingQuizWordId: string | null;
+  wordsBeforeQuiz: number;
+  consecutiveWords: number;
+  quizRound: number;
+  quizMastery: QuizMasteryState;
+  lastQuizWordId: string | null;
+  activeCheckpointId: string | null;
+}
+
+const readPersistedQuizSessionState = (): PersistedQuizSessionState | null => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const raw = window.sessionStorage.getItem(QUIZ_SESSION_STORAGE_KEY);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(raw) as PersistedQuizSessionState;
+  } catch {
+    return null;
+  }
+};
+
 export default function VocabularyLearning({
   navigate,
   openMobileNav,
@@ -121,6 +156,8 @@ export default function VocabularyLearning({
   const [isPracticeQuizSession, setIsPracticeQuizSession] = useState(false);
   const previousLevelCycleRef = useRef(levelCycle);
   const shownCheckpointIdsRef = useRef<Set<string>>(new Set());
+  const pendingQuizSessionRef = useRef<PersistedQuizSessionState | null>(readPersistedQuizSessionState());
+  const hasRestoredQuizSessionRef = useRef(false);
   const [aiVocabulary, setAiVocabulary] = useState<VocabularyItem[]>(() => {
     return readCachedAIVocabularyOrPairLatest(targetLanguage, nativeLanguage, { levelCycle });
   });
@@ -190,6 +227,60 @@ export default function VocabularyLearning({
     shownCheckpointIdsRef.current = new Set();
     setActiveCheckpointId(null);
   }, [levelCycle, updateState]);
+
+  useEffect(() => {
+    if (hasRestoredQuizSessionRef.current) {
+      return;
+    }
+
+    const persisted = pendingQuizSessionRef.current;
+    if (!persisted) {
+      hasRestoredQuizSessionRef.current = true;
+      return;
+    }
+
+    if (aiVocabulary.length === 0) {
+      return;
+    }
+
+    const wordsById = new Map(aiVocabulary.map((item) => [item.id, item]));
+    const restoredQuizWord = persisted.quizWordId ? wordsById.get(persisted.quizWordId) || null : null;
+    const restoredPendingQuizWord = persisted.pendingQuizWordId
+      ? wordsById.get(persisted.pendingQuizWordId) || null
+      : null;
+    const restoredQuizPool = persisted.quizPoolIds
+      .map((id) => wordsById.get(id))
+      .filter((item): item is VocabularyItem => !!item);
+    const restoredReviewWords = persisted.reviewWordIds
+      .map((id) => wordsById.get(id))
+      .filter((item): item is VocabularyItem => !!item);
+
+    setWordsBeforeQuiz(persisted.wordsBeforeQuiz);
+    setConsecutiveWords(persisted.consecutiveWords);
+    setQuizRound(persisted.quizRound);
+    setQuizMastery(persisted.quizMastery || {});
+    setLastQuizWordId(persisted.lastQuizWordId);
+    setActiveCheckpointId(persisted.activeCheckpointId);
+    setIsPracticeQuizSession(persisted.isPracticeQuizSession);
+
+    if (persisted.isQuizMode && restoredQuizWord) {
+      setQuizWord(restoredQuizWord);
+      setQuizPoolSnapshot(
+        restoredQuizPool.length > 0 ? restoredQuizPool : buildQuizPoolSnapshot(restoredQuizWord)
+      );
+      setIsQuizMode(true);
+      setQuizSessionKey((previous) => previous + 1);
+    }
+
+    if (persisted.isReviewMode && restoredPendingQuizWord) {
+      setPendingQuizWord(restoredPendingQuizWord);
+      setReviewWords(restoredReviewWords);
+      setIsReviewMode(true);
+    }
+
+    pendingQuizSessionRef.current = null;
+    hasRestoredQuizSessionRef.current = true;
+  }, [aiVocabulary]);
 
   const currentLevelWords = (() => {
     const difficulty =
@@ -486,6 +577,44 @@ export default function VocabularyLearning({
 
     return [...deduped, focusWord].slice(-Math.max(wordsBeforeQuiz, 3));
   };
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const persistedState: PersistedQuizSessionState = {
+      isQuizMode,
+      isReviewMode,
+      isPracticeQuizSession,
+      quizWordId: quizWord?.id || null,
+      quizPoolIds: quizPoolSnapshot.map((item) => item.id),
+      reviewWordIds: reviewWords.map((item) => item.id),
+      pendingQuizWordId: pendingQuizWord?.id || null,
+      wordsBeforeQuiz,
+      consecutiveWords,
+      quizRound,
+      quizMastery,
+      lastQuizWordId,
+      activeCheckpointId,
+    };
+
+    window.sessionStorage.setItem(QUIZ_SESSION_STORAGE_KEY, JSON.stringify(persistedState));
+  }, [
+    isQuizMode,
+    isReviewMode,
+    isPracticeQuizSession,
+    quizWord,
+    quizPoolSnapshot,
+    reviewWords,
+    pendingQuizWord,
+    wordsBeforeQuiz,
+    consecutiveWords,
+    quizRound,
+    quizMastery,
+    lastQuizWordId,
+    activeCheckpointId,
+  ]);
 
   const startQuizSession = (word: VocabularyItem, sourcePoolOverride?: VocabularyItem[]) => {
     clearReviewState();
@@ -845,8 +974,16 @@ export default function VocabularyLearning({
       />
 
       {/* Main Lesson Content */}
-      <div className="flex flex-1 items-center justify-center overflow-hidden px-3 pb-3 pt-2 sm:p-4">
-        <div className="flex h-full w-full max-w-lg flex-col justify-center">
+      <div
+        className={`flex flex-1 overflow-hidden px-3 pb-3 pt-2 sm:p-4 ${
+          isQuizMode ? "items-start justify-center" : "items-center justify-center"
+        }`}
+      >
+        <div
+          className={`flex h-full w-full max-w-lg flex-col ${
+            isQuizMode ? "justify-start" : "justify-center"
+          }`}
+        >
           {/* Entrance Spacer Animation */}
           <motion.div
             initial={{ opacity: 0, y: -12 }}
@@ -947,7 +1084,7 @@ export default function VocabularyLearning({
             </motion.div>
           ) : isQuizMode ? (
             // Quiz Mode
-            <div className="flex h-full min-h-0 flex-col justify-center">
+            <div className="flex h-full min-h-0 flex-col justify-start">
               {/* Practice Session Exit Action */}
               {isPracticeQuizSession && (
                 <div className="mb-2 flex justify-end sm:mb-4">
