@@ -245,7 +245,7 @@ export default function SentenceLearning({
 
   return (
     // Sentence Learning Page Container
-    <div className="min-h-screen flex flex-col">
+    <div className="flex min-h-[100dvh] flex-col overflow-hidden md:min-h-screen">
       {/* Top Navigation with Progress */}
       <NavigationHeader
         onMenu={openMobileNav}
@@ -258,7 +258,7 @@ export default function SentenceLearning({
       />
 
       {/* Main Sentence Practice Content */}
-      <div className="flex-1 px-4 pb-28 pt-5">
+      <div className="flex-1 overflow-hidden px-3 pb-36 pt-3 sm:px-4 sm:pb-28 sm:pt-5">
         <div className="mx-auto w-full max-w-3xl">
           {/* Active Sentence Card */}
           <motion.div
@@ -267,7 +267,7 @@ export default function SentenceLearning({
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 140 }}
           >
-            <Card className="text-center">
+            <Card className="p-4 text-center sm:p-6">
               {/* Illustration */}
               <motion.div
                 animate={{
@@ -275,23 +275,23 @@ export default function SentenceLearning({
                   rotate: [0, 2, -2, 0],
                 }}
                 transition={{ duration: 3, repeat: Infinity }}
-                className="text-9xl mb-8 leading-none flex items-center justify-center"
+                className="mb-4 flex items-center justify-center text-7xl leading-none sm:mb-8 sm:text-9xl"
               >
                 {currentSentence.illustration}
               </motion.div>
 
               {/* Native Sentence */}
-              <div className="theme-bg-surface mb-8 rounded-2xl border p-6">
-                <p className="theme-text-soft mb-3 text-sm font-bold">
+              <div className="theme-bg-surface mb-4 rounded-2xl border p-4 sm:mb-8 sm:p-6">
+                <p className="theme-text-soft mb-2 text-xs font-bold sm:mb-3 sm:text-sm">
                   {appState.targetLanguage} Fill in the blank:
                 </p>
-                <div className="flex items-center justify-center gap-4">
-                  <h2 className="font-baloo text-3xl md:text-4xl font-bold leading-relaxed">
+                <div className="flex items-center justify-center gap-3 sm:gap-4">
+                  <h2 className="font-baloo text-[2rem] font-bold leading-tight sm:text-3xl md:text-4xl">
                     {question.maskedSentence}
                   </h2>
                   <button
                     onClick={(e) => playMaskedSentenceAudio(e)}
-                    className="bg-primary  p-4 rounded-full hover:scale-110 transition-transform flex-shrink-0"
+                    className="bg-primary flex-shrink-0 rounded-full p-3 transition-transform hover:scale-110 sm:p-4"
                   >
                     🔊
                   </button>
@@ -299,17 +299,17 @@ export default function SentenceLearning({
               </div>
 
               {/* English Translation */}
-              <div className="theme-bg-surface rounded-2xl border p-6 shadow-lg">
-                <p className="theme-text-soft mb-3 text-sm font-bold">
+              <div className="theme-bg-surface rounded-2xl border p-4 shadow-lg sm:p-6">
+                <p className="theme-text-soft mb-2 text-xs font-bold sm:mb-3 sm:text-sm">
                   {appState.nativeLanguage} Hint:
                 </p>
-                <div className="flex items-center justify-center gap-4">
-                  <h3 className="font-baloo text-3xl md:text-4xl font-bold text-secondary leading-relaxed">
+                <div className="flex items-center justify-center gap-3 sm:gap-4">
+                  <h3 className="font-baloo text-[2rem] font-bold leading-tight text-secondary sm:text-3xl md:text-4xl">
                     {currentSentence.englishSentence}
                   </h3>
                   <button
                     onClick={(e) => playAudio(currentSentence.englishSentence, e)}
-                    className="bg-secondary text-white p-4 rounded-full hover:scale-110 transition-transform flex-shrink-0"
+                    className="bg-secondary flex-shrink-0 rounded-full p-3 text-white transition-transform hover:scale-110 sm:p-4"
                   >
                     🔊
                   </button>
@@ -317,7 +317,7 @@ export default function SentenceLearning({
               </div>
 
               {/* Answer Option Buttons */}
-              <div className="mt-6 flex flex-wrap justify-center gap-3">
+              <div className="mt-4 flex flex-wrap justify-center gap-2 sm:mt-6 sm:gap-3">
                 {question.options.map((option) => {
                   const isCorrectOption =
                     option.toLowerCase() === question.correctWord.toLowerCase();
@@ -338,7 +338,7 @@ export default function SentenceLearning({
                       key={option}
                       onClick={() => handleOptionSelect(option)}
                       disabled={showResult}
-                      className={`rounded-xl border px-4 py-2.5 text-base font-bold transition disabled:cursor-not-allowed ${stateClass}`}
+                      className={`rounded-xl border px-3 py-2 text-sm font-bold transition disabled:cursor-not-allowed sm:px-4 sm:py-2.5 sm:text-base ${stateClass}`}
                     >
                       {option}
                     </button>
@@ -348,11 +348,11 @@ export default function SentenceLearning({
 
               {/* Answer Feedback */}
               {showResult && (
-                <div className="theme-bg-surface mt-4 rounded-xl border p-4">
-                  <p className="text-lg font-bold">
+                <div className="theme-bg-surface mt-3 rounded-xl border p-3 sm:mt-4 sm:p-4">
+                  <p className="text-base font-bold sm:text-lg">
                     {isCorrectAnswer ? "Correct! Great job!" : "Nice try!"}
                   </p>
-                  <p className="theme-text-soft mt-1 font-semibold">
+                  <p className="theme-text-soft mt-1 text-sm font-semibold sm:text-base">
                     Correct answer: {question.correctWord}
                   </p>
                 </div>
@@ -361,13 +361,13 @@ export default function SentenceLearning({
           </motion.div>
 
           {/* Progress Dots */}
-          <div className="mt-4 flex justify-center gap-2">
+          <div className="mt-3 flex justify-center gap-1.5 sm:mt-4 sm:gap-2">
             {sentenceData.map((_, index) => (
               <div
                 key={index}
-                className={`w-3 h-3 rounded-full transition-all ${
+                className={`h-2 w-2 rounded-full transition-all sm:h-3 sm:w-3 ${
                   index === currentIndex
-                    ? "bg-secondary w-6"
+                    ? "w-5 bg-secondary sm:w-6"
                     : index < currentIndex
                       ? "bg-success"
                       : "bg-gray-300"
@@ -379,18 +379,18 @@ export default function SentenceLearning({
       </div>
 
       {/* Bottom Action Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-[color:var(--border)] bg-[color:var(--bg)]/95 px-4 py-3 backdrop-blur">
+      <div className="fixed bottom-20 left-0 right-0 z-40 border-t border-[color:var(--border)] bg-[color:var(--bg)]/95 px-3 py-3 backdrop-blur sm:bottom-0 sm:px-4">
         <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3">
           <button
             onClick={showResult ? handlePrevious : handleSkip}
-            className="theme-bg-surface rounded-2xl border px-6 py-3 text-sm font-bold uppercase tracking-[0.08em]"
+            className="theme-bg-surface rounded-2xl border px-4 py-3 text-sm font-bold uppercase tracking-[0.08em] sm:px-6"
           >
             {showResult ? "Previous" : "Skip"}
           </button>
           <button
             onClick={showResult ? handleNext : handleCheckAnswer}
             disabled={!showResult && !selectedOption}
-            className={`rounded-2xl px-8 py-3 text-sm font-bold uppercase tracking-[0.08em] transition ${
+            className={`rounded-2xl px-6 py-3 text-sm font-bold uppercase tracking-[0.08em] transition sm:px-8 ${
               !showResult && !selectedOption
                 ? "theme-bg-surface cursor-not-allowed border"
                 : "bg-gradient-to-r from-primary to-secondary text-white shadow-lg"
