@@ -1455,8 +1455,8 @@ export default function VocabularyLearning({
             <div className="mb-4 flex items-center justify-center text-7xl leading-none">🎉</div>
             <h3 className="font-baloo text-3xl font-bold text-gray-800">Level Complete!</h3>
             <p className="mt-3 text-gray-600 font-semibold">
-              Nice work. You finished this level pack. You can review the words you learned in your
-              Backpack, continue learning vocabulary, or proceed to sentence learning.
+              Nice work. You finished all the flashcards. You can review the words you learned in
+              your Backpack, or proceed to sentence learning.
             </p>
             <div className="mt-6 flex flex-col gap-3">
               <button
@@ -1467,20 +1467,6 @@ export default function VocabularyLearning({
                 className="flex-1 rounded-2xl bg-gradient-to-r from-primary to-secondary px-6 py-4 font-bold text-white shadow-lg"
               >
                 See Backpack
-              </button>
-              <button
-                onClick={() => {
-                  setShowLevelCompleteModal(false);
-                  clearQuizState();
-                  clearReviewState();
-                  setConsecutiveWords(0);
-                  updateState({
-                    currentVocabIndex: 0,
-                  });
-                }}
-                className="flex-1 rounded-2xl bg-gray-100 px-6 py-4 font-bold text-gray-700"
-              >
-                Continue Learning
               </button>
               <button
                 onClick={() => {
@@ -1502,19 +1488,27 @@ export default function VocabularyLearning({
           <div className="max-w-md w-full rounded-3xl border-4 border-primary bg-white p-8 text-center shadow-2xl">
             <div className="mb-4 flex items-center justify-center text-7xl leading-none">🏁</div>
             <h3 className="font-baloo text-3xl font-bold text-gray-800">
-              {activeCheckpoint.title}
+              {activeCheckpoint.unlocksSentencePhase ? "Level Complete!" : activeCheckpoint.title}
             </h3>
-            <p className="mt-3 text-gray-600 font-semibold">{activeCheckpoint.message}</p>
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <p className="mt-3 text-gray-600 font-semibold">
+              {activeCheckpoint.unlocksSentencePhase
+                ? "Nice work. You finished this level pack. You can review the words you learned in your Backpack, continue learning vocabulary, or proceed to sentence learning."
+                : activeCheckpoint.message}
+            </p>
+            <div
+              className={`mt-6 flex flex-col gap-3 ${
+                activeCheckpoint.unlocksSentencePhase ? "" : "sm:flex-row"
+              }`}
+            >
               {activeCheckpoint.unlocksSentencePhase && (
                 <button
                   onClick={() => {
                     setActiveCheckpointId(null);
-                    navigate("sentence");
+                    navigate("collection");
                   }}
                   className="flex-1 rounded-2xl bg-gradient-to-r from-primary to-secondary px-6 py-4 font-bold text-white shadow-lg"
                 >
-                  Start Sentence Practice
+                  See Backpack
                 </button>
               )}
               <button
@@ -1525,8 +1519,19 @@ export default function VocabularyLearning({
                     : "bg-gradient-to-r from-primary to-secondary text-white shadow-lg"
                 }`}
               >
-                {activeCheckpoint.cta}
+                {activeCheckpoint.unlocksSentencePhase ? "Continue Learning" : activeCheckpoint.cta}
               </button>
+              {activeCheckpoint.unlocksSentencePhase && (
+                <button
+                  onClick={() => {
+                    setActiveCheckpointId(null);
+                    navigate("sentence");
+                  }}
+                  className="flex-1 rounded-2xl border border-primary bg-white px-6 py-4 font-bold text-gray-700"
+                >
+                  Proceed to Sentence Learning
+                </button>
+              )}
             </div>
           </div>
         </div>
