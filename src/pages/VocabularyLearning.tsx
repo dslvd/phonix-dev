@@ -1434,7 +1434,7 @@ export default function VocabularyLearning({
             <h3 className="font-baloo text-3xl font-bold text-gray-800">Level Complete!</h3>
             <p className="mt-3 text-gray-600 font-semibold">
               Nice work. You finished this level pack. Want to review the words you learned? Check
-              your Backpack.
+              your Backpack, or click Continue to proceed to sentence practice.
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <button
@@ -1449,6 +1449,7 @@ export default function VocabularyLearning({
               <button
                 onClick={() => {
                   setShowLevelCompleteModal(false);
+                  navigate("sentence");
                 }}
                 className="flex-1 rounded-2xl bg-gray-100 px-6 py-4 font-bold text-gray-700"
               >

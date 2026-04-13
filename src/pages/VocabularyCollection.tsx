@@ -100,8 +100,27 @@ export default function VocabularyCollection({
   }, [targetLanguage, nativeLanguage, levelCycle]);
 
   const totalWords = aiVocabulary.length || VOCABULARY_PACK_WORD_COUNT;
+  const learnedBackpackVocabulary = appState.backpackItems
+    .filter((item) => item.source === "lesson" || item.id.startsWith("lesson:"))
+    .filter(
+      (item, index, array) =>
+        array.findIndex((entry) => entry.id === item.id) === index,
+    )
+    .map((item) => ({
+      id: item.id.replace(/^lesson:/, ""),
+      nativeWord: item.nativeText,
+      englishWord: item.translatedText,
+      category: "general",
+      emoji: item.emoji || "🧠",
+      difficulty: item.difficulty || "beginner",
+    })) satisfies VocabularyItem[];
 
-  const learnedVocabulary = aiVocabulary.filter((item) => appState.learnedWords.includes(item.id));
+  const learnedVocabulary =
+    learnedBackpackVocabulary.length > 0
+      ? learnedBackpackVocabulary
+      : aiVocabulary.filter((item) => appState.learnedWords.includes(item.id));
+  const lockedVocabulary = aiVocabulary.filter((item) => !appState.learnedWords.includes(item.id));
+  const totalTrackedWords = Math.max(totalWords, learnedVocabulary.length);
 
   useEffect(() => {
     if (learnedVocabulary.length === 0) {
@@ -152,12 +171,12 @@ export default function VocabularyCollection({
                 <div className="mb-3 flex items-center justify-between">
                   <h3 className="text-lg font-bold">Words Learned</h3>
                   <span className="text-lg font-bold">
-                    {learnedVocabulary.length}/{totalWords}
+                    {learnedVocabulary.length}/{totalTrackedWords}
                   </span>
                 </div>
                 <ProgressBar
                   current={learnedVocabulary.length}
-                  total={totalWords}
+                  total={totalTrackedWords}
                   color="success"
                   showNumbers={false}
                 />
@@ -313,7 +332,7 @@ export default function VocabularyCollection({
         )}
 
         {/* Continue Learning CTA */}
-        {!isGuestMode && learnedVocabulary.length > 0 && learnedVocabulary.length < totalWords && (
+        {!isGuestMode && learnedVocabulary.length > 0 && lockedVocabulary.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
