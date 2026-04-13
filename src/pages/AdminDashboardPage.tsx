@@ -343,19 +343,21 @@ export default function AdminDashboard({ navigate, appState, premium }: AdminDas
               className="w-full rounded-2xl border bg-transparent px-4 py-3 font-semibold outline-none focus:border-[color:var(--primary)]"
             />
             {authError && <p className="text-sm font-semibold text-red-400">{authError}</p>}
-            <button
+            <Button
               onClick={handleAdminLogin}
               disabled={isLoadingUsers}
+              unstyled
               className="btn w-full py-4"
             >
               {isLoadingUsers ? "Checking..." : "Unlock Admin"}
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={enableOverrideMode}
+              unstyled
               className="theme-bg-surface w-full rounded-2xl border px-6 py-3 text-sm font-bold uppercase tracking-[0.08em] transition"
             >
               Use Admin Override
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -375,12 +377,13 @@ export default function AdminDashboard({ navigate, appState, premium }: AdminDas
                 Admin override is active. Account management actions may require a valid admin
                 password.
               </p>
-              <button
+              <Button
                 onClick={disableOverrideMode}
+                unstyled
                 className="rounded-xl border border-amber-300 px-3 py-2 text-xs font-bold uppercase tracking-[0.08em] text-amber-200 transition hover:bg-amber-400/10"
               >
                 Disable Override
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -505,15 +508,16 @@ export default function AdminDashboard({ navigate, appState, premium }: AdminDas
               </Button>
             </div>
             <div className="mt-4 space-y-2">
-              <button
+              <Button
                 onClick={handleRefreshFlashcardsOverride}
                 disabled={isRefreshingFlashcards}
+                unstyled
                 className="btn w-full"
               >
                 {isRefreshingFlashcards
                   ? "Refreshing AI Flashcards..."
                   : "Override Refresh AI Flashcards"}
-              </button>
+              </Button>
               {flashcardRefreshMessage && (
                 <p
                   className={`text-xs font-semibold ${flashcardRefreshMessage.startsWith("Failed") ? "text-red-400" : "text-emerald-300"}`}
@@ -552,24 +556,26 @@ export default function AdminDashboard({ navigate, appState, premium }: AdminDas
                       </p>
                     </div>
                     <div className="flex flex-col gap-2 sm:flex-row">
-                      <button
+                      <Button
                         onClick={() => handleResetUserHistory(user.userKey)}
                         disabled={activeUserActionKey !== null}
+                        unstyled
                         className="btn btn-ghost rounded-xl px-3 py-2 text-xs"
                       >
                         {activeUserActionKey === `reset:${user.userKey}`
                           ? "Resetting..."
                           : "Reset History"}
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         onClick={() => handleDeleteUser(user.userKey)}
                         disabled={activeUserActionKey !== null}
+                        unstyled
                         className="btn btn-ghost rounded-xl border-red-400 px-3 py-2 text-xs text-red-300"
                       >
                         {activeUserActionKey === `delete:${user.userKey}`
                           ? "Deleting..."
                           : "Delete"}
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 ))

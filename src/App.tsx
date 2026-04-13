@@ -13,6 +13,7 @@ import Premium from './pages/Premium';
 import AdminDashboard from './pages/AdminDashboardPage';
 import Instructions from './pages/Instructions';
 import Mascot from './components/Mascot';
+import Button from './components/Button';
 import { usePremium } from './lib/usePremium';
 import { clearPremiumStatus } from './lib/premiumService';
 import { getVocabularyLevelCycle, prefetchAIVocabularyWindow } from './lib/aiVocabulary';
@@ -388,8 +389,9 @@ function App() {
 
   const themeToggle = (
     <div className="card inline-flex items-center gap-1 rounded-full p-1" role="group" aria-label="Theme mode switch">
-      <button
+      <Button
         onClick={() => setTheme('light')}
+        unstyled
         className={`grid h-9 w-9 place-items-center rounded-full text-lg leading-none font-bold transition sm:h-10 sm:w-10 ${
           theme === 'light' ? 'bg-[color:var(--primary)] text-[color:var(--text)]' : 'text-muted'
         }`}
@@ -402,9 +404,10 @@ function App() {
           src="/assets/LightMode.png"
           style={{ filter: theme === 'light' ? 'brightness(0.25)' : 'none' , width: '30px', height: '30px' }}
         />
-      </button>
-      <button
+      </Button>
+      <Button
         onClick={() => setTheme('dark')}
+        unstyled
         className={`grid h-9 w-9 place-items-center rounded-full text-lg leading-none font-bold transition sm:h-10 sm:w-10 ${
           theme === 'dark' ? 'bg-[color:var(--primary)] text-[color:var(--text)]' : 'text-muted'
         }`}
@@ -417,7 +420,7 @@ function App() {
           src="/assets/DarkMode.png"
           style={{ filter: theme === 'light' ? 'brightness(0.25)' : 'none' , width: '30px', height: '30px'}}
         />
-      </button>
+      </Button>
    </div>
   );
   
@@ -722,13 +725,14 @@ function App() {
           <>
             {!mobileHasFixedHeader && (
             <div className={`fixed left-4 ${mobileFloatingTopClass} z-[80]`}>
-              <button
+              <Button
                 onClick={() => setMobileNavOpen(true)}
+                unstyled
                 className="theme-bg-surface flex h-12 w-12 items-center justify-center rounded-2xl border shadow-[0_18px_36px_rgba(15,27,36,0.22)]"
                 aria-label="Open navigation menu"
               >
                 <span className="text-[1.35rem] leading-none">☰</span>
-              </button>
+              </Button>
             </div>
 
             )}
@@ -760,25 +764,27 @@ function App() {
                           AI-driven learning app
                         </p>
                       </div>
-                      <button
+                      <Button
                         onClick={() => setMobileNavOpen(false)}
+                        unstyled
                         className="theme-bg-surface flex h-10 w-10 items-center justify-center rounded-xl border text-lg"
                         aria-label="Close navigation menu"
                       >
                         ×
-                      </button>
+                      </Button>
                     </div>
 
                     <nav className="mt-6 space-y-2">
                       {desktopNavItems.map((item) => {
                         const isActive = currentPage === item.page;
                         return (
-                          <button
+                          <Button
                             key={item.page}
                             onClick={() => {
                               setMobileNavOpen(false);
                               navigate(item.page);
                             }}
+                            unstyled
                             className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm font-bold transition ${
                               isActive
                                 ? 'bg-[color:color-mix(in_srgb,var(--primary)_18%,var(--surface))] text-[var(--text)] border border-[var(--primary)]'
@@ -787,22 +793,23 @@ function App() {
                           >
                             <span className="text-lg leading-none">{item.icon}</span>
                             <span className="uppercase tracking-[0.08em]">{item.label}</span>
-                          </button>
+                          </Button>
                         );
                       })}
                     </nav>
 
                     <div className="mt-auto space-y-3">
-                      <button
+                      <Button
                         onClick={() => {
                           setMobileNavOpen(false);
                           resetAppState();
                           navigate('landing');
                         }}
+                        unstyled
                         className="btn btn-secondary w-full rounded-xl px-4 py-3 text-sm uppercase tracking-[0.08em]"
                       >
                         {isGuestMode ? 'Exit Guest Mode' : 'Log Out'}
-                      </button>
+                      </Button>
                     </div>
                   </motion.aside>
                 </>
@@ -850,9 +857,10 @@ function App() {
               {desktopNavItems.map((item) => {
                 const isActive = currentPage === item.page;
                 return (
-                  <button
+                  <Button
                     key={item.page}
                     onClick={() => navigate(item.page)}
+                    unstyled
                     className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm font-bold transition ${
                       isActive
                         ? 'bg-[color:color-mix(in_srgb,var(--primary)_18%,var(--surface))] text-[var(--text)] border border-[var(--primary)]'
@@ -861,7 +869,7 @@ function App() {
                   >
                     <span className="text-lg leading-none">{item.icon}</span>
                     <span className="uppercase tracking-[0.08em]">{item.label}</span>
-                  </button>
+                  </Button>
                 );
               })}
             </nav>
@@ -870,15 +878,16 @@ function App() {
               <div className="flex justify-center">
                 {themeToggle}
               </div>
-              <button
+              <Button
                 onClick={() => {
                   resetAppState();
                   navigate('landing');
                 }}
+                unstyled
                 className="btn btn-secondary w-full rounded-xl px-4 py-3 text-sm uppercase tracking-[0.08em]"
               >
                 {isGuestMode ? 'Exit Guest Mode' : 'Log Out'}
-              </button>
+              </Button>
             </div>
           </aside>
         )}

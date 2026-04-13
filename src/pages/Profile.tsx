@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import Button from "../components/Button";
 import NavigationHeader from "../components/NavigationHeader";
 import { Page, AppState, UpdateStateFn } from "../App";
 import { usePremium } from "../lib/usePremium";
@@ -247,8 +248,9 @@ export default function Profile({ navigate, openMobileNav, appState, updateState
             transition={{ delay: 0.5 }}
             className="mt-5"
           >
-            <button
+            <Button
               onClick={() => navigate("premium")}
+              unstyled
               className="theme-bg-surface w-full rounded-2xl border p-5 text-left transition hover:border-[#56b8e8]"
             >
               <div className="text-center">
@@ -267,7 +269,7 @@ export default function Profile({ navigate, openMobileNav, appState, updateState
                   Upgrade now
                 </span>
               </div>
-            </button>
+            </Button>
           </motion.div>
         )}
 
@@ -278,8 +280,9 @@ export default function Profile({ navigate, openMobileNav, appState, updateState
           transition={{ delay: 0.6 }}
           className="mt-5 grid gap-4 md:grid-cols-3"
         >
-          <button
+          <Button
             onClick={() => navigate("collection")}
+            unstyled
             className="theme-bg-surface rounded-2xl border p-5 text-center transition hover:border-[#56b8e8]"
           >
             <div>
@@ -287,10 +290,11 @@ export default function Profile({ navigate, openMobileNav, appState, updateState
               <h3 className="font-baloo text-xl font-bold">My Vocabulary</h3>
               <p className="theme-text-soft mt-1 text-sm font-semibold">View all learned words</p>
             </div>
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={() => navigate("instructions")}
+            unstyled
             className="theme-bg-surface rounded-2xl border p-5 text-center transition hover:border-[#56b8e8]"
           >
             <div>
@@ -300,10 +304,11 @@ export default function Profile({ navigate, openMobileNav, appState, updateState
                 See full app instructions
               </p>
             </div>
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={() => navigate("setup")}
+            unstyled
             className="theme-bg-surface rounded-2xl border p-5 text-center transition hover:border-[#56b8e8]"
           >
             <div>
@@ -313,7 +318,7 @@ export default function Profile({ navigate, openMobileNav, appState, updateState
                 Update your learning preferences
               </p>
             </div>
-          </button>
+          </Button>
         </motion.div>
 
         {/* Logout Action */}
