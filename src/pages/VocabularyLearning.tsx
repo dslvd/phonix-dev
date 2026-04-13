@@ -20,6 +20,7 @@ import { pickNextQuizWord, QuizMasteryState, recordQuizOutcome } from "../lib/qu
 
 interface VocabularyLearningProps {
   navigate: (page: Page) => void;
+  openMobileNav?: () => void;
   appState: AppState;
   updateState: UpdateStateFn;
   premium: ReturnType<typeof usePremium>;
@@ -73,6 +74,7 @@ const getQuizIntervalForBand = (band: "beginner" | "intermediate" | "advanced") 
 
 export default function VocabularyLearning({
   navigate,
+  openMobileNav,
   appState,
   updateState,
   premium,
@@ -826,9 +828,10 @@ export default function VocabularyLearning({
 
   return (
     // Vocabulary Learning Page Container
-    <div className="min-h-screen flex flex-col">
+    <div className="flex min-h-[100dvh] flex-col overflow-hidden md:min-h-screen">
       {/* Top Navigation with Progress + Battery */}
       <NavigationHeader
+        onMenu={openMobileNav}
         onBack={() => navigate("dashboard")}
         onLogout={() => navigate("landing")}
         title="Vocabulary Learning"
@@ -842,13 +845,13 @@ export default function VocabularyLearning({
       />
 
       {/* Main Lesson Content */}
-      <div className="flex-1 flex items-center justify-center p-4">
-        <div className="max-w-lg w-full">
+      <div className="flex flex-1 items-center justify-center overflow-hidden px-3 pb-3 pt-2 sm:p-4">
+        <div className="flex h-full w-full max-w-lg flex-col justify-center">
           {/* Entrance Spacer Animation */}
           <motion.div
             initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-6"
+            className="mb-2 sm:mb-6"
           />
 
           {/* Page States: Loading, Review, Quiz, Flashcard */}
@@ -990,16 +993,16 @@ export default function VocabularyLearning({
                     className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-[#FF9126] via-[#ffb35a] to-[#56b8e8] opacity-50 blur-2xl"
                   />
 
-                  <div className="theme-bg-surface relative rounded-3xl border p-8 shadow-2xl">
+                  <div className="theme-bg-surface relative rounded-3xl border p-5 shadow-2xl sm:p-8">
                     {/* Emoji Illustration with particle effect */}
-                    <div className="relative mb-8 flex justify-center items-center">
+                    <div className="relative mb-5 flex items-center justify-center sm:mb-8">
                       <motion.div
                         animate={{
                           scale: [1, 1.15, 1],
                           rotate: [0, 5, -5, 0],
                         }}
                         transition={{ duration: 4, repeat: Infinity }}
-                        className="text-[150px] leading-none flex items-center justify-center"
+                        className="flex items-center justify-center text-[112px] leading-none sm:text-[150px]"
                       >
                         {displayedItem.emoji}
                       </motion.div>
@@ -1018,7 +1021,7 @@ export default function VocabularyLearning({
                             repeat: Infinity,
                             delay: i * 0.8,
                           }}
-                          className="absolute top-0 left-1/2 -translate-x-1/2 text-2xl flex items-center justify-center"
+                          className="absolute left-1/2 top-0 flex -translate-x-1/2 items-center justify-center text-xl sm:text-2xl"
                         >
                           ✨
                         </motion.div>
@@ -1026,28 +1029,28 @@ export default function VocabularyLearning({
                     </div>
 
                     {/* Native Word Section */}
-                    <div className="mb-8">
+                    <div className="mb-5 sm:mb-8">
                       <motion.p
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="theme-text-soft mb-3 text-sm font-bold uppercase tracking-wider"
+                        className="theme-text-soft mb-2 text-[11px] font-bold uppercase tracking-wider sm:mb-3 sm:text-sm"
                       >
                         {appState.targetLanguage}
                       </motion.p>
-                      <div className="flex items-center justify-center gap-4">
+                      <div className="flex items-center justify-center gap-3 sm:gap-4">
                         <motion.h2
                           initial={{ opacity: 0, scale: 0.8 }}
                           animate={{ opacity: 1, scale: 1 }}
                           transition={{ delay: 0.3, type: "spring" }}
-                          className="select-none font-baloo text-6xl font-bold bg-gradient-to-r from-[#FF9126] to-[#FF9126] bg-clip-text text-transparent"
+                          className="select-none bg-gradient-to-r from-[#FF9126] to-[#FF9126] bg-clip-text font-baloo text-5xl font-bold text-transparent sm:text-6xl"
                         >
                           {displayedItem.nativeWord}
                         </motion.h2>
                         <button
                           type="button"
                           onClick={(e) => playAudio(displayedItem.nativeWord, "fil-PH", e)}
-                          className="theme-bg-surface flex h-12 w-12 items-center justify-center rounded-full border text-xl shadow-md transition hover:border-[#FF9126] hover:shadow-lg"
+                          className="theme-bg-surface flex h-11 w-11 items-center justify-center rounded-full border text-lg shadow-md transition hover:border-[#FF9126] hover:shadow-lg sm:h-12 sm:w-12 sm:text-xl"
                           title={`Play ${appState.targetLanguage} pronunciation`}
                           aria-label={`Play ${appState.targetLanguage} pronunciation`}
                         >
@@ -1063,18 +1066,18 @@ export default function VocabularyLearning({
                       transition={{ delay: 0.4 }}
                       className="relative"
                     >
-                      <div className="theme-bg-surface rounded-2xl border p-6 shadow-inner">
-                        <p className="theme-text-soft mb-2 text-xs font-bold uppercase tracking-wider">
+                      <div className="theme-bg-surface rounded-2xl border p-4 shadow-inner sm:p-6">
+                        <p className="theme-text-soft mb-1 text-[11px] font-bold uppercase tracking-wider sm:mb-2 sm:text-xs">
                           {appState.nativeLanguage}
                         </p>
-                        <div className="flex items-center justify-between gap-4">
-                          <h3 className="select-none font-baloo text-5xl font-bold">
+                        <div className="flex items-center justify-between gap-3 sm:gap-4">
+                          <h3 className="select-none font-baloo text-4xl font-bold sm:text-5xl">
                             {displayedItem.englishWord}
                           </h3>
                           <button
                             type="button"
                             onClick={(e) => playAudio(displayedItem.englishWord, "en-US", e)}
-                            className="theme-bg-surface flex h-12 w-12 shrink-0 items-center justify-center rounded-full border text-xl shadow-md transition hover:border-[#56b8e8] hover:shadow-lg"
+                            className="theme-bg-surface flex h-11 w-11 shrink-0 items-center justify-center rounded-full border text-lg shadow-md transition hover:border-[#56b8e8] hover:shadow-lg sm:h-12 sm:w-12 sm:text-xl"
                             title={`Play ${appState.nativeLanguage} pronunciation`}
                             aria-label={`Play ${appState.nativeLanguage} pronunciation`}
                           >
@@ -1085,14 +1088,14 @@ export default function VocabularyLearning({
                     </motion.div>
 
                     {/* Category Badge */}
-                    <div className="mt-6 flex justify-center">
+                    <div className="mt-4 flex justify-center sm:mt-6">
                       <motion.div
                         initial={{ opacity: 0, scale: 0 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.5, type: "spring" }}
-                        className="inline-flex items-center gap-2 rounded-full border border-[#FF9126] bg-gradient-to-r from-[#FF9126] to-[#ffb35a] px-4 py-2"
+                        className="inline-flex items-center gap-2 rounded-full border border-[#FF9126] bg-gradient-to-r from-[#FF9126] to-[#ffb35a] px-3 py-1.5 sm:px-4 sm:py-2"
                       >
-                        <span className="text-xs font-bold uppercase tracking-wide text-[#4a2a00]">
+                        <span className="text-[10px] font-bold uppercase tracking-wide text-[#4a2a00] sm:text-xs">
                           {displayedItem.category}
                         </span>
                       </motion.div>
@@ -1106,7 +1109,7 @@ export default function VocabularyLearning({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
-                className="mt-8"
+                className="mt-4 sm:mt-8"
               >
                 <div className="grid gap-3 sm:grid-cols-3">
                   <motion.div
@@ -1117,7 +1120,7 @@ export default function VocabularyLearning({
                     <button
                       onClick={handlePrevious}
                       disabled={appState.currentVocabIndex === 0}
-                      className={`w-full py-4 px-6 rounded-2xl font-bold text-lg transition-all ${
+                      className={`w-full rounded-2xl px-5 py-3.5 font-bold transition-all sm:px-6 sm:py-4 sm:text-lg ${
                         appState.currentVocabIndex === 0
                           ? "theme-bg-surface cursor-not-allowed"
                           : "theme-bg-surface border text-sm hover:border-[#FF9126] hover:shadow-lg"
@@ -1150,7 +1153,7 @@ export default function VocabularyLearning({
                           startQuizSession(currentItem, practicePool);
                         }
                       }}
-                      className="w-full rounded-2xl border border-[#56b8e8] bg-[#173b52] px-6 py-4 text-sm font-bold uppercase tracking-[0.08em] text-[#c9efff] transition hover:border-[#7ed6ff]"
+                      className="w-full rounded-2xl border border-[#56b8e8] bg-[#173b52] px-5 py-3.5 text-sm font-bold uppercase tracking-[0.08em] text-[#c9efff] transition hover:border-[#7ed6ff] sm:px-6 sm:py-4"
                     >
                       Quiz Me
                     </button>
@@ -1163,7 +1166,7 @@ export default function VocabularyLearning({
                   >
                     <button
                       onClick={handleNext}
-                      className="w-full py-4 px-6 rounded-2xl font-bold text-lg bg-gradient-to-r from-[#FF9126] to-[#ffb35a] shadow-lg hover:shadow-2xl transition-all relative overflow-hidden group"
+                      className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-[#FF9126] to-[#ffb35a] px-5 py-3.5 font-bold shadow-lg transition-all hover:shadow-2xl sm:px-6 sm:py-4 sm:text-lg"
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-[#FF9126] to-[#FF9126] opacity-0 group-hover:opacity-100 transition-opacity" />
                       <span className="relative z-10 text-white transition-colors group-hover:text-[#fff3de]">
@@ -1179,7 +1182,7 @@ export default function VocabularyLearning({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.7 }}
-                className="mt-6 flex justify-center gap-2"
+                className="mt-4 flex justify-center gap-2 sm:mt-6"
               >
                 {aiVocabulary.slice(0, Math.min(10, aiVocabulary.length)).map((item, index) => (
                   <motion.div

@@ -54,7 +54,7 @@ async function postJson<T>(url: string, body: unknown): Promise<T> {
 
 async function callGeminiBrowser(prompt: string, apiKey: string) {
   const response = await fetch(
-    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent',
     {
       method: 'POST',
       headers: {
@@ -439,7 +439,7 @@ export async function analyzeImageWithAI(base64Data: string, targetLanguage: str
     const apiKey = apiKeys[index];
 
     const response = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent',
       {
         method: 'POST',
         headers: {
