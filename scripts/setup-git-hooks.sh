@@ -1,7 +1,8 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/usr/bin/env sh
+set -eu
 
-repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+script_dir="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+repo_root="$(CDPATH= cd -- "$script_dir/.." && pwd)"
 
 git -C "$repo_root" config core.hooksPath .githooks
 chmod +x "$repo_root/.githooks/pre-push"
