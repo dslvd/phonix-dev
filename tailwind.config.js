@@ -65,7 +65,7 @@ export default {
         },
         float: {
           '0%, 100%': { transform: 'translateY(0px)' },
-          '50%': { transform: 'translateY(-20px)' },
+          '50%': { transform: 'translateY(-8px)' },
         },
         pop: {
           '0%': { transform: 'scale(0.85) translateY(28px)', opacity: '0' },
