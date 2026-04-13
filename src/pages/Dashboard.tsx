@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import Button from "../components/Button";
 import { Page, AppState, UpdateStateFn } from "../App";
 import { VocabularyItem, sentenceData, vocabularyData } from "../data/vocabulary";
 import { usePremium } from "../lib/usePremium";
@@ -375,24 +376,27 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
                 </div>
 
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <button
+                  <Button
                     onClick={() => navigate("landing")}
+                    unstyled
                     className="rounded-xl border-b-4 border-[color:var(--primary)] bg-[color:var(--primary)] px-4 py-2.5 text-sm font-bold uppercase tracking-[0.08em]"
                   >
                     Create Profile
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     onClick={() => navigate("scan")}
+                    unstyled
                     className="rounded-xl border border-[#2a4151] bg-[#56b8e8] px-4 py-2.5 text-sm font-bold uppercase tracking-[0.08em]"
                   >
                     Try Scan Mode
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     onClick={() => navigate("instructions")}
+                    unstyled
                     className="rounded-xl border border-[#2a4151] bg-transparent px-4 py-2.5 text-sm font-bold uppercase tracking-[0.08em]"
                   >
                     View Full Guide
-                  </button>
+                  </Button>
                 </div>
               </motion.div>
             )}
@@ -417,17 +421,18 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
                       {overallJourneyProgress}% overall progress
                     </p>
                   </div>
-                  <button
+                  <Button
                     onClick={() => {
                       updateState({
                         currentVocabIndex: resumeVocabularyIndex,
                       });
                       navigate("vocabulary");
                     }}
+                    unstyled
                     className="shrink-0 self-start rounded-xl border border-[#fff3de]/60 bg-[#fff3de] px-4 py-2 text-xs font-bold uppercase tracking-[0.08em] text-[#8a4a00] transition hover:bg-white sm:self-center"
                   >
                     {hasStartedVocabulary ? "Resume" : "Start"}
-                  </button>
+                  </Button>
                 </div>
               </motion.div>
             )}
@@ -468,9 +473,10 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
                         className={`relative flex items-start gap-4 sm:gap-6 ${isOdd ? "sm:flex-row-reverse" : ""}`}
                       >
                         <div className="relative z-10 flex w-10 shrink-0 justify-center sm:w-16">
-                          <button
+                          <Button
                             onClick={node.unlocked ? () => openRoadmapNode(node) : undefined}
                             disabled={!node.unlocked}
+                            unstyled
                             className={`flex h-10 w-10 items-center justify-center rounded-full border-4 text-lg shadow-lg transition sm:h-16 sm:w-16 sm:text-3xl ${
                               node.unlocked
                                 ? `bg-gradient-to-br ${node.tone} border-white/70 hover:scale-105`
@@ -479,7 +485,7 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
                             aria-label={node.title}
                           >
                             {node.unlocked ? node.icon : "🔒"}
-                          </button>
+                          </Button>
                         </div>
 
                         <div className={`flex-1 ${isOdd ? "sm:pr-12" : "sm:pl-12"}`}>
@@ -586,12 +592,13 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
                       })}
                     </div>
                   )}
-                  <button
+                  <Button
                     onClick={() => navigate("instructions")}
+                    unstyled
                     className="theme-bg-surface mt-3 w-full rounded-xl border px-3 py-2 text-sm font-bold uppercase tracking-[0.08em]"
                   >
                     How It Works
-                  </button>
+                  </Button>
                 </div>
               )}
 
@@ -671,18 +678,20 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
                     Keep your streak and lesson path synced.
                   </p>
                   <div className="mt-4 space-y-2">
-                    <button
+                    <Button
                       onClick={() => navigate("landing")}
+                      unstyled
                       className="w-full rounded-xl border-b-4 border-[#FF9126] bg-[#FF9126] px-4 py-3 text-sm font-bold uppercase tracking-[0.08em]"
                     >
                       Create Profile
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       onClick={() => navigate(premium.isPremium ? "scan" : "premium")}
+                      unstyled
                       className="w-full rounded-xl border border-[#2a4151] bg-[#56b8e8] px-4 py-3 text-sm font-bold uppercase tracking-[0.08em]"
                     >
                       {premium.isPremium ? "Open Scan Mode" : "Get Unlimited Batteries"}
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}

@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
+import Button from "../components/Button";
 import NavigationHeader from "../components/NavigationHeader";
 import Quiz from "../components/Quiz";
 import Mascot from "../components/Mascot";
@@ -901,7 +902,7 @@ export default function VocabularyLearning({
                         <p className="theme-text-soft text-sm font-semibold">{word.englishWord}</p>
                       </div>
                     </div>
-                    <button
+                    <Button
                       type="button"
                       onClick={(e) => playAudio(word.nativeWord, "fil-PH", e)}
                       className="theme-bg-surface flex h-11 w-11 items-center justify-center rounded-full border text-xl shadow-sm transition hover:border-[#FF9126]"
@@ -909,13 +910,13 @@ export default function VocabularyLearning({
                       aria-label={`Play ${word.nativeWord}`}
                     >
                       🔊
-                    </button>
+                    </Button>
                   </div>
                 ))}
               </div>
 
               <div className="mt-8 grid gap-3 sm:grid-cols-2">
-                <button
+                <Button
                   onClick={() => {
                     if (isPracticeQuizSession) {
                       exitPracticeQuizSession();
@@ -927,8 +928,8 @@ export default function VocabularyLearning({
                   className="theme-bg-surface rounded-2xl border px-6 py-4 text-sm font-bold uppercase tracking-[0.08em]"
                 >
                   {isPracticeQuizSession ? "Exit Quiz Me" : "Back to Cards"}
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={() => {
                     if (pendingQuizWord) {
                       startQuizSession(
@@ -942,7 +943,7 @@ export default function VocabularyLearning({
                   className="rounded-2xl bg-gradient-to-r from-[#FF9126] to-[#ffb35a] px-6 py-4 text-sm font-bold uppercase tracking-[0.08em] text-white shadow-lg"
                 >
                   Start Quiz
-                </button>
+                </Button>
               </div>
             </motion.div>
           ) : isQuizMode ? (
@@ -951,12 +952,12 @@ export default function VocabularyLearning({
               {/* Practice Session Exit Action */}
               {isPracticeQuizSession && (
                 <div className="mb-4 flex justify-end">
-                  <button
+                  <Button
                     onClick={exitPracticeQuizSession}
                     className="theme-bg-surface rounded-2xl border px-4 py-2 text-xs font-bold uppercase tracking-[0.08em]"
                   >
                     Exit Quiz
-                  </button>
+                  </Button>
                 </div>
               )}
               <Quiz
@@ -1047,7 +1048,7 @@ export default function VocabularyLearning({
                         >
                           {displayedItem.nativeWord}
                         </motion.h2>
-                        <button
+                        <Button
                           type="button"
                           onClick={(e) => playAudio(displayedItem.nativeWord, "fil-PH", e)}
                           className="theme-bg-surface flex h-11 w-11 items-center justify-center rounded-full border text-lg shadow-md transition hover:border-[#FF9126] hover:shadow-lg sm:h-12 sm:w-12 sm:text-xl"
@@ -1055,7 +1056,7 @@ export default function VocabularyLearning({
                           aria-label={`Play ${appState.targetLanguage} pronunciation`}
                         >
                           🔊
-                        </button>
+                        </Button>
                       </div>
                     </div>
 
@@ -1074,7 +1075,7 @@ export default function VocabularyLearning({
                           <h3 className="select-none font-baloo text-4xl font-bold sm:text-5xl">
                             {displayedItem.englishWord}
                           </h3>
-                          <button
+                          <Button
                             type="button"
                             onClick={(e) => playAudio(displayedItem.englishWord, "en-US", e)}
                             className="theme-bg-surface flex h-11 w-11 shrink-0 items-center justify-center rounded-full border text-lg shadow-md transition hover:border-[#56b8e8] hover:shadow-lg sm:h-12 sm:w-12 sm:text-xl"
@@ -1082,7 +1083,7 @@ export default function VocabularyLearning({
                             aria-label={`Play ${appState.nativeLanguage} pronunciation`}
                           >
                             🔊
-                          </button>
+                          </Button>
                         </div>
                       </div>
                     </motion.div>
@@ -1117,7 +1118,7 @@ export default function VocabularyLearning({
                     whileTap={{ scale: 0.98 }}
                     className="sm:col-span-1"
                   >
-                    <button
+                    <Button
                       onClick={handlePrevious}
                       disabled={appState.currentVocabIndex === 0}
                       className={`w-full rounded-2xl px-5 py-3.5 font-bold transition-all sm:px-6 sm:py-4 sm:text-lg ${
@@ -1127,7 +1128,7 @@ export default function VocabularyLearning({
                       }`}
                     >
                       ← Previous
-                    </button>
+                    </Button>
                   </motion.div>
 
                   <motion.div
@@ -1135,7 +1136,7 @@ export default function VocabularyLearning({
                     whileTap={{ scale: 0.98 }}
                     className="sm:col-span-1"
                   >
-                    <button
+                    <Button
                       onClick={() => {
                         const practicePool =
                           backpackDiscoveredVocabulary.length >= 2
@@ -1156,7 +1157,7 @@ export default function VocabularyLearning({
                       className="w-full rounded-2xl border border-[#56b8e8] bg-[#173b52] px-5 py-3.5 text-sm font-bold uppercase tracking-[0.08em] text-[#c9efff] transition hover:border-[#7ed6ff] sm:px-6 sm:py-4"
                     >
                       Quiz Me
-                    </button>
+                    </Button>
                   </motion.div>
 
                   <motion.div
@@ -1164,7 +1165,7 @@ export default function VocabularyLearning({
                     whileTap={{ scale: 0.98 }}
                     className="sm:col-span-1"
                   >
-                    <button
+                    <Button
                       onClick={handleNext}
                       className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-[#FF9126] to-[#ffb35a] px-5 py-3.5 font-bold shadow-lg transition-all hover:shadow-2xl sm:px-6 sm:py-4 sm:text-lg"
                     >
@@ -1172,7 +1173,7 @@ export default function VocabularyLearning({
                       <span className="relative z-10 text-white transition-colors group-hover:text-[#fff3de]">
                         Next →
                       </span>
-                    </button>
+                    </Button>
                   </motion.div>
                 </div>
               </motion.div>
@@ -1224,13 +1225,13 @@ export default function VocabularyLearning({
               Batteries refill automatically after 3 hours.
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <button
+              <Button
                 onClick={() => navigate("premium")}
                 className="flex-1 rounded-2xl bg-gradient-to-r from-primary to-secondary px-6 py-4 font-bold text-white shadow-lg"
               >
                 Get Unlimited Batteries
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => {
                   setShowOutOfBatteriesModal(false);
                   navigate("dashboard");
@@ -1238,7 +1239,7 @@ export default function VocabularyLearning({
                 className="flex-1 rounded-2xl bg-gray-100 px-6 py-4 font-bold"
               >
                 Back to Dashboard
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1255,7 +1256,7 @@ export default function VocabularyLearning({
               your Backpack.
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <button
+              <Button
                 onClick={() => {
                   setShowLevelCompleteModal(false);
                   navigate("collection");
@@ -1263,8 +1264,8 @@ export default function VocabularyLearning({
                 className="flex-1 rounded-2xl bg-gradient-to-r from-primary to-secondary px-6 py-4 font-bold text-white shadow-lg"
               >
                 See Backpack
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => {
                   setShowLevelCompleteModal(false);
                   navigate("sentence");
@@ -1272,7 +1273,7 @@ export default function VocabularyLearning({
                 className="flex-1 rounded-2xl bg-gray-100 px-6 py-4 font-bold text-gray-700"
               >
                 Continue
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1289,7 +1290,7 @@ export default function VocabularyLearning({
             <p className="mt-3 text-gray-600 font-semibold">{activeCheckpoint.message}</p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               {activeCheckpoint.unlocksSentencePhase && (
-                <button
+                <Button
                   onClick={() => {
                     setActiveCheckpointId(null);
                     navigate("sentence");
@@ -1297,9 +1298,9 @@ export default function VocabularyLearning({
                   className="flex-1 rounded-2xl bg-gradient-to-r from-primary to-secondary px-6 py-4 font-bold text-white shadow-lg"
                 >
                   Start Sentence Practice
-                </button>
+                </Button>
               )}
-              <button
+              <Button
                 onClick={() => setActiveCheckpointId(null)}
                 className={`flex-1 rounded-2xl px-6 py-4 font-bold ${
                   activeCheckpoint.unlocksSentencePhase
@@ -1308,7 +1309,7 @@ export default function VocabularyLearning({
                 }`}
               >
                 {activeCheckpoint.cta}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1324,3 +1325,4 @@ export default function VocabularyLearning({
     </div>
   );
 }
+

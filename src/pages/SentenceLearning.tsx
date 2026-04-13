@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import Button from "../components/Button";
 import Card from "../components/Card";
 import NavigationHeader from "../components/NavigationHeader";
 import Mascot from "../components/Mascot";
@@ -290,12 +291,13 @@ export default function SentenceLearning({
                   <h2 className="font-baloo text-[2rem] font-bold leading-tight sm:text-3xl md:text-4xl">
                     {question.maskedSentence}
                   </h2>
-                  <button
+                  <Button
                     onClick={(e) => playMaskedSentenceAudio(e)}
+                    unstyled
                     className="bg-primary flex-shrink-0 rounded-full p-3 transition-transform hover:scale-110 sm:p-4"
                   >
                     🔊
-                  </button>
+                  </Button>
                 </div>
               </div>
 
@@ -308,12 +310,13 @@ export default function SentenceLearning({
                   <h3 className="font-baloo text-[2rem] font-bold leading-tight text-secondary sm:text-3xl md:text-4xl">
                     {currentSentence.englishSentence}
                   </h3>
-                  <button
+                  <Button
                     onClick={(e) => playAudio(currentSentence.englishSentence, e)}
+                    unstyled
                     className="bg-secondary flex-shrink-0 rounded-full p-3 text-white transition-transform hover:scale-110 sm:p-4"
                   >
                     🔊
-                  </button>
+                  </Button>
                 </div>
               </div>
 
@@ -335,14 +338,15 @@ export default function SentenceLearning({
                         : "theme-bg-surface opacity-70";
 
                   return (
-                    <button
+                    <Button
                       key={option}
                       onClick={() => handleOptionSelect(option)}
                       disabled={showResult}
+                      unstyled
                       className={`rounded-2xl border px-3 py-2 text-sm font-bold transition disabled:cursor-not-allowed sm:px-4 sm:py-2.5 sm:text-base ${stateClass}`}
                     >
                       {option}
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
@@ -382,15 +386,17 @@ export default function SentenceLearning({
       {/* Bottom Action Bar */}
       <div className="fixed bottom-24 left-0 right-0 z-40 px-3 sm:bottom-0 sm:px-4">
         <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 rounded-[28px] border border-[color:color-mix(in_srgb,var(--primary)_18%,var(--border))] bg-[color:color-mix(in_srgb,var(--surface)_88%,white_12%)] p-2 shadow-[0_20px_45px_rgba(15,27,36,0.16)] backdrop-blur">
-          <button
+          <Button
             onClick={showResult ? handlePrevious : handleSkip}
+            unstyled
             className="theme-bg-surface rounded-2xl border px-4 py-3 text-sm font-bold uppercase tracking-[0.08em] sm:px-6"
           >
             {showResult ? "Previous" : "Skip"}
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={showResult ? handleNext : handleCheckAnswer}
             disabled={!showResult && !selectedOption}
+            unstyled
             className={`min-w-[136px] rounded-2xl px-6 py-3 text-sm font-bold uppercase tracking-[0.08em] transition sm:px-8 ${
               !showResult && !selectedOption
                 ? "theme-bg-surface cursor-not-allowed border"
@@ -402,7 +408,7 @@ export default function SentenceLearning({
                 ? "Finish"
                 : "Continue"
               : "Check"}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -419,24 +425,26 @@ export default function SentenceLearning({
               your Backpack.
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <button
+              <Button
                 onClick={() => {
                   setShowLevelCompleteModal(false);
                   navigate("collection");
                 }}
+                unstyled
                 className="flex-1 rounded-2xl bg-gradient-to-r from-primary to-secondary px-6 py-4 font-bold text-white shadow-lg"
               >
                 See Backpack
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => {
                   setShowLevelCompleteModal(false);
                   navigate("dashboard");
                 }}
+                unstyled
                 className="flex-1 rounded-2xl bg-gray-100 px-6 py-4 font-bold"
               >
                 Back to Dashboard
-              </button>
+              </Button>
             </div>
           </div>
         </div>
