@@ -15,7 +15,6 @@ export interface SentenceItem {
   illustration: string; // emoji or image
   audioUrl?: string;
 }
-
 // Example vocabulary data (Filipino/Hiligaynon to English)
 export const vocabularyData: VocabularyItem[] = [
   {

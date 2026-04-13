@@ -16,12 +16,14 @@ import {
 
 interface VocabularyCollectionProps {
   navigate: (page: Page) => void;
+  openMobileNav?: () => void;
   appState: AppState;
   updateState: (updates: Partial<AppState>) => void;
 }
 
 export default function VocabularyCollection({
   navigate,
+  openMobileNav,
   appState,
   updateState,
 }: VocabularyCollectionProps) {
@@ -133,6 +135,7 @@ export default function VocabularyCollection({
     <div className="min-h-screen pb-20">
       {/* Top Navigation */}
       <NavigationHeader
+        onMenu={openMobileNav}
         onBack={() => navigate("dashboard")}
         onLogout={() => navigate("landing")}
         onProfile={() => navigate("profile")}

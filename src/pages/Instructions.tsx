@@ -4,10 +4,11 @@ import { AppState, Page } from "../App";
 
 interface InstructionsProps {
   navigate: (page: Page) => void;
+  openMobileNav?: () => void;
   appState: AppState;
 }
 
-export default function Instructions({ navigate, appState }: InstructionsProps) {
+export default function Instructions({ navigate, openMobileNav, appState }: InstructionsProps) {
   const isGuestMode = (() => {
     if (typeof window === "undefined") {
       return false;
@@ -66,6 +67,7 @@ export default function Instructions({ navigate, appState }: InstructionsProps) 
     <div className="min-h-screen px-4 py-5 lg:px-6">
       {/* Top Navigation */}
       <NavigationHeader
+        onMenu={openMobileNav}
         onBack={() => navigate("dashboard")}
         onLogout={() => navigate("landing")}
         onProfile={() => navigate("profile")}

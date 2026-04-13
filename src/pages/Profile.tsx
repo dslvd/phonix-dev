@@ -7,6 +7,7 @@ import { BATTERY_MAX, formatBatteryCountdown } from "../lib/battery";
 
 interface ProfileProps {
   navigate: (page: Page) => void;
+  openMobileNav?: () => void;
   appState: AppState;
   updateState: UpdateStateFn;
   premium: ReturnType<typeof usePremium>;
@@ -18,7 +19,7 @@ interface UserData {
   picture?: string;
 }
 
-export default function Profile({ navigate, appState, updateState, premium }: ProfileProps) {
+export default function Profile({ navigate, openMobileNav, appState, updateState, premium }: ProfileProps) {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState("");
@@ -59,6 +60,7 @@ export default function Profile({ navigate, appState, updateState, premium }: Pr
     <div className="min-h-screen px-4 py-5  lg:px-6">
       {/* Top Navigation */}
       <NavigationHeader
+        onMenu={openMobileNav}
         onBack={() => navigate("dashboard")}
         onLogout={handleLogout}
         title="Profile"
