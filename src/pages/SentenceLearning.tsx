@@ -258,8 +258,8 @@ export default function SentenceLearning({
       />
 
       {/* Main Sentence Practice Content */}
-      <div className="flex-1 overflow-hidden px-3 pb-40 pt-3 sm:px-4 sm:pb-28 sm:pt-5">
-        <div className="mx-auto flex h-full w-full max-w-3xl flex-col justify-center">
+      <div className="flex-1 overflow-hidden px-3 pb-32 pt-4 sm:px-4 sm:pb-28 sm:pt-5">
+        <div className="mx-auto w-full max-w-3xl">
           {/* Active Sentence Card */}
           <motion.div
             key={currentSentence.id}
@@ -267,8 +267,7 @@ export default function SentenceLearning({
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 140 }}
           >
-            <Card className="relative overflow-hidden border-[color:color-mix(in_srgb,var(--primary)_18%,var(--border))] bg-[linear-gradient(180deg,color-mix(in_srgb,var(--surface)_90%,white_10%)_0%,var(--surface)_100%)] p-4 text-center shadow-[0_22px_46px_rgba(15,27,36,0.1)] sm:p-6">
-              <div className="pointer-events-none absolute inset-x-10 top-0 h-20 rounded-full bg-[radial-gradient(circle,color-mix(in_srgb,var(--primary)_18%,transparent),transparent_70%)] blur-2xl" />
+            <Card className="rounded-[32px] p-4 text-center shadow-[0_18px_40px_rgba(15,27,36,0.08)] sm:p-6">
               {/* Illustration */}
               <motion.div
                 animate={{
@@ -276,13 +275,13 @@ export default function SentenceLearning({
                   rotate: [0, 2, -2, 0],
                 }}
                 transition={{ duration: 3, repeat: Infinity }}
-                className="mb-4 flex items-center justify-center text-7xl leading-none sm:mb-8 sm:text-9xl"
+                className="mb-5 flex items-center justify-center text-7xl leading-none sm:mb-8 sm:text-9xl"
               >
                 {currentSentence.illustration}
               </motion.div>
 
               {/* Native Sentence */}
-              <div className="theme-bg-surface mb-4 rounded-2xl border border-[color:color-mix(in_srgb,var(--primary)_16%,var(--border))] p-4 shadow-[0_16px_34px_rgba(15,27,36,0.06)] sm:mb-8 sm:p-6">
+              <div className="theme-bg-surface mb-4 rounded-[28px] border p-4 sm:mb-8 sm:p-6">
                 <p className="theme-text-soft mb-2 text-xs font-bold sm:mb-3 sm:text-sm">
                   {appState.targetLanguage} Fill in the blank:
                 </p>
@@ -300,7 +299,7 @@ export default function SentenceLearning({
               </div>
 
               {/* English Translation */}
-              <div className="theme-bg-surface rounded-2xl border border-[color:color-mix(in_srgb,var(--secondary)_22%,var(--border))] p-4 shadow-[0_16px_34px_rgba(15,27,36,0.06)] sm:p-6">
+              <div className="theme-bg-surface rounded-[28px] border p-4 sm:p-6">
                 <p className="theme-text-soft mb-2 text-xs font-bold sm:mb-3 sm:text-sm">
                   {appState.nativeLanguage} Hint:
                 </p>
@@ -326,8 +325,8 @@ export default function SentenceLearning({
 
                   const stateClass = !showResult
                     ? isSelected
-                      ? "border border-[#56b8e8] bg-[#173b52] text-[#d4efff] shadow-[0_10px_24px_rgba(23,59,82,0.2)]"
-                      : "theme-bg-surface hover:border-[#56b8e8] hover:bg-[color:color-mix(in_srgb,var(--surface)_88%,white_12%)]"
+                      ? "border border-[#56b8e8] bg-[#173b52] text-[#d4efff]"
+                      : "theme-bg-surface hover:border-[#56b8e8]"
                     : isCorrectOption
                       ? "border border-green-500 bg-green-100 text-green-900"
                       : isSelected
@@ -380,8 +379,8 @@ export default function SentenceLearning({
       </div>
 
       {/* Bottom Action Bar */}
-      <div className="fixed bottom-24 left-0 right-0 z-40 px-3 sm:bottom-0 sm:px-4">
-        <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 rounded-[28px] border border-[color:color-mix(in_srgb,var(--primary)_18%,var(--border))] bg-[color:color-mix(in_srgb,var(--surface)_88%,white_12%)] p-2 shadow-[0_20px_45px_rgba(15,27,36,0.16)] backdrop-blur">
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-[color:var(--border)] bg-[color:var(--bg)]/95 px-3 py-3 backdrop-blur sm:px-4">
+        <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 pr-20 sm:pr-0">
           <button
             onClick={showResult ? handlePrevious : handleSkip}
             className="theme-bg-surface rounded-2xl border px-4 py-3 text-sm font-bold uppercase tracking-[0.08em] sm:px-6"
@@ -448,6 +447,7 @@ export default function SentenceLearning({
         animation="float"
         responseLanguage={responseLanguage}
         pageContext={sentencePageContext}
+        containerClassName="bottom-16 right-3 md:bottom-6 md:right-6"
       />
     </div>
   );
