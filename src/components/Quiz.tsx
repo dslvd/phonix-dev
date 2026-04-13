@@ -75,6 +75,79 @@ export default function Quiz({
   const [incorrectText, setIncorrectText] = useState("");
   const answerTimeoutRef = useRef<number | null>(null);
 
+  const getSpeechLang = (language: string, fallback: string) => {
+    const value = (language || "").trim().toLowerCase();
+    if (!value) {
+      return fallback;
+    }
+
+    if (value.includes("hiligaynon") || value.includes("filipino") || value.includes("tagalog")) {
+      return "fil-PH";
+    }
+
+    if (value.includes("english")) {
+      return "en-US";
+    }
+
+    return fallback;
+  };
+
+  const pickVoiceForLang = (voices: SpeechSynthesisVoice[], langCode: string) => {
+    const lowerLang = langCode.toLowerCase();
+
+    if (lowerLang.startsWith("fil")) {
+      return (
+        voices.find((voice) => {
+          const voiceLang = voice.lang.toLowerCase();
+          return (
+            voiceLang.startsWith("fil") ||
+            voiceLang.startsWith("tl") ||
+            voiceLang.includes("ph")
+          );
+        }) || null
+      );
+    }
+
+    if (lowerLang.startsWith("en")) {
+      return voices.find((voice) => voice.lang.toLowerCase().startsWith("en")) || null;
+    }
+
+    return voices.find((voice) => voice.lang.toLowerCase().startsWith(lowerLang.split("-")[0])) || null;
+  };
+
+  const speakText = (text: string, language: string, fallbackLang: string) => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window) || !text.trim()) {
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text.trim());
+    utterance.lang = getSpeechLang(language, fallbackLang);
+    utterance.rate = 0.9;
+    utterance.pitch = 0.9;
+    utterance.volume = 1;
+
+    const speakWithVoice = () => {
+      const voices = window.speechSynthesis.getVoices();
+      const preferred = pickVoiceForLang(voices, utterance.lang);
+      const englishFallback = voices.find((voice) => voice.lang.toLowerCase().startsWith("en")) || null;
+      utterance.voice = preferred || englishFallback || voices[0] || null;
+      window.speechSynthesis.speak(utterance);
+    };
+
+    const availableVoices = window.speechSynthesis.getVoices();
+    if (availableVoices.length === 0) {
+      window.speechSynthesis.onvoiceschanged = () => {
+        window.speechSynthesis.onvoiceschanged = null;
+        speakWithVoice();
+      };
+      return;
+    }
+
+    speakWithVoice();
+  };
+
   const challengeLines = [
     "What is this in Hiligaynon?",
     "Which Hiligaynon word matches this?",
@@ -265,13 +338,20 @@ export default function Quiz({
     levelStage,
   ]);
 
-  const handleSelect = (wordId: string) => {
+  useEffect(() => {
+    // Auto-read the prompt word in the learner's response language each new question.
+    speakText(currentWord.englishWord, nativeLanguage, "en-US");
+  }, [currentWord.id, currentWord.englishWord, nativeLanguage]);
+
+  const handleSelect = (word: VocabularyItem) => {
     if (showResult) return; // Prevent multiple selections
 
-    setSelectedAnswer(wordId);
+    speakText(word.nativeWord, targetLanguage, "fil-PH");
+
+    setSelectedAnswer(word.id);
     setShowResult(true);
 
-    const isCorrect = wordId === currentWord.id;
+    const isCorrect = word.id === currentWord.id;
 
     // Delay to show result before moving to next
     if (answerTimeoutRef.current !== null) {
@@ -340,7 +420,7 @@ export default function Quiz({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              onClick={() => handleSelect(word.id)}
+              onClick={() => handleSelect(word)}
               disabled={showResult}
               className={`${getButtonStyle(word)} rounded-2xl p-6 transition-all duration-300 disabled:cursor-not-allowed`}
             >
