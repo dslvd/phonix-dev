@@ -1681,7 +1681,7 @@ const translatePendingAttachment = async () => {
                         onClick={() =>
                           scanResult.translatedText && speakText(scanResult.translatedText)
                         }
-                        className="max-h-48 flex-1 cursor-pointer overflow-y-auto break-words whitespace-pre-wrap pr-1 text-[2rem] font-extrabold leading-[1.45] text-[#0f1f3d]"
+                        className="max-h-48 flex-1 cursor-pointer overflow-y-auto break-words whitespace-pre-wrap pr-1 text-[2rem] font-extrabold leading-[1.45]"
                         title="Tap to hear pronunciation"
                       >
                         {scanResult.translatedText || "—"}
@@ -2018,7 +2018,7 @@ const translatePendingAttachment = async () => {
                         🔊
                       </button>
                     </div>
-                    <p className="max-h-56 overflow-y-auto break-words whitespace-pre-wrap pr-1 text-xl font-extrabold leading-[1.55] text-[#0f1f3d]">
+                    <p className="max-h-56 overflow-y-auto break-words whitespace-pre-wrap pr-1 text-xl font-extrabold leading-[1.55]">
                       {selectedSavedScan.translatedText}
                     </p>
                   </div>
