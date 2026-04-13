@@ -382,7 +382,7 @@ export default function Quiz({
 
   return (
     // Quiz Component Container
-    <div className="flex h-full min-h-0 flex-col justify-center gap-4 sm:gap-8">
+    <div className="flex h-full min-h-0 flex-col justify-start gap-4 sm:gap-8">
       {/* Challenge Header */}
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
@@ -399,7 +399,7 @@ export default function Quiz({
       </motion.div>
 
       {/* Word Display */}
-      <Card className="theme-bg-surface border-2 border-[color:var(--border)] py-6 text-center sm:py-12">
+      <Card className="theme-bg-surface flex min-h-[14rem] flex-col justify-center border-2 border-[color:var(--border)] py-6 text-center sm:min-h-0 sm:py-12">
         <motion.div
           animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
           transition={{ duration: 2, repeat: Infinity }}
