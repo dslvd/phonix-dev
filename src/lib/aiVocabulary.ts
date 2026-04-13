@@ -183,8 +183,11 @@ const enforceLevelCounts = (words: VocabularyItem[], levelCycle: number) => {
 const ensurePhaseOneSupportWords = (words: VocabularyItem[], levelCycle: number): VocabularyItem[] => {
   const supportWords = buildPhaseOneSupportWords(levelCycle);
   const supportWordKeys = new Set(supportWords.map(getMeaningKey));
+  const phaseOneSupportWordKeys = new Set(buildPhaseOneSupportWords(0).map(getMeaningKey));
 
-  const beginnerWords = words.filter((word) => word.difficulty === 'beginner');
+  const beginnerWords = words
+    .filter((word) => word.difficulty === 'beginner')
+    .filter((word) => levelCycle === 0 || !phaseOneSupportWordKeys.has(getMeaningKey(word)));
   const intermediateWords = words.filter((word) => word.difficulty === 'intermediate');
   const advancedWords = words.filter((word) => word.difficulty === 'advanced');
 
@@ -239,7 +242,9 @@ const buildVocabularyPrompt = (
     '7. Make vocabulary clearly match the level focus theme.',
     '8. Do not reuse the exact same set from previous levels.',
     '9. Keep words kid-friendly, simple, and easy to learn.',
-    '10. Include these beginner support words in the pack: Cook, Work, and Hot.',
+    ...(levelCycle === 0
+      ? ['10. Include these beginner support words in the pack: Cook, Work, and Hot.']
+      : []),
   ].join('\n');
 
 export const readCachedAIVocabulary = (targetLanguage: string, nativeLanguage: string, options: AIVocabularyOptions = {}): VocabularyItem[] => {
