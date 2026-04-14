@@ -11,12 +11,16 @@ interface LanguageSetupProps {
 }
 
 export default function LanguageSetup({ navigate, updateState }: LanguageSetupProps) {
-  const [nativeLanguage] = useState("English");
-  const [targetLanguage] = useState("Hiligaynon");
+  const [nativeLanguage, setNativeLanguage] = useState("");
+  const [targetLanguage, setTargetLanguage] = useState("");
+  const nativeLanguageOptions = ["English"];
+  const targetLanguageOptions = ["Hiligaynon"];
 
   const handleSubmit = () => {
-    updateState({ nativeLanguage, targetLanguage });
-    navigate("mode");
+    if (nativeLanguage && targetLanguage) {
+      updateState({ nativeLanguage, targetLanguage });
+      navigate("mode");
+    }
   };
 
   return (
@@ -28,14 +32,14 @@ export default function LanguageSetup({ navigate, updateState }: LanguageSetupPr
       />
 
       <div className="flex min-h-[calc(100vh-80px)] items-center justify-center p-4">
-        <Card className="w-full max-w-md">
+        <Card className="max-w-md w-full">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8 text-center"
+            className="text-center mb-8"
           >
-            <h1 className="mb-2 font-baloo text-4xl font-bold">Language Setup</h1>
-            <p className="theme-text-soft">Your learning path is set to English to Hiligaynon.</p>
+            <h1 className="mb-2 font-baloo text-4xl font-bold">Language Setup 🌍</h1>
+            <p className="theme-text-soft">Tell us about your language journey!</p>
           </motion.div>
 
           <motion.div
@@ -44,10 +48,25 @@ export default function LanguageSetup({ navigate, updateState }: LanguageSetupPr
             transition={{ delay: 0.2 }}
             className="mb-6"
           >
-            <div className="theme-bg-surface rounded-2xl border px-6 py-4">
-              <p className="theme-text-soft text-sm font-semibold">I speak</p>
-              <p className="mt-1 text-lg font-bold">English</p>
-            </div>
+            <label className="block mb-3">
+              <span className="flex items-center gap-2 text-lg font-bold">
+                <span>🗣️</span>I speak...
+              </span>
+            </label>
+            <select
+              value={nativeLanguage}
+              onChange={(e) => setNativeLanguage(e.target.value)}
+              className="theme-bg-surface w-full rounded-2xl border px-6 py-4 text-lg font-semibold outline-none transition-all focus:border-[#56b8e8]"
+            >
+              <option value="" disabled>
+                Select a language
+              </option>
+              {nativeLanguageOptions.map((language) => (
+                <option key={language} value={language}>
+                  {language}
+                </option>
+              ))}
+            </select>
           </motion.div>
 
           <motion.div
@@ -56,10 +75,25 @@ export default function LanguageSetup({ navigate, updateState }: LanguageSetupPr
             transition={{ delay: 0.4 }}
             className="mb-8"
           >
-            <div className="theme-bg-surface rounded-2xl border px-6 py-4">
-              <p className="theme-text-soft text-sm font-semibold">I want to learn</p>
-              <p className="mt-1 text-lg font-bold">Hiligaynon</p>
-            </div>
+            <label className="block mb-3">
+              <span className="flex items-center gap-2 text-lg font-bold">
+                <span>🎯</span>I want to learn...
+              </span>
+            </label>
+            <select
+              value={targetLanguage}
+              onChange={(e) => setTargetLanguage(e.target.value)}
+              className="theme-bg-surface w-full rounded-2xl border px-6 py-4 text-lg font-semibold outline-none transition-all focus:border-[#56b8e8]"
+            >
+              <option value="" disabled>
+                Select a language
+              </option>
+              {targetLanguageOptions.map((language) => (
+                <option key={language} value={language}>
+                  {language}
+                </option>
+              ))}
+            </select>
           </motion.div>
 
           <motion.div
@@ -67,7 +101,14 @@ export default function LanguageSetup({ navigate, updateState }: LanguageSetupPr
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
           >
-            <Button variant="primary" size="lg" fullWidth onClick={handleSubmit}>
+            <Button
+              variant="primary"
+              size="lg"
+              fullWidth
+              onClick={handleSubmit}
+              disabled={!nativeLanguage || !targetLanguage}
+              icon="🚀"
+            >
               LET'S GO!
             </Button>
           </motion.div>
