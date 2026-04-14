@@ -20,9 +20,6 @@ export default function Landing({ navigate, resetAppState }: LandingProps) {
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   const currentOrigin =
     typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
-  const isLocalOrigin =
-    typeof window !== "undefined" &&
-    (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
 
   useEffect(() => {
     const script = document.createElement("script");
@@ -127,33 +124,6 @@ export default function Landing({ navigate, resetAppState }: LandingProps) {
           className="mb-4"
         >
           <div ref={googleButtonRef} className="mb-4 flex justify-center" style={{ minHeight: "44px" }} />
-
-          {clientId && (
-            <div className="theme-bg-surface mb-4 rounded-xl border p-3 text-xs">
-              <p className="mb-1 font-bold text-[#56b8e8]">
-                {isLocalOrigin ? "Google Sign-In Setup" : "Google Sign-In Domain Setup"}
-              </p>
-              <p className="theme-text-soft">
-                If Google sign-in shows an authorization or origin error, add{" "}
-                <code className="rounded bg-[color:var(--bg)] px-1">{currentOrigin}</code> to{" "}
-                <strong>Authorized JavaScript origins</strong> in{" "}
-                <a
-                  href="https://console.cloud.google.com/apis/credentials"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-bold underline"
-                >
-                  Google Cloud Console
-                </a>
-                .
-              </p>
-              <p className="theme-text-soft mt-1">
-                {isLocalOrigin
-                  ? "Use Guest Login below while local OAuth is being configured."
-                  : "Your deployed domain has to be registered there too. You can still use Guest Login below."}
-              </p>
-            </div>
-          )}
 
           {!clientId && (
             <div className="theme-bg-surface mb-4 cursor-pointer rounded-2xl border p-3 text-center transition-all hover:border-[#56b8e8]">
