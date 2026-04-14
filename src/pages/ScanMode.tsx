@@ -1460,21 +1460,18 @@ const translatePendingAttachment = async () => {
                 )}
 
                 {!cameraActive && !cameraLoading ? (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-4">
-                    <div className="flex items-center justify-center text-5xl leading-none animate-bounce sm:text-6xl">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2.5 px-4 py-5 sm:gap-3 sm:p-4">
+                    <div className="hidden">
                       📄
                     </div>
-                    <h3 className="text-center font-baloo text-lg font-bold sm:text-xl">
+                    <h3 className="text-center font-baloo text-[1.05rem] font-bold sm:text-xl">
                       Ready to Scan Text?
                     </h3>
                     <Button variant="primary" onClick={startCamera} className="px-6 py-2.5 text-base sm:px-8 sm:py-3 sm:text-lg">
                       🎥 Start Camera
                     </Button>
-                    <div className="space-y-1 rounded-lg bg-gray-800/50 px-4 py-2.5 text-center text-[11px] sm:p-3 sm:px-4 sm:text-xs">
+                    <div className="inline-flex max-w-[17rem] rounded-lg bg-gray-800/45 px-3 py-2 text-center text-[10px] sm:max-w-none sm:px-4 sm:py-3 sm:text-xs">
                       <p className="font-bold">You&apos;ll be asked for camera permission</p>
-                      <p className="text-[#f5f7fa]/50">
-                        Point at text or a document -&gt; OCR translates instantly!
-                      </p>
                     </div>
                   </div>
                 ) : cameraLoading ? (
@@ -1666,10 +1663,9 @@ const translatePendingAttachment = async () => {
                   type="button"
                   onClick={pendingAttachment ? translatePendingAttachment : handleUploadClick}
                   disabled={isScanning}
-                  className="flex min-h-[82px] w-full flex-1 flex-col items-center justify-center rounded-[20px] border-2 border-dashed border-[#9fc8ff] bg-[#dbeafe] px-3 py-3 text-center transition hover:border-[#6da9ff] hover:bg-[#e6f1ff] disabled:cursor-not-allowed disabled:opacity-70 sm:min-h-[170px] sm:rounded-[26px] sm:px-6 sm:py-8 dark:bg-[#12263a]/40 dark:hover:bg-[#12263a]/55"
-                  style={{ backgroundColor: "#cfe5ff", borderColor: "#9fc8ff" }}
+                  className="scan-upload-dropzone flex min-h-[82px] w-full flex-1 flex-col items-center justify-center rounded-[20px] border-2 border-dashed px-3 py-3 text-center transition disabled:cursor-not-allowed disabled:opacity-70 sm:min-h-[170px] sm:rounded-[26px] sm:px-6 sm:py-8"
                 >
-                  <div className="mb-1.5 flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#5b5b5b] shadow-sm sm:mb-3 sm:h-14 sm:w-14">
+                  <div className="scan-upload-icon-circle mb-1.5 flex h-10 w-10 items-center justify-center rounded-full shadow-sm sm:mb-3 sm:h-14 sm:w-14">
                     {pendingAttachment ? (
                       refreshIcon
                     ) : (
@@ -1687,7 +1683,7 @@ const translatePendingAttachment = async () => {
                       </svg>
                     )}
                   </div>
-                  <div className="font-baloo text-base font-bold leading-tight text-[#2f61d4] sm:text-2xl">
+                  <div className="scan-upload-label font-baloo text-base font-bold leading-tight sm:text-2xl">
                     {activeScanAction === "upload"
                       ? "Translating..."
                       : pendingAttachment
@@ -1695,7 +1691,7 @@ const translatePendingAttachment = async () => {
                         : "Browse Files"}
                   </div>
                   {!pendingAttachment && (
-                    <div className="mt-0.5 text-[10px] font-semibold leading-4 text-[#1f2933] sm:mt-1 sm:text-sm sm:leading-normal">
+                    <div className="scan-upload-subtext mt-0.5 text-[10px] font-semibold leading-4 sm:mt-1 sm:text-sm sm:leading-normal">
                       or drag & drop here
                     </div>
                   )}
@@ -1757,21 +1753,21 @@ const translatePendingAttachment = async () => {
             className="min-w-0 space-y-3"
           >
             <Card
-              className={`theme-bg-surface hidden min-w-0 max-w-full overflow-hidden p-0 md:block ${
-                scanResult ? "border border-[#8db7ff]" : "theme-border"
+              className={`theme-bg-surface hidden min-w-0 max-w-full overflow-hidden md:block ${
+                scanResult ? "scan-ready-card border border-[#6a8fda] !p-0" : "theme-border p-0"
               }`}
             >
               <div
-                className={`-mt-px flex items-center justify-between gap-3 px-4 pb-1.5 pt-0.5 ${
+                className={`flex items-center justify-between gap-3 ${
                   scanResult
-                    ? "border-b border-[#dce7fb] bg-[#eef5ff]"
-                    : "theme-border border-b bg-white/70 dark:bg-transparent"
+                    ? "scan-ready-header mx-0 mt-0 rounded-none border-b border-[#c9d8f3] bg-[#eef4ff] px-5 py-4 dark:border-[#2f4164] dark:bg-[color:color-mix(in_srgb,var(--surface)_72%,#b9c8ea_28%)]"
+                    : "-mt-px border-b bg-white/70 px-4 pb-1.5 pt-0.5 theme-border dark:bg-transparent"
                 }`}
               >
                 <div className="flex items-center gap-2">
                   <span className="text-[#FFB23F]">✨</span>
                   <h3
-                    className={`font-baloo text-lg font-bold leading-none ${scanResult ? "text-[#2f61d4]" : ""}`}
+                    className={`font-baloo text-lg font-bold leading-none ${scanResult ? "scan-ready-title text-[#6d8fe3] dark:text-[#89a8ef]" : ""}`}
                   >
                     {scanResult ? "Translation Ready" : "Translation Result"}
                   </h3>
@@ -1780,7 +1776,7 @@ const translatePendingAttachment = async () => {
                   <Button
                     type="button"
                     onClick={() => setScanResult(null)}
-                    className="text-lg font-bold text-[#8da2c9] transition hover:text-[#5c76ac]"
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-[#ff9126] text-xl font-bold text-white transition hover:bg-[#ff9d41]"
                     aria-label="Clear translation result"
                   >
                     ×
@@ -1789,13 +1785,13 @@ const translatePendingAttachment = async () => {
               </div>
 
               {scanResult ? (
-                <div className="space-y-3 px-4 py-2.5">
+                <div className="space-y-3 px-4 pb-4 pt-4">
                   <div className="text-left">
                     <div className="mb-2 flex items-center justify-between gap-3">
-                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#6e83ab]">
+                      <p className="scan-ready-label text-xs font-bold uppercase tracking-[0.12em] text-[#7f97cb] dark:text-[#7f97cb]">
                         Detected Text
                       </p>
-                      <span className="rounded-full bg-[#eef4ff] px-2.5 py-1 text-[11px] font-bold text-[#4c77ff]">
+                      <span className="scan-ready-badge rounded-full border border-[#9eb8ea] bg-[#f8fbff] px-2.5 py-1 text-[11px] font-bold text-[#5d87ea] dark:border-[#35518a] dark:bg-[color:color-mix(in_srgb,var(--surface)_72%,#f4f8ff_28%)] dark:text-[#82a7ff]">
                         {scanResult.confidence === "manual"
                           ? "Manual Input"
                           : scanResult.confidence === "upload"
@@ -1804,15 +1800,15 @@ const translatePendingAttachment = async () => {
                       </span>
                     </div>
 
-                    <div className="rounded-2xl bg-[#f7fbff] px-4 py-4">
-                      <p className="max-h-28 overflow-y-auto break-words whitespace-pre-wrap pr-1 text-sm font-semibold leading-7 text-[#435574]">
+                    <div className="scan-ready-detected-box rounded-2xl border border-[#9eb8ea] bg-[#f8fbff] px-4 py-4 dark:border-[#2f476e] dark:bg-[color:color-mix(in_srgb,var(--surface)_86%,#0d1c33_14%)]">
+                      <p className="scan-ready-detected-text max-h-28 overflow-y-auto break-words whitespace-pre-wrap pr-1 text-sm font-semibold leading-7 text-[#42577d] dark:text-[#dce8ff]">
                         {scanResult.detectedText}
                       </p>
                     </div>
                   </div>
 
                   <div className="text-left">
-                    <p className="mb-2 text-xs font-bold uppercase tracking-[0.12em] text-[#4c77ff]">
+                    <p className="scan-ready-language mb-2 text-xs font-bold uppercase tracking-[0.12em] text-[#4f7fee] dark:text-[#5e8fff]">
                       {appState.targetLanguage}
                     </p>
                     <div className="flex items-start justify-between gap-4">
@@ -1828,7 +1824,7 @@ const translatePendingAttachment = async () => {
                       {scanResult.translatedText && (
                         <Button
                           onClick={() => speakText(scanResult.translatedText)}
-                          className="mt-1 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-[#edf4ff] text-xl text-[#4b84ff] transition hover:scale-105"
+                          className="scan-ready-speaker mt-1 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border border-[#7da0e3] bg-[#f8fbff] text-xl text-[#5d87ea] transition hover:scale-105 hover:bg-[#edf4ff] dark:border-[#37517d] dark:bg-[color:color-mix(in_srgb,var(--surface)_74%,#edf4ff_26%)] dark:text-[#89b0ff] dark:hover:bg-[color:color-mix(in_srgb,var(--surface)_68%,#edf4ff_32%)]"
                         >
                           🔊
                         </Button>
@@ -2032,7 +2028,7 @@ const translatePendingAttachment = async () => {
                   <span className="text-[#7e93b4]">📄</span>
                   Collection
                 </h3>
-                <span className="rounded-full bg-[#f4f7fc] px-3 py-1 text-[11px] font-bold text-[#91a2bd]">
+                <span className="scan-collection-count rounded-full bg-white/8 px-3 py-1 text-[11px] font-bold text-[#9fb3d9]">
                   {savedScans.length} {savedScans.length === 1 ? "Item" : "Items"}
                 </span>
               </div>
@@ -2057,7 +2053,7 @@ const translatePendingAttachment = async () => {
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: index * 0.05 }}
-                          className="relative flex w-full min-w-0 items-start gap-1.5 overflow-hidden rounded-2xl bg-[#fbfdff] px-4 py-3 shadow-sm ring-1 ring-[#edf2fa] transition hover:ring-[#c8daf6]"
+                          className="scan-collection-item relative flex w-full min-w-0 items-start gap-1.5 overflow-hidden rounded-2xl bg-[color:color-mix(in_srgb,var(--surface)_84%,white_16%)] px-4 py-3 shadow-sm ring-1 ring-white/10 transition hover:ring-[#36517c]"
                         >
                           <Button
                             type="button"
@@ -2065,19 +2061,19 @@ const translatePendingAttachment = async () => {
                             className="flex min-w-0 flex-1 flex-col items-start text-left"
                           >
                             <span
-                              className="block w-full min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-sm font-semibold text-[#64789a]"
+                              className="scan-collection-detected block w-full min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-sm font-semibold text-[#b8c9e6]"
                               title={item.detectedText}
                             >
                               {item.detectedText}
                             </span>
                             <div className="mt-1 flex w-full min-w-0 items-center">
                               <span
-                                className="block min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-sm font-bold text-[#2f61d4]"
+                                className="scan-collection-translated block min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-sm font-bold text-[#8db0ff]"
                                 title={item.translatedText}
                               >
                                 {item.translatedText}
                               </span>
-                              <span className="-ml-3 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#f1f5ff] text-sm text-[#7b94cc]">
+                              <span className="scan-collection-speaker -ml-3 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-sm text-[#9ab3e9]">
                                 🔊
                               </span>
                             </div>
@@ -2088,7 +2084,7 @@ const translatePendingAttachment = async () => {
                               event.stopPropagation();
                               deleteSavedScan(item);
                             }}
-                            className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#fff3f1] text-[0px] text-[#e16d5a] transition hover:bg-[#ffe4df] hover:text-[#cb533f] before:content-['×'] before:text-[9px] before:font-bold before:leading-none"
+                            className="scan-collection-delete absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-white/10 text-[0px] text-[#f09b8f] transition hover:bg-white/15 hover:text-[#ffd0c8] before:content-['×'] before:text-[9px] before:font-bold before:leading-none"
                             aria-label={`Delete ${item.detectedText} from collection`}
                             title="Delete from collection"
                           >
@@ -2122,31 +2118,31 @@ const translatePendingAttachment = async () => {
               className="w-full"
               onClick={(e) => e.stopPropagation()}
             >
-              <Card className="theme-bg-surface overflow-hidden border border-[#8db7ff] p-0 shadow-2xl">
-                <div className="flex items-center justify-between gap-3 border-b border-[#dce7fb] bg-[#eef5ff] px-4 py-4">
+              <Card className="scan-ready-card theme-bg-surface overflow-hidden border border-[#6a8fda] !p-0 shadow-2xl">
+                <div className="scan-ready-header flex items-center justify-between gap-3 border-b border-[#c9d8f3] bg-[#eef4ff] px-5 py-4 dark:border-[#2f4164] dark:bg-[color:color-mix(in_srgb,var(--surface)_72%,#b9c8ea_28%)]">
                   <div className="flex items-center gap-2">
                     <span className="text-[#FFB23F]">✨</span>
-                    <h3 className="font-baloo text-lg font-bold text-[#2f61d4]">
+                    <h3 className="scan-ready-title font-baloo text-lg font-bold text-[#6d8fe3] dark:text-[#89a8ef]">
                       Translation Ready
                     </h3>
                   </div>
                   <Button
                     type="button"
                     onClick={() => setScanResult(null)}
-                    className="flex h-14 w-14 items-center justify-center rounded-[22px] bg-[#ff9126] text-2xl font-bold text-white shadow-sm hover:bg-[#ff9d41]"
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-[#ff9126] text-xl font-bold text-white shadow-sm hover:bg-[#ff9d41]"
                     aria-label="Dismiss translation result"
                   >
                     ×
                   </Button>
                 </div>
 
-                <div className="space-y-4 px-4 py-4">
+                <div className="space-y-4 px-4 pb-4 pt-4">
                   <div className="text-left">
                     <div className="mb-2 flex items-center justify-between gap-3">
-                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#6e83ab]">
+                      <p className="scan-ready-label text-xs font-bold uppercase tracking-[0.12em] text-[#7f97cb] dark:text-[#7f97cb]">
                         Detected Text
                       </p>
-                      <span className="rounded-full bg-[#eef4ff] px-2.5 py-1 text-[11px] font-bold text-[#4c77ff]">
+                      <span className="scan-ready-badge rounded-full border border-[#9eb8ea] bg-[#f8fbff] px-2.5 py-1 text-[11px] font-bold text-[#5d87ea] dark:border-[#35518a] dark:bg-[color:color-mix(in_srgb,var(--surface)_72%,#f4f8ff_28%)] dark:text-[#82a7ff]">
                         {scanResult.confidence === "manual"
                           ? "Manual Input"
                           : scanResult.confidence === "upload"
@@ -2155,15 +2151,15 @@ const translatePendingAttachment = async () => {
                       </span>
                     </div>
 
-                    <div className="rounded-2xl bg-[#f7fbff] px-4 py-4">
-                      <p className="max-h-32 overflow-y-auto break-words whitespace-pre-wrap pr-1 text-sm font-semibold leading-7 text-[#435574]">
+                    <div className="scan-ready-detected-box rounded-2xl border border-[#9eb8ea] bg-[#f8fbff] px-4 py-4 dark:border-[#2f476e] dark:bg-[color:color-mix(in_srgb,var(--surface)_86%,#0d1c33_14%)]">
+                      <p className="scan-ready-detected-text max-h-32 overflow-y-auto break-words whitespace-pre-wrap pr-1 text-sm font-semibold leading-7 text-[#42577d] dark:text-[#dce8ff]">
                         {scanResult.detectedText}
                       </p>
                     </div>
                   </div>
 
                   <div className="text-left">
-                    <p className="mb-2 text-xs font-bold uppercase tracking-[0.12em] text-[#4c77ff]">
+                    <p className="scan-ready-language mb-2 text-xs font-bold uppercase tracking-[0.12em] text-[#4f7fee] dark:text-[#5e8fff]">
                       {appState.targetLanguage}
                     </p>
                     <div className="flex items-start justify-between gap-3">
@@ -2179,7 +2175,7 @@ const translatePendingAttachment = async () => {
                       {scanResult.translatedText && (
                         <Button
                           onClick={() => speakText(scanResult.translatedText)}
-                          className="mt-1 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-[#edf4ff] text-xl text-[#4b84ff] transition hover:scale-105"
+                          className="scan-ready-speaker mt-1 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border border-[#7da0e3] bg-[#f8fbff] text-xl text-[#5d87ea] transition hover:scale-105 hover:bg-[#edf4ff] dark:border-[#37517d] dark:bg-[color:color-mix(in_srgb,var(--surface)_74%,#edf4ff_26%)] dark:text-[#89b0ff] dark:hover:bg-[color:color-mix(in_srgb,var(--surface)_68%,#edf4ff_32%)]"
                         >
                           🔊
                         </Button>
@@ -2215,16 +2211,16 @@ const translatePendingAttachment = async () => {
               exit={{ opacity: 0, y: 12, scale: 0.98 }}
               className="w-full max-w-2xl"
             >
-              <Card className="theme-bg-surface overflow-hidden border border-[#cfe0f8] p-0 shadow-2xl">
-                <div className="flex items-center justify-between gap-3 border-b border-[#dce7fb] bg-[#f7faff] px-5 py-4">
+              <Card className="scan-ready-card theme-bg-surface overflow-hidden border border-[#6a8fda] !p-0 shadow-2xl">
+                <div className="scan-ready-header flex items-center justify-between gap-3 border-b border-[#c9d8f3] bg-[#eef4ff] px-5 py-4 dark:border-[#2f4164] dark:bg-[color:color-mix(in_srgb,var(--surface)_72%,#b9c8ea_28%)]">
                   <div className="flex items-center gap-2">
                     <span className="text-[#b8c5da]">📄</span>
-                    <h3 className="font-baloo text-xl font-bold">Collection Item</h3>
+                    <h3 className="scan-ready-title font-baloo text-xl font-bold text-[#6d8fe3] dark:text-[#89a8ef]">Collection Item</h3>
                   </div>
                   <Button
                     type="button"
                     onClick={() => setSelectedSavedScan(null)}
-                    className="text-lg font-bold text-[#8da2c9] transition hover:text-[#5c76ac]"
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-[#ff9126] text-xl font-bold text-white transition hover:bg-[#ff9d41]"
                     aria-label="Close collection preview"
                   >
                     ×
@@ -2233,11 +2229,11 @@ const translatePendingAttachment = async () => {
 
                 <div className="space-y-5 px-5 py-5">
                   <div>
-                    <p className="mb-2 text-xs font-bold uppercase tracking-[0.12em] text-[#6e83ab]">
+                    <p className="scan-ready-label mb-2 text-xs font-bold uppercase tracking-[0.12em] text-[#7f97cb] dark:text-[#7f97cb]">
                       Detected Text
                     </p>
-                    <div className="rounded-2xl bg-[#f7fbff] px-4 py-4">
-                      <p className="max-h-40 overflow-y-auto break-words whitespace-pre-wrap pr-1 text-sm font-semibold leading-7 text-[#435574]">
+                    <div className="scan-ready-detected-box rounded-2xl border border-[#9eb8ea] bg-[#f8fbff] px-4 py-4 dark:border-[#2f476e] dark:bg-[color:color-mix(in_srgb,var(--surface)_86%,#0d1c33_14%)]">
+                      <p className="scan-ready-detected-text max-h-40 overflow-y-auto break-words whitespace-pre-wrap pr-1 text-sm font-semibold leading-7 text-[#42577d] dark:text-[#dce8ff]">
                         {selectedSavedScan.detectedText}
                       </p>
                     </div>
@@ -2245,13 +2241,13 @@ const translatePendingAttachment = async () => {
 
                   <div>
                     <div className="mb-2 flex items-center justify-between gap-3">
-                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#4c77ff]">
+                      <p className="scan-ready-language text-xs font-bold uppercase tracking-[0.12em] text-[#4f7fee] dark:text-[#5e8fff]">
                         {appState.targetLanguage}
                       </p>
                       <Button
                         type="button"
                         onClick={() => speakText(selectedSavedScan.translatedText)}
-                        className="flex h-11 w-11 items-center justify-center rounded-full bg-[#edf4ff] text-lg text-[#4b84ff] transition hover:scale-105"
+                        className="scan-ready-speaker flex h-11 w-11 items-center justify-center rounded-full border border-[#7da0e3] bg-[#f8fbff] text-lg text-[#5d87ea] transition hover:scale-105 hover:bg-[#edf4ff] dark:border-[#37517d] dark:bg-[color:color-mix(in_srgb,var(--surface)_74%,#edf4ff_26%)] dark:text-[#89b0ff] dark:hover:bg-[color:color-mix(in_srgb,var(--surface)_68%,#edf4ff_32%)]"
                         aria-label="Play saved pronunciation"
                       >
                         🔊
