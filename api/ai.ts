@@ -38,30 +38,8 @@ async function callGemini(prompt: string, apiKey: string) {
   return { text, provider: 'gemini' };
 }
 
-async function callGeminiWithFallback(prompt: string, apiKeys: string[]) {
-  let lastError: unknown = null;
-
-  for (let index = 0; index < apiKeys.length; index += 1) {
-    const apiKey = apiKeys[index];
-
-    try {
-      const result = await callGemini(prompt, apiKey);
-      return {
-        ...result,
-        provider: index === 0 ? 'gemini' : 'gemini-backup',
-      };
-    } catch (error: any) {
-      lastError = error;
-      const message = String(error?.message || '');
-
-      if ((message.includes('429') || message.toLowerCase().includes('quota')) && index < apiKeys.length - 1) {
-        console.warn('Primary Gemini server key is rate-limited, trying backup Gemini server key.');
-        continue;
-      }
-    }
-  }
-
-  throw lastError instanceof Error ? lastError : new Error('gemini-failed');
+async function callGeminiSingle(prompt: string, apiKey: string) {
+  return callGemini(prompt, apiKey);
 }
 
 async function callOpenRouter(prompt: string, apiKey: string) {
@@ -140,15 +118,14 @@ export default async function handler(req: any, res: any) {
 
     console.log('AI route hit');
     console.log('Has GEMINI_API_KEY:', !!process.env.GEMINI_API_KEY);
-    console.log('Has GEMINI_API_KEY_BACKUP:', !!process.env.GEMINI_API_KEY_BACKUP);
     console.log('Has OPENROUTER_API_KEY:', !!process.env.OPENROUTER_API_KEY);
     console.log('Has GROQ_API_KEY:', !!process.env.GROQ_API_KEY);
 
-    const geminiApiKeys = [process.env.GEMINI_API_KEY, process.env.GEMINI_API_KEY_BACKUP].filter(Boolean) as string[];
+    const geminiApiKey = process.env.GEMINI_API_KEY;
 
     const providers = [
-      geminiApiKeys.length > 0
-        ? () => callGeminiWithFallback(prompt, geminiApiKeys)
+      geminiApiKey
+        ? () => callGeminiSingle(prompt, geminiApiKey)
         : null,
       process.env.OPENROUTER_API_KEY
         ? () => callOpenRouter(prompt, process.env.OPENROUTER_API_KEY as string)
@@ -160,7 +137,7 @@ export default async function handler(req: any, res: any) {
 
     if (providers.length === 0) {
       res.status(500).json({
-        error: 'No AI provider configured. Add GEMINI_API_KEY, GEMINI_API_KEY_BACKUP, OPENROUTER_API_KEY, or GROQ_API_KEY.',
+        error: 'No AI provider configured. Add GEMINI_API_KEY, OPENROUTER_API_KEY, or GROQ_API_KEY.',
       });
       return;
     }

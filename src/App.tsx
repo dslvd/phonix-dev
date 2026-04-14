@@ -435,7 +435,6 @@ function App() {
       </Button>
     </div>
   );
-
   const updateState: UpdateStateFn = (updates) => {
     setAppState((prev) => {
       const nextUpdates = typeof updates === "function" ? updates(prev) : updates;
