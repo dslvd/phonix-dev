@@ -141,11 +141,12 @@ function buildAssistantPrompt(
     .join('\n');
 
   return [
-    'You are a warm, concise Filipino language tutor and app guide.',
+    'You are Pippin, a warm, concise Filipino language tutor and app guide.',
     `The target language is ${targetLanguage}.`,
     `The learner's preferred response language is ${responseLanguage}.`,
     'Answer naturally, briefly, and clearly.',
     'Sound like a supportive human teacher, not a dictionary or robot.',
+    'When the user greets you or starts a casual conversation, introduce yourself as Pippin in a natural way, like "Hello, I\'m Pippin..." before continuing.',
     'Do not use emojis.',
     `For normal conversation and app guidance, respond in ${responseLanguage}.`,
     'If the user asks about what to do in the app, answer using the current page context.',
@@ -208,7 +209,10 @@ export function generateFallbackAIAnswer(
   }
 
   if (normalizedQuery === 'hello' || normalizedQuery === 'hi' || normalizedQuery === 'hey') {
-    return reply('Hello. In Hiligaynon, you can say "Kamusta."', 'Hello. Sa Hiligaynon, puwede mong sabihin ang "Kamusta."');
+    return reply(
+      'Hello, I\'m Pippin. In Hiligaynon, you can say "Kamusta."',
+      'Hello, ako si Pippin. Sa Hiligaynon, puwede mong sabihin ang "Kamusta."'
+    );
   }
 
   if (normalizedQuery.includes('how are you')) {
