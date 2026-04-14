@@ -504,8 +504,16 @@ function App() {
 
     const hydrateFromCloud = async () => {
       try {
-        const safeUserKey = encodeURIComponent(userKey).replace(/\./g, "%2E");
-        const response = await fetch(`/api/user-state?userKey=${safeUserKey}`);
+        const response = await fetch("/api/user-state", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            action: "load",
+            userKey,
+          }),
+        });
         if (!response.ok) {
           return;
         }

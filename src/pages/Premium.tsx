@@ -128,7 +128,7 @@ export default function Premium({ navigate, openMobileNav, premium }: PremiumPro
               <p className="theme-text-soft mb-2 text-lg font-bold">LIMITED TIME OFFER</p>
 
               <div className="flex justify-center items-end gap-2 mb-4">
-                <span className="theme-text-soft text-2xl opacity-70 line-through">₱299.99</span>
+                <span className="theme-text-soft text-2xl opacity-70 line-through">₱389.99</span>
                 <span className="font-baloo text-6xl font-bold">FREE</span>
               </div>
 

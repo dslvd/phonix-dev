@@ -107,7 +107,41 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
+    const action = String(req.body?.action || 'save').trim().toLowerCase();
     const userKey = req.body?.userKey;
+
+    if (action === 'load') {
+      if (!isValidUserKey(userKey)) {
+        res.status(400).json({ error: 'Valid userKey is required' });
+        return;
+      }
+
+      const result = await runD1Query(
+        'SELECT state_json, updated_at FROM user_app_state WHERE user_key = ?1 LIMIT 1',
+        [String(userKey).trim().toLowerCase()]
+      );
+
+      const rows = (result?.result?.[0]?.results || []) as D1Row[];
+      if (rows.length === 0) {
+        res.status(200).json({ state: null });
+        return;
+      }
+
+      const row = rows[0];
+      let parsedState: unknown = null;
+      try {
+        parsedState = JSON.parse(row.state_json);
+      } catch {
+        parsedState = null;
+      }
+
+      res.status(200).json({
+        state: parsedState,
+        updatedAt: row.updated_at,
+      });
+      return;
+    }
+
     const state = req.body?.state;
 
     if (!isValidUserKey(userKey)) {
