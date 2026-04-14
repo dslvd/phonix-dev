@@ -75,77 +75,34 @@ export default function Quiz({
   const [incorrectText, setIncorrectText] = useState("");
   const answerTimeoutRef = useRef<number | null>(null);
 
-  const getSpeechLang = (language: string, fallback: string) => {
-    const value = (language || "").trim().toLowerCase();
-    if (!value) {
-      return fallback;
-    }
-
-    if (value.includes("hiligaynon")) {
-      return "fil-PH";
-    }
-
-    if (value.includes("english")) {
-      return "en-US";
-    }
-
-    return fallback;
-  };
-
-  const pickVoiceForLang = (voices: SpeechSynthesisVoice[], langCode: string) => {
-    const lowerLang = langCode.toLowerCase();
-
-    if (lowerLang.startsWith("fil")) {
-      return (
-        voices.find((voice) => {
-          const voiceLang = voice.lang.toLowerCase();
-          return (
-            voiceLang.startsWith("fil") ||
-            voiceLang.startsWith("tl") ||
-            voiceLang.includes("ph")
-          );
-        }) || null
-      );
-    }
-
-    if (lowerLang.startsWith("en")) {
-      return voices.find((voice) => voice.lang.toLowerCase().startsWith("en")) || null;
-    }
-
-    return voices.find((voice) => voice.lang.toLowerCase().startsWith(lowerLang.split("-")[0])) || null;
-  };
-
-  const speakText = (text: string, language: string, fallbackLang: string) => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window) || !text.trim()) {
+  const speakText = (text: string, language: string = "fil-PH") => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
       return;
     }
 
     window.speechSynthesis.cancel();
 
-    const utterance = new SpeechSynthesisUtterance(text.trim());
-    utterance.lang = getSpeechLang(language, fallbackLang);
-    utterance.rate = 0.9;
-    utterance.pitch = 0.9;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = language;
+    utterance.rate = 0.8;
+    utterance.pitch = 1;
     utterance.volume = 1;
 
-    const speakWithVoice = () => {
-      const voices = window.speechSynthesis.getVoices();
-      const preferred = pickVoiceForLang(voices, utterance.lang);
-      const englishFallback = voices.find((voice) => voice.lang.toLowerCase().startsWith("en")) || null;
-      utterance.voice = preferred || englishFallback || voices[0] || null;
-      window.speechSynthesis.speak(utterance);
-    };
+    const voices = window.speechSynthesis.getVoices();
+    const matchingVoice = voices.find((voice) => {
+      const voiceLanguage = voice.lang.toLowerCase();
+      return (
+        voiceLanguage.includes("fil") ||
+        voiceLanguage.includes("tl") ||
+        voiceLanguage.includes("ph")
+      );
+    });
 
-    const availableVoices = window.speechSynthesis.getVoices();
-    if (availableVoices.length === 0) {
-      window.speechSynthesis.onvoiceschanged = () => {
-        window.speechSynthesis.onvoiceschanged = null;
-        speakWithVoice();
-      };
-      return;
+    if (matchingVoice) {
+      utterance.voice = matchingVoice;
     }
 
-    speakWithVoice();
+    window.speechSynthesis.speak(utterance);
   };
 
   const challengeLines = [
@@ -340,13 +297,13 @@ export default function Quiz({
 
   useEffect(() => {
     // Auto-read the prompt word in the learner's response language each new question.
-    speakText(currentWord.englishWord, nativeLanguage, "en-US");
+    speakText(currentWord.englishWord, nativeLanguage);
   }, [currentWord.id, currentWord.englishWord, nativeLanguage]);
 
   const handleSelect = (word: VocabularyItem) => {
     if (showResult) return; // Prevent multiple selections
 
-    speakText(word.nativeWord, targetLanguage, "fil-PH");
+    speakText(word.nativeWord, targetLanguage);
 
     setSelectedAnswer(word.id);
     setShowResult(true);
