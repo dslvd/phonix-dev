@@ -37,7 +37,7 @@ export default function Premium({ navigate, openMobileNav, premium }: PremiumPro
       icon: "🔋",
       title: "Unlimited Batteries",
       description: "Make mistakes while learning without ever running out of batteries!",
-      gradient: "from-[#7ed6ff] to-[#56b8e8]",
+      gradient: "from-[#FF9126] to-[#FF9126]",
     },
     {
       icon: "📄",
@@ -49,20 +49,20 @@ export default function Premium({ navigate, openMobileNav, premium }: PremiumPro
       icon: "🎯",
       title: "Advanced Progress Tracking",
       description: "Detailed analytics and learning insights",
-      gradient: "from-[#ffb86b] to-[#ff8e6d]",
+      gradient: "from-[#FF9126] to-[#FF9126]",
     },
-    {
-      icon: "🎨",
-      title: "Custom Themes",
-      description: "Personalize your learning experience",
-      gradient: "from-[#c8a4ff] to-[#8f66db]",
-    },
-    {
-      icon: "👥",
-      title: "Family Sharing",
-      description: "Share premium with up to 5 family members",
-      gradient: "from-[#56b8e8] to-[#2f9de4]",
-    },
+    // {
+    //   icon: "🎨",
+    //   title: "Custom Themes",
+    //   description: "Personalize your learning experience",
+    //   gradient: "from-[#c8a4ff] to-[#8f66db]",
+    // },
+    // {
+    //   icon: "👥",
+    //   title: "Family Sharing",
+    //   description: "Share premium with up to 5 family members",
+    //   gradient: "from-[#56b8e8] to-[#2f9de4]",
+    // },
   ];
 
   return (
@@ -106,10 +106,10 @@ export default function Premium({ navigate, openMobileNav, premium }: PremiumPro
       <div className="max-w-6xl mx-auto p-4 mt-6">
         {/* HERO */}
         <motion.div className="text-center mb-12">
-          <div className="text-9xl mb-6">✨</div>
+          <div className="text-9xl mb-6"></div>
 
-          <h1 className="mb-4 bg-gradient-to-r from-[#dff1ff] via-[#7ed6ff] to-[#56b8e8] bg-clip-text font-baloo text-6xl font-bold text-transparent">
-            Unlimited Batteries
+          <h1 className="mb-4 bg-gradient-to-r from-[#F08D39] via-[#F08D39] to-[#F08D39] bg-clip-text font-baloo text-6xl font-bold text-transparent">
+            Phonix Premium
           </h1>
 
           <p className="mb-6 text-2xl font-semibold">Unlock Your Full Learning Potential</p>
