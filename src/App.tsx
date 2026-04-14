@@ -108,6 +108,11 @@ function getStoredUser() {
   }
 }
 
+function hasStoredLoggedInUser() {
+  const user = getStoredUser();
+  return !!(user?.email || "").trim();
+}
+
 function getUserKey() {
   const user = getStoredUser();
   const email = (user?.email || "").trim().toLowerCase();
@@ -132,8 +137,7 @@ function getInitialPage(): Page {
     return "admin";
   }
 
-  const hasUser = !!window.localStorage.getItem("user");
-  if (!hasUser) {
+  if (!hasStoredLoggedInUser()) {
     return "landing";
   }
 
@@ -200,8 +204,7 @@ function App() {
       return defaultState;
     }
 
-    const rawStoredUser = window.localStorage.getItem("user");
-    if (!rawStoredUser) {
+    if (!hasStoredLoggedInUser()) {
       window.localStorage.removeItem("phonix-app-state");
       return defaultState;
     }
@@ -271,8 +274,7 @@ function App() {
       return;
     }
 
-    const hasUser = !!window.localStorage.getItem("user");
-    if (currentPage !== "landing" || hasUser) {
+    if (currentPage !== "landing" || hasStoredLoggedInUser()) {
       return;
     }
 
@@ -378,8 +380,7 @@ function App() {
       return;
     }
 
-    const hasUser = !!window.localStorage.getItem("user");
-    if (!hasUser || currentPage === "landing") {
+    if (!hasStoredLoggedInUser() || currentPage === "landing") {
       window.localStorage.removeItem("phonix-current-page");
       return;
     }
