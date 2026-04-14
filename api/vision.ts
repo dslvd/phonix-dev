@@ -6,22 +6,36 @@ declare const process: {
   env: Record<string, string | undefined>;
 };
 
+function getVertexModelUrl(apiKey: string, model = 'gemini-2.5-pro') {
+  const project =
+    process.env.VERTEX_AI_PROJECT_ID ||
+    process.env.GOOGLE_CLOUD_PROJECT ||
+    process.env.GCLOUD_PROJECT ||
+    '';
+  const location = process.env.VERTEX_AI_LOCATION || process.env.GOOGLE_CLOUD_LOCATION || 'global';
+
+  if (!project) {
+    throw new Error('Missing VERTEX_AI_PROJECT_ID or GOOGLE_CLOUD_PROJECT for Vertex AI.');
+  }
+
+  return `https://aiplatform.googleapis.com/v1/projects/${project}/locations/${location}/publishers/google/models/${model}:generateContent?key=${apiKey}`;
+}
+
 async function callGeminiVision(image: string, targetLanguage: string, apiKey: string) {
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`,
-    {
+  const response = await fetch(getVertexModelUrl(apiKey), {
       method: 'POST',
       headers: jsonHeaders,
       body: JSON.stringify({
         contents: [
           {
+            role: 'user',
             parts: [
               {
                 text: `Identify the main object in this image in English. Then translate it to ${targetLanguage}. Format exactly: Object: [name] | Translation: [${targetLanguage} word]. Keep it simple and concise.`,
               },
               {
-                inline_data: {
-                  mime_type: 'image/jpeg',
+                inlineData: {
+                  mimeType: 'image/jpeg',
                   data: image,
                 },
               },
@@ -29,8 +43,7 @@ async function callGeminiVision(image: string, targetLanguage: string, apiKey: s
           },
         ],
       }),
-    }
-  );
+    });
 
   const data = await response.json();
   console.log('Gemini vision response:', data);
@@ -45,7 +58,7 @@ async function callGeminiVision(image: string, targetLanguage: string, apiKey: s
     throw new Error('Gemini vision returned no text');
   }
 
-  return { text, provider: 'gemini' };
+  return { text, provider: 'vertex-ai' };
 }
 
 async function callOpenRouterVision(image: string, targetLanguage: string, apiKey: string) {
@@ -111,12 +124,18 @@ export default async function handler(req: any, res: any) {
     }
 
     console.log('Vision route hit');
+    console.log('Has VERTEX_AI_API_KEY:', !!process.env.VERTEX_AI_API_KEY);
     console.log('Has GEMINI_API_KEY:', !!process.env.GEMINI_API_KEY);
     console.log('Has OPENROUTER_API_KEY:', !!process.env.OPENROUTER_API_KEY);
 
     const providers = [
-      process.env.GEMINI_API_KEY
-        ? () => callGeminiVision(image, targetLanguage, process.env.GEMINI_API_KEY as string)
+      (process.env.VERTEX_AI_API_KEY || process.env.GEMINI_API_KEY)
+        ? () =>
+            callGeminiVision(
+              image,
+              targetLanguage,
+              (process.env.VERTEX_AI_API_KEY || process.env.GEMINI_API_KEY) as string
+            )
         : null,
       process.env.OPENROUTER_API_KEY
         ? () => callOpenRouterVision(image, targetLanguage, process.env.OPENROUTER_API_KEY as string)
@@ -125,7 +144,7 @@ export default async function handler(req: any, res: any) {
 
     if (providers.length === 0) {
       res.status(500).json({
-        error: 'No vision provider configured. Add GEMINI_API_KEY or OPENROUTER_API_KEY.',
+        error: 'No vision provider configured. Add VERTEX_AI_API_KEY or GEMINI_API_KEY, or OPENROUTER_API_KEY.',
       });
       return;
     }

@@ -983,20 +983,16 @@ export default function VocabularyLearning({
 
   const mascotMessage = (() => {
     if (isQuizMode) {
-      return nativeLanguage.trim().toLowerCase() === "filipino"
-        ? "Pwede akong magbigay ng clue, hindi sagot."
-        : "I can give a clue, not the answer.";
+      return "I can give a clue, not the answer.";
     }
 
     if (isReviewMode) {
-      return nativeLanguage.trim().toLowerCase() === "filipino"
-        ? "Handa ka na ba? I-review muna natin ito."
+      return "Ready? Let's review these first."; /*
         : "Ready? Let’s review these first.";
+      */
     }
 
-    return nativeLanguage.trim().toLowerCase() === "filipino"
-      ? "Magtanong ka tungkol sa word o clue."
-      : "Ask me about the word or clues.";
+    return "Ask me about the word or clues.";
   })();
 
   const vocabularyPageContext = [

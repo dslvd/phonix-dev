@@ -13,7 +13,7 @@ interface LanguageSetupProps {
 export default function LanguageSetup({ navigate, updateState }: LanguageSetupProps) {
   const [nativeLanguage, setNativeLanguage] = useState("");
   const [targetLanguage, setTargetLanguage] = useState("");
-  const nativeLanguageOptions = ["English", "Filipino"];
+  const nativeLanguageOptions = ["English"];
   const targetLanguageOptions = ["Hiligaynon"];
 
   const handleSubmit = () => {
@@ -24,20 +24,15 @@ export default function LanguageSetup({ navigate, updateState }: LanguageSetupPr
   };
 
   return (
-    // Page Container
     <div className="min-h-screen">
-      {/* Top Navigation */}
       <NavigationHeader
         onBack={() => navigate("landing")}
         onLogout={() => navigate("landing")}
         showStats={false}
       />
 
-      {/* Centered Setup Card Wrapper */}
-      <div className="flex items-center justify-center p-4 min-h-[calc(100vh-80px)]">
-        {/* Setup Card */}
+      <div className="flex min-h-[calc(100vh-80px)] items-center justify-center p-4">
         <Card className="max-w-md w-full">
-          {/* Page Intro */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -47,7 +42,6 @@ export default function LanguageSetup({ navigate, updateState }: LanguageSetupPr
             <p className="theme-text-soft">Tell us about your language journey!</p>
           </motion.div>
 
-          {/* Native Language Selector */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -75,7 +69,6 @@ export default function LanguageSetup({ navigate, updateState }: LanguageSetupPr
             </select>
           </motion.div>
 
-          {/* Target Language Selector */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -103,7 +96,6 @@ export default function LanguageSetup({ navigate, updateState }: LanguageSetupPr
             </select>
           </motion.div>
 
-          {/* Continue Action */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

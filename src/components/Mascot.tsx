@@ -38,7 +38,6 @@ export default function Mascot({
   containerClassName = "",
 }: MascotProps) {
   const AUTO_HIDE_MESSAGE_MS = 3000;
-  const isFilipino = responseLanguage.trim().toLowerCase() === "filipino";
   const isGuestMode = (() => {
     if (typeof window === "undefined") {
       return false;
@@ -82,15 +81,11 @@ export default function Mascot({
     wiggle: "animate-wiggle",
   };
   const uiText = {
-    title: isFilipino ? "AI Assistant" : "AI Assistant",
-    subtitle: isFilipino
-      ? "Magtanong ng tungkol sa lesson"
-      : "Ask a quick question about the lesson",
-    placeholder: isFilipino
-      ? "Magtanong tungkol sa salita o aralin"
-      : "Ask about a word or lesson...",
-    send: isFilipino ? "Ipadala" : "Send",
-    thinking: isFilipino ? "Nag-iisip..." : "Thinking...",
+    title: "Pippin",
+    subtitle: "Ask a quick question about the lesson",
+    placeholder: "Ask about a word or lesson...",
+    send: "Send",
+    thinking: "Thinking...",
   };
 
   const panelClasses = useMemo(
@@ -135,7 +130,7 @@ export default function Mascot({
     if (!trimmedQuery || loading) return;
 
     if (isGuestMode) {
-      setError("Log in to continue using AI Assistant features.");
+      setError("Log in to continue using Pippin features.");
       setMessages((prev) => [
         ...prev,
         {
@@ -228,7 +223,7 @@ export default function Mascot({
                   onClick={() => setIsOpen(false)}
                   unstyled
                   className="theme-bg-surface flex h-9 w-9 items-center justify-center rounded-full border text-lg font-bold transition"
-                  aria-label="Close AI assistant"
+                  aria-label="Close Pippin"
                 >
                   x
                 </Button>
@@ -336,7 +331,7 @@ export default function Mascot({
           transition={{ type: "spring", stiffness: 260, damping: 20 }}
           onClick={() => setIsOpen((prev) => !prev)}
           className="theme-bg-surface relative flex h-14 w-14 items-center justify-center rounded-full border shadow-[0_24px_40px_rgba(15,27,36,0.24)] md:h-16 md:w-16"
-          aria-label={isOpen ? "Hide AI assistant" : "Open AI assistant"}
+          aria-label={isOpen ? "Hide Pippin" : "Open Pippin"}
         >
           <img
             src="/assets/PipinIcon.png"

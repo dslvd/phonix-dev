@@ -11,6 +11,21 @@ const CACHE_TTL_MS = 1000 * 60 * 60 * 12;
 const memoryCache = new Map<string, { text: string; provider: string; updatedAt: number }>();
 const inFlightRefresh = new Map<string, Promise<{ text: string; provider: string }>>();
 
+function getVertexModelUrl(apiKey: string, model = 'gemini-2.5-pro') {
+  const project =
+    process.env.VERTEX_AI_PROJECT_ID ||
+    process.env.GOOGLE_CLOUD_PROJECT ||
+    process.env.GCLOUD_PROJECT ||
+    '';
+  const location = process.env.VERTEX_AI_LOCATION || process.env.GOOGLE_CLOUD_LOCATION || 'global';
+
+  if (!project) {
+    throw new Error('Missing VERTEX_AI_PROJECT_ID or GOOGLE_CLOUD_PROJECT for Vertex AI.');
+  }
+
+  return `https://aiplatform.googleapis.com/v1/projects/${project}/locations/${location}/publishers/google/models/${model}:generateContent?key=${apiKey}`;
+}
+
 function normalizeLang(value: unknown, fallback: string) {
   const input = String(value || '').trim();
   return input || fallback;
@@ -211,20 +226,18 @@ async function writeCachedToD1(pairKey: string, text: string, provider: string) 
 }
 
 async function callGemini(prompt: string, apiKey: string) {
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`,
-    {
+  const response = await fetch(getVertexModelUrl(apiKey), {
       method: 'POST',
       headers: jsonHeaders,
       body: JSON.stringify({
         contents: [
           {
+            role: 'user',
             parts: [{ text: prompt }],
           },
         ],
       }),
-    }
-  );
+    });
 
   const data = await response.json();
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -237,31 +250,11 @@ async function callGemini(prompt: string, apiKey: string) {
     throw new Error('Gemini returned no text');
   }
 
-  return { text: String(text), provider: 'gemini' };
+  return { text: String(text), provider: 'vertex-ai' };
 }
 
-async function callGeminiWithFallback(prompt: string, apiKeys: string[]) {
-  let lastError: unknown = null;
-
-  for (let index = 0; index < apiKeys.length; index += 1) {
-    const apiKey = apiKeys[index];
-
-    try {
-      const result = await callGemini(prompt, apiKey);
-      return {
-        ...result,
-        provider: index === 0 ? 'gemini' : 'gemini-backup',
-      };
-    } catch (error: any) {
-      lastError = error;
-      const message = String(error?.message || '');
-      if ((message.includes('429') || message.toLowerCase().includes('quota')) && index < apiKeys.length - 1) {
-        continue;
-      }
-    }
-  }
-
-  throw lastError instanceof Error ? lastError : new Error('gemini-failed');
+async function callGeminiSingle(prompt: string, apiKey: string) {
+  return callGemini(prompt, apiKey);
 }
 
 async function callOpenRouter(prompt: string, apiKey: string) {
@@ -321,10 +314,10 @@ async function callGroq(prompt: string, apiKey: string) {
 }
 
 async function generateVocabularyText(prompt: string) {
-  const geminiApiKeys = [process.env.GEMINI_API_KEY, process.env.GEMINI_API_KEY_BACKUP].filter(Boolean) as string[];
+  const geminiApiKey = process.env.VERTEX_AI_API_KEY || process.env.GEMINI_API_KEY;
 
   const providers = [
-    geminiApiKeys.length > 0 ? () => callGeminiWithFallback(prompt, geminiApiKeys) : null,
+    geminiApiKey ? () => callGeminiSingle(prompt, geminiApiKey) : null,
     process.env.OPENROUTER_API_KEY
       ? () => callOpenRouter(prompt, process.env.OPENROUTER_API_KEY as string)
       : null,

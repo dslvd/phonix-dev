@@ -9,8 +9,9 @@ export default defineConfig({
     emptyOutDir: true,
   },
   server: {
-    port: 3000,
-    open: true,
+    host: true,
+    port: 5173,
+    open: false,
   },
   define: {
     'process.env': process.env
