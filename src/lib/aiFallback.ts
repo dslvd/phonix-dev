@@ -30,6 +30,26 @@ const stripEmoji = (value: string) =>
     .replace(/\s{2,}/g, ' ')
     .trim();
 
+function getVertexModelUrl(apiKey: string, model = 'gemini-2.5-pro') {
+  const project =
+    import.meta.env.VITE_VERTEX_AI_PROJECT_ID ||
+    import.meta.env.VITE_GOOGLE_CLOUD_PROJECT ||
+    '';
+  const location =
+    import.meta.env.VITE_VERTEX_AI_LOCATION ||
+    import.meta.env.VITE_GOOGLE_CLOUD_LOCATION ||
+    'global';
+
+  if (!project) {
+    throw new AIRequestError(
+      'missing_vertex_project',
+      'Missing VITE_VERTEX_AI_PROJECT_ID or VITE_GOOGLE_CLOUD_PROJECT.'
+    );
+  }
+
+  return `https://aiplatform.googleapis.com/v1/projects/${project}/locations/${location}/publishers/google/models/${model}:generateContent?key=${apiKey}`;
+}
+
 async function postJson<T>(url: string, body: unknown): Promise<T> {
   const response = await fetch(url, {
     method: 'POST',
@@ -54,7 +74,7 @@ async function postJson<T>(url: string, body: unknown): Promise<T> {
 
 async function callGeminiBrowser(prompt: string, apiKey: string) {
   const response = await fetch(
-    'https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-2.5-pro:generateContent',
+    getVertexModelUrl(apiKey),
     {
       method: 'POST',
       headers: {
@@ -64,6 +84,7 @@ async function callGeminiBrowser(prompt: string, apiKey: string) {
       body: JSON.stringify({
         contents: [
           {
+            role: 'user',
             parts: [
               {
                 text: `${prompt}\n\nRespond in plain text only. Do not use markdown, bold, or formatting.`,
@@ -401,7 +422,7 @@ export async function analyzeImageWithAI(base64Data: string, targetLanguage: str
     throw new Error('missing-api-key');
   }
   const response = await fetch(
-    'https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-2.5-pro:generateContent',
+    getVertexModelUrl(apiKey),
     {
       method: 'POST',
       headers: {
@@ -411,6 +432,7 @@ export async function analyzeImageWithAI(base64Data: string, targetLanguage: str
       body: JSON.stringify({
         contents: [
           {
+            role: 'user',
             parts: [
               {
                 text: `Identify the main object in this image in English. Then translate it to ${targetLanguage}. Format exactly: Object: [name] | Translation: [${targetLanguage} word]. Keep it simple and concise. Respond in plain text only. Do not use markdown, bold, or formatting.`,

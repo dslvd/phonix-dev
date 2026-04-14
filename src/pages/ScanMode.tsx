@@ -49,12 +49,70 @@ interface FocusIndicator {
   key: number;
 }
 
+const SCAN_RESULT_STORAGE_KEY = "phonix-scan-result-v1";
+const MANUAL_TEXT_STORAGE_KEY = "phonix-scan-manual-text-v1";
+
+const readStoredScanResult = (): ScanResult | null => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const raw = window.sessionStorage.getItem(SCAN_RESULT_STORAGE_KEY);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as Partial<ScanResult>;
+    if (
+      typeof parsed.detectedText !== "string" ||
+      typeof parsed.translatedText !== "string" ||
+      typeof parsed.confidence !== "string"
+    ) {
+      return null;
+    }
+
+    return {
+      detectedText: parsed.detectedText,
+      translatedText: parsed.translatedText,
+      confidence: parsed.confidence,
+    };
+  } catch {
+    return null;
+  }
+};
+
+const readStoredManualText = () => {
+  if (typeof window === "undefined") {
+    return "";
+  }
+
+  return window.sessionStorage.getItem(MANUAL_TEXT_STORAGE_KEY) || "";
+};
+
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.mjs",
   import.meta.url,
 ).toString();
 
 const cleanOCRText = (text: string) => text.replace(/\s+/g, " ").trim();
+
+const getVertexModelUrl = (apiKey: string, model = "gemini-2.5-pro") => {
+  const project =
+    import.meta.env.VITE_VERTEX_AI_PROJECT_ID ||
+    import.meta.env.VITE_GOOGLE_CLOUD_PROJECT ||
+    "";
+  const location =
+    import.meta.env.VITE_VERTEX_AI_LOCATION ||
+    import.meta.env.VITE_GOOGLE_CLOUD_LOCATION ||
+    "global";
+
+  if (!project) {
+    throw new Error("Missing VITE_VERTEX_AI_PROJECT_ID or VITE_GOOGLE_CLOUD_PROJECT in .env");
+  }
+
+  return `https://aiplatform.googleapis.com/v1/projects/${project}/locations/${location}/publishers/google/models/${model}:generateContent?key=${apiKey}`;
+};
 
 const formatScanErrorMessage = (
   error: unknown,
@@ -149,12 +207,12 @@ export default function ScanMode({ navigate, openMobileNav, appState, updateStat
   const [activeScanAction, setActiveScanAction] = useState<"camera" | "upload" | "manual" | null>(
     null,
   );
-  const [scanResult, setScanResult] = useState<ScanResult | null>(null);
+  const [scanResult, setScanResult] = useState<ScanResult | null>(() => readStoredScanResult());
   const [error, setError] = useState<string | null>(null);
   const [savedScans, setSavedScans] = useState<ScanResult[]>([]);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showLoginRequiredModal, setShowLoginRequiredModal] = useState(false);
-  const [manualText, setManualText] = useState("");
+  const [manualText, setManualText] = useState(() => readStoredManualText());
   const [pendingAttachment, setPendingAttachment] = useState<PendingAttachment | null>(null);
   const [selectedSavedScan, setSelectedSavedScan] = useState<ScanResult | null>(null);
   const [isDragActive, setIsDragActive] = useState(false);
@@ -480,7 +538,7 @@ Text: ${text}
   `.trim();
 
     const response = await fetch(
-      `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-2.5-pro:generateContent?key=${apiKey}`,
+      getVertexModelUrl(apiKey),
       {
         method: "POST",
         headers: {
@@ -489,6 +547,7 @@ Text: ${text}
         body: JSON.stringify({
           contents: [
             {
+              role: "user",
               parts: [{ text: prompt }],
             },
           ],
@@ -1219,6 +1278,33 @@ const translatePendingAttachment = async () => {
   }, []);
 
   useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    if (scanResult) {
+      window.sessionStorage.setItem(SCAN_RESULT_STORAGE_KEY, JSON.stringify(scanResult));
+      return;
+    }
+
+    window.sessionStorage.removeItem(SCAN_RESULT_STORAGE_KEY);
+  }, [scanResult]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const trimmed = manualText.trim();
+    if (trimmed) {
+      window.sessionStorage.setItem(MANUAL_TEXT_STORAGE_KEY, manualText);
+      return;
+    }
+
+    window.sessionStorage.removeItem(MANUAL_TEXT_STORAGE_KEY);
+  }, [manualText]);
+
+  useEffect(() => {
     const handleWindowPaste = (event: ClipboardEvent) => {
       void handlePasteAttachment(event);
     };
@@ -1634,7 +1720,7 @@ const translatePendingAttachment = async () => {
             className="min-w-0 space-y-3"
           >
             <Card
-              className={`theme-bg-surface min-w-0 max-w-full overflow-hidden p-0 ${
+              className={`theme-bg-surface hidden min-w-0 max-w-full overflow-hidden p-0 md:block ${
                 scanResult ? "border border-[#8db7ff]" : "theme-border"
               }`}
             >
@@ -1977,6 +2063,102 @@ const translatePendingAttachment = async () => {
           </motion.div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {scanResult && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center bg-slate-950/45 p-3 md:hidden"
+            onClick={() => setScanResult(null)}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 28 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 24 }}
+              transition={{ type: "spring", stiffness: 180, damping: 20 }}
+              className="w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Card className="theme-bg-surface overflow-hidden border border-[#8db7ff] p-0 shadow-2xl">
+                <div className="flex items-center justify-between gap-3 border-b border-[#dce7fb] bg-[#eef5ff] px-4 py-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#FFB23F]">✨</span>
+                    <h3 className="font-baloo text-lg font-bold text-[#2f61d4]">
+                      Translation Ready
+                    </h3>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={() => setScanResult(null)}
+                    className="flex h-14 w-14 items-center justify-center rounded-[22px] bg-[#ff9126] text-2xl font-bold text-white shadow-sm hover:bg-[#ff9d41]"
+                    aria-label="Dismiss translation result"
+                  >
+                    ×
+                  </Button>
+                </div>
+
+                <div className="space-y-4 px-4 py-4">
+                  <div className="text-left">
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#6e83ab]">
+                        Detected Text
+                      </p>
+                      <span className="rounded-full bg-[#eef4ff] px-2.5 py-1 text-[11px] font-bold text-[#4c77ff]">
+                        {scanResult.confidence === "manual"
+                          ? "Manual Input"
+                          : scanResult.confidence === "upload"
+                            ? "Uploaded File"
+                            : "Camera OCR"}
+                      </span>
+                    </div>
+
+                    <div className="rounded-2xl bg-[#f7fbff] px-4 py-4">
+                      <p className="max-h-32 overflow-y-auto break-words whitespace-pre-wrap pr-1 text-sm font-semibold leading-7 text-[#435574]">
+                        {scanResult.detectedText}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="text-left">
+                    <p className="mb-2 text-xs font-bold uppercase tracking-[0.12em] text-[#4c77ff]">
+                      {appState.targetLanguage}
+                    </p>
+                    <div className="flex items-start justify-between gap-3">
+                      <p
+                        onClick={() =>
+                          scanResult.translatedText && speakText(scanResult.translatedText)
+                        }
+                        className="max-h-[18rem] flex-1 cursor-pointer overflow-y-auto break-words whitespace-pre-wrap pr-1 text-[1.75rem] font-extrabold leading-[1.45]"
+                        title="Tap to hear pronunciation"
+                      >
+                        {scanResult.translatedText || "â€”"}
+                      </p>
+                      {scanResult.translatedText && (
+                        <Button
+                          onClick={() => speakText(scanResult.translatedText)}
+                          className="mt-1 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-[#edf4ff] text-xl text-[#4b84ff] transition hover:scale-105"
+                        >
+                          🔊
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  <Button
+                    variant="primary"
+                    onClick={saveScan}
+                    className="w-full border-b-4 border-[#d97b12] bg-[#ff9126] hover:bg-[#ff9d41]"
+                  >
+                    💾 Save to Collection
+                  </Button>
+                </div>
+              </Card>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {selectedSavedScan && (

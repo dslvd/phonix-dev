@@ -14,6 +14,21 @@ function cleanDetectedText(text: string) {
   return text.replace(/\s+/g, ' ').trim();
 }
 
+function getVertexModelUrl(apiKey: string, model = 'gemini-2.5-pro') {
+  const project =
+    process.env.VERTEX_AI_PROJECT_ID ||
+    process.env.GOOGLE_CLOUD_PROJECT ||
+    process.env.GCLOUD_PROJECT ||
+    '';
+  const location = process.env.VERTEX_AI_LOCATION || process.env.GOOGLE_CLOUD_LOCATION || 'global';
+
+  if (!project) {
+    throw new Error('Missing VERTEX_AI_PROJECT_ID or GOOGLE_CLOUD_PROJECT for Vertex AI.');
+  }
+
+  return `https://aiplatform.googleapis.com/v1/projects/${project}/locations/${location}/publishers/google/models/${model}:generateContent?key=${apiKey}`;
+}
+
 function formatScanRouteError(error: unknown) {
   const rawMessage =
     error instanceof Error ? error.message : typeof error === 'string' ? error : '';
@@ -96,20 +111,18 @@ Do not explain anything.
 Text: ${text}
   `.trim();
 
-  const response = await fetch(
-    `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-2.5-pro:generateContent?key=${apiKey}`,
-    {
+  const response = await fetch(getVertexModelUrl(apiKey), {
       method: 'POST',
       headers: jsonHeaders,
       body: JSON.stringify({
         contents: [
           {
+            role: 'user',
             parts: [{ text: prompt }],
           },
         ],
       }),
-    }
-  );
+    });
 
   const data = await response.json().catch(() => null);
 
