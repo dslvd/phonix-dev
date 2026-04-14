@@ -1444,7 +1444,7 @@ const translatePendingAttachment = async () => {
                       </div>
                     </div>
 
-                    <button
+                    <Button
                       type="button"
                       onClick={handleSwapCamera}
                       disabled={cameraLoading || isScanning}
@@ -1453,7 +1453,7 @@ const translatePendingAttachment = async () => {
                       title="Swap camera"
                     >
                       ↻
-                    </button>
+                    </Button>
                   </>
                 )}
               </div>
@@ -1523,7 +1523,7 @@ const translatePendingAttachment = async () => {
                   Images, PDF, DOCX, or TXT
                 </p>
 
-                <button
+                <Button
                   type="button"
                   onClick={pendingAttachment ? translatePendingAttachment : handleUploadClick}
                   disabled={isScanning}
@@ -1560,21 +1560,21 @@ const translatePendingAttachment = async () => {
                       or drag & drop here
                     </div>
                   )}
-                </button>
+                </Button>
 
                 {pendingAttachment && (
                   <div className="mt-3 flex min-w-0 items-center justify-between gap-3 rounded-2xl border border-[#b8d7ff] bg-white/70 px-4 py-3 dark:bg-white/5">
                     <p className="min-w-0 flex-1 truncate text-sm font-semibold text-primary">
                       {pendingAttachment.name}
                     </p>
-                    <button
+                    <Button
                       type="button"
                       onClick={clearPendingAttachment}
                       className="theme-text-soft flex-shrink-0 rounded-full border px-2 py-0.5 text-xs font-bold transition hover:text-primary"
                       aria-label="Remove attached file"
                     >
                       x
-                    </button>
+                    </Button>
                   </div>
                 )}
               </Card>
@@ -1638,14 +1638,14 @@ const translatePendingAttachment = async () => {
                   </h3>
                 </div>
                 {scanResult && (
-                  <button
+                  <Button
                     type="button"
                     onClick={() => setScanResult(null)}
                     className="text-lg font-bold text-[#8da2c9] transition hover:text-[#5c76ac]"
                     aria-label="Clear translation result"
                   >
                     ×
-                  </button>
+                  </Button>
                 )}
               </div>
 
@@ -1687,12 +1687,12 @@ const translatePendingAttachment = async () => {
                         {scanResult.translatedText || "—"}
                       </p>
                       {scanResult.translatedText && (
-                        <button
+                        <Button
                           onClick={() => speakText(scanResult.translatedText)}
                           className="mt-1 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-[#edf4ff] text-xl text-[#4b84ff] transition hover:scale-105"
                         >
                           🔊
-                        </button>
+                        </Button>
                       )}
                     </div>
                   </div>
@@ -1727,14 +1727,14 @@ const translatePendingAttachment = async () => {
                 </h3>
               </div>
                 {scanResult && (
-                  <button
+                  <Button
                     type="button"
                     onClick={() => setScanResult(null)}
                     className="text-lg font-bold text-[#8da2c9] transition hover:text-[#5c76ac]"
                     aria-label="Clear translation result"
                   >
                     x
-                  </button>
+                  </Button>
                 )}
               </div>
 
@@ -1766,12 +1766,12 @@ const translatePendingAttachment = async () => {
                         {result.translatedText || '—'}
                       </p>
                       {result.translatedText && (
-                        <button
+                        <Button
                           onClick={() => speakText(result.translatedText)}
                           className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-[#edf4ff] text-xl text-[#4b84ff] transition hover:scale-105"
                         >
                           🔊
-                        </button>
+                        </Button>
                       )}
                     </div>
                   </div>
@@ -1848,12 +1848,12 @@ const translatePendingAttachment = async () => {
                               </p>
 
                               {scanResult!.translatedText && (
-                                <button
+                                <Button
                                   onClick={() => speakText(scanResult!.translatedText)}
                                   className="text-3xl hover:scale-110 transition-transform"
                                 >
                                   🔊
-                                </button>
+                                </Button>
                               )}
                             </div>
 
@@ -1920,7 +1920,7 @@ const translatePendingAttachment = async () => {
                           transition={{ delay: index * 0.05 }}
                           className="w-full min-w-0 overflow-hidden rounded-2xl bg-[#fbfdff] px-4 py-3 shadow-sm ring-1 ring-[#edf2fa] transition hover:ring-[#c8daf6]"
                         >
-                          <button
+                          <Button
                             type="button"
                             onClick={() => setSelectedSavedScan(item)}
                             className="flex w-full min-w-0 flex-col items-start text-left"
@@ -1942,7 +1942,7 @@ const translatePendingAttachment = async () => {
                                 🔊
                               </span>
                             </div>
-                          </button>
+                          </Button>
                         </motion.div>
                       ))}
                     </div>
@@ -1982,14 +1982,14 @@ const translatePendingAttachment = async () => {
                     <span className="text-[#b8c5da]">📄</span>
                     <h3 className="font-baloo text-xl font-bold">Collection Item</h3>
                   </div>
-                  <button
+                  <Button
                     type="button"
                     onClick={() => setSelectedSavedScan(null)}
                     className="text-lg font-bold text-[#8da2c9] transition hover:text-[#5c76ac]"
                     aria-label="Close collection preview"
                   >
                     ×
-                  </button>
+                  </Button>
                 </div>
 
                 <div className="space-y-5 px-5 py-5">
@@ -2009,14 +2009,14 @@ const translatePendingAttachment = async () => {
                       <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#4c77ff]">
                         {appState.targetLanguage}
                       </p>
-                      <button
+                      <Button
                         type="button"
                         onClick={() => speakText(selectedSavedScan.translatedText)}
                         className="flex h-11 w-11 items-center justify-center rounded-full bg-[#edf4ff] text-lg text-[#4b84ff] transition hover:scale-105"
                         aria-label="Play saved pronunciation"
                       >
                         🔊
-                      </button>
+                      </Button>
                     </div>
                     <p className="max-h-56 overflow-y-auto break-words whitespace-pre-wrap pr-1 text-xl font-extrabold leading-[1.55]">
                       {selectedSavedScan.translatedText}
@@ -2054,7 +2054,7 @@ const translatePendingAttachment = async () => {
                   users.
                 </p>
                 <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-                  <button
+                  <Button
                     onClick={() => {
                       setShowLoginRequiredModal(false);
                       navigate("landing");
@@ -2062,13 +2062,13 @@ const translatePendingAttachment = async () => {
                     className="flex-1 rounded-xl border-b-4 border-[#FF9126] bg-[#FF9126] px-4 py-3 font-bold text-[#4a2a00]"
                   >
                     Log In
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     onClick={() => setShowLoginRequiredModal(false)}
                     className="theme-bg-surface flex-1 rounded-xl border px-4 py-3 font-bold"
                   >
                     Stay in Guest Mode
-                  </button>
+                  </Button>
                 </div>
               </Card>
             </motion.div>
@@ -2161,12 +2161,12 @@ const translatePendingAttachment = async () => {
                       </span>
                     </motion.button>
 
-                    <button
+                    <Button
                       onClick={() => setShowUpgradeModal(false)}
                       className="theme-text-soft w-full py-2 text-sm font-semibold transition-colors hover:text-white"
                     >
                       Maybe Later
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </Card>
@@ -2177,3 +2177,4 @@ const translatePendingAttachment = async () => {
     </div>
   );
 }
+

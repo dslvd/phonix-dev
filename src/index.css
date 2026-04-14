@@ -31,12 +31,10 @@
     @apply min-h-screen font-nunito antialiased;
     background: var(--bg);    
     color: var(--text);
+    border-color: var(--border);
   }
-  [data-theme="light"] body {
-    background: var(--bg);
   * {
-      border-color: var(--border);
-    }
+    border-color: inherit;
   }
 }
 

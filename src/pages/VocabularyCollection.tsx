@@ -263,15 +263,16 @@ export default function VocabularyCollection({
                       {item.nativeWord}
                     </h3>
                     <p className="theme-text-soft text-sm font-semibold">{item.englishWord}</p>
-                    <button
+                    <Button
                       onClick={() => {
                         const utterance = new SpeechSynthesisUtterance(item.nativeWord);
                         speechSynthesis.speak(utterance);
                       }}
+                      unstyled
                       className="mt-3 rounded-full bg-primary px-3 py-1 text-xs font-bold text-white transition-transform hover:scale-110"
                     >
                       Play
-                    </button>
+                    </Button>
                   </Card>
                 </motion.div>
               ))}
@@ -355,18 +356,20 @@ export default function VocabularyCollection({
                 until you recharge or upgrade to premium.
               </p>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                <button
+                <Button
                   onClick={() => navigate("premium")}
+                  unstyled
                   className="flex-1 rounded-2xl border-b-4 border-[#FF9126] bg-[#FF9126] px-6 py-4 font-bold text-[#4a2a00] shadow-lg"
                 >
                   Upgrade to Premium
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={() => setShowNoBatteryModal(false)}
+                  unstyled
                   className="flex-1 rounded-2xl border border-[#2a4151] bg-[#1a3242] px-6 py-4 font-bold text-[#cbe4f6]"
                 >
                   Stay Here
-                </button>
+                </Button>
               </div>
             </div>
           </div>

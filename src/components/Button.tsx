@@ -1,28 +1,35 @@
-import { motion } from 'framer-motion';
+import { motion, type HTMLMotionProps } from 'framer-motion';
 import { ReactNode } from 'react';
 
-interface ButtonProps {
+interface ButtonProps extends Omit<HTMLMotionProps<'button'>, 'children'> {
   children: ReactNode;
-  onClick?: () => void;
   variant?: 'primary' | 'secondary' | 'outline' | 'success' | 'danger';
   size?: 'sm' | 'md' | 'lg';
-  icon?: string;
+  icon?: ReactNode;
   fullWidth?: boolean;
-  disabled?: boolean;
-  className?: string;
+  unstyled?: boolean;
 }
 
 export default function Button({
   children,
-  onClick,
-  variant = 'primary',
-  size = 'md',
+  variant: variantProp,
+  size: sizeProp,
   icon,
   fullWidth = false,
   disabled = false,
   className = '',
+  type = 'button',
+  unstyled = false,
+  ...props
 }: ButtonProps) {
-  const baseClasses = 'btn';
+  const variant = variantProp ?? 'primary';
+  const size = sizeProp ?? 'md';
+  const hasCustomUtilityStyling =
+    /(?:^|\s)(?:theme-|bg-|rounded|border|shadow|h-\[|h-|w-\[|w-|min-w-|px-|py-|text-left|underline|absolute|fixed)/.test(
+      className,
+    );
+  const useDefaultStyling = !unstyled && !(variantProp === undefined && hasCustomUtilityStyling);
+  const baseClasses = useDefaultStyling ? 'btn' : '';
   
   const variantClasses = {
     primary: '',
@@ -40,13 +47,16 @@ export default function Button({
 
   const widthClass = fullWidth ? 'w-full' : '';
   const disabledClass = disabled ? '' : 'cursor-pointer';
+  const buttonSizeClass = useDefaultStyling ? sizeClasses[size] : '';
+  const buttonVariantClass = useDefaultStyling ? variantClasses[variant] : '';
 
   return (
     <motion.button
       whileTap={{ scale: disabled ? 1 : 0.95 }}
-      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${widthClass} ${disabledClass} ${className}`}
-      onClick={onClick}
+      type={type}
+      className={`${baseClasses} ${buttonVariantClass} ${buttonSizeClass} ${widthClass} ${disabledClass} ${className}`.trim()}
       disabled={disabled}
+      {...props}
     >
       {icon && <span className="text-2xl">{icon}</span>}
       {children}

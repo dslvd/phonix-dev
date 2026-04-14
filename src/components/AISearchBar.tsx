@@ -187,16 +187,17 @@ export default function AISearchBar({
               <div className="whitespace-pre-wrap leading-relaxed">
                 {result}
               </div>
-              <button
+              <Button
                 onClick={() => {
                   setResult('');
                   setQuery('');
                 }}
+                unstyled
                 className="mt-3 text-xs font-bold"
                 style={{ color: 'var(--primary)' }}
               >
                 {isFilipino ? 'Magtanong ulit' : 'Ask another question'}
-              </button>
+              </Button>
             </motion.div>
           )}
         </AnimatePresence>
@@ -222,14 +223,15 @@ export default function AISearchBar({
                       'How do I get batteries again?',
                     ]
               ).map((suggestion) => (
-                <button
+                <Button
                   key={suggestion}
                   onClick={() => setQuery(suggestion)}
+                  unstyled
                   className="rounded-full border px-3 py-1 text-xs font-semibold transition hover:border-[color:var(--primary)]"
                   style={{ backgroundColor: 'var(--surface)' }}
                 >
                   {suggestion}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
