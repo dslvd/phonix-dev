@@ -390,7 +390,7 @@ function App() {
   const themeToggle = (
     <div className="card inline-flex items-center gap-1 rounded-full p-1" role="group" aria-label="Theme mode switch">
       <Button
-        onClick={() => setTheme('light')}
+        onClick={() => setTheme("light")}
         unstyled
         className={`grid h-9 w-9 place-items-center rounded-full text-lg leading-none font-bold transition sm:h-10 sm:w-10 ${
           theme === "light" ? "bg-[color:var(--primary)] text-[color:var(--text)]" : "text-muted"
@@ -410,7 +410,7 @@ function App() {
         />
       </Button>
       <Button
-        onClick={() => setTheme('dark')}
+        onClick={() => setTheme("dark")}
         unstyled
         className={`grid h-9 w-9 place-items-center rounded-full text-lg leading-none font-bold transition sm:h-10 sm:w-10 ${
           theme === "dark" ? "bg-[color:var(--primary)] text-[color:var(--text)]" : "text-muted"
@@ -429,9 +429,8 @@ function App() {
           }}
         />
       </Button>
-   </div>
+    </div>
   );
-
   const updateState: UpdateStateFn = (updates) => {
     setAppState((prev) => {
       const nextUpdates = typeof updates === "function" ? updates(prev) : updates;
