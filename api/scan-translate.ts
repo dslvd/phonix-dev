@@ -26,7 +26,8 @@ function formatScanRouteError(error: unknown) {
     lowerMessage.includes('rate-limit') ||
     lowerMessage.includes('rate limited') ||
     lowerMessage.includes('429') ||
-    lowerMessage.includes('generativelanguage.googleapis.com')
+    lowerMessage.includes('generativelanguage.googleapis.com') ||
+    lowerMessage.includes('aiplatform.googleapis.com')
   ) {
     return {
       status: 429,
@@ -96,7 +97,7 @@ Text: ${text}
   `.trim();
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`,
+    `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-2.5-pro:generateContent?key=${apiKey}`,
     {
       method: 'POST',
       headers: jsonHeaders,
@@ -135,8 +136,10 @@ function getVisionApiKey() {
 
 function getGeminiApiKey() {
   return (
+    process.env.VERTEX_AI_API_KEY ||
     process.env.GEMINI_API_KEY ||
     process.env.GOOGLE_API_KEY ||
+    process.env.VITE_VERTEX_AI_API_KEY ||
     process.env.VITE_GEMINI_API_KEY ||
     ''
   );
@@ -157,7 +160,7 @@ export default async function handler(req: any, res: any) {
 
     if (!geminiApiKey) {
       return res.status(500).json({
-        error: 'Missing Gemini API key. Add GEMINI_API_KEY.',
+        error: 'Missing Vertex AI API key. Add VERTEX_AI_API_KEY or GEMINI_API_KEY.',
       });
     }
 

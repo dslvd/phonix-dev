@@ -71,7 +71,8 @@ const formatScanErrorMessage = (
     lowerMessage.includes("rate-limit") ||
     lowerMessage.includes("rate limited") ||
     lowerMessage.includes("429") ||
-    lowerMessage.includes("generativelanguage.googleapis.com")
+    lowerMessage.includes("generativelanguage.googleapis.com") ||
+    lowerMessage.includes("aiplatform.googleapis.com")
   ) {
     return "Translation is temporarily unavailable because the AI service is busy right now. Please try again in a few minutes.";
   }
@@ -462,10 +463,10 @@ export default function ScanMode({ navigate, openMobileNav, appState, updateStat
 
 /*Inits Gemini key*/
 const translateTextWithGemini = async (text: string, targetLanguage: string) => {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  const apiKey = import.meta.env.VITE_VERTEX_AI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY;
 
     if (!apiKey) {
-      throw new Error("Missing VITE_GEMINI_API_KEY in .env");
+      throw new Error("Missing VITE_VERTEX_AI_API_KEY or VITE_GEMINI_API_KEY in .env");
     }
 
     /*PROMPT VERY IMPORTANT*/
@@ -479,7 +480,7 @@ Text: ${text}
   `.trim();
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`,
+      `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-2.5-pro:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: {

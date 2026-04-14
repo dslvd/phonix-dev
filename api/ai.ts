@@ -8,7 +8,7 @@ const jsonHeaders = {
 
 async function callGemini(prompt: string, apiKey: string) {
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`,
+    `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-2.5-pro:generateContent?key=${apiKey}`,
     {
       method: 'POST',
       headers: jsonHeaders,
@@ -35,7 +35,7 @@ async function callGemini(prompt: string, apiKey: string) {
     throw new Error('Gemini returned no text');
   }
 
-  return { text, provider: 'gemini' };
+  return { text, provider: 'vertex-ai' };
 }
 
 async function callGeminiSingle(prompt: string, apiKey: string) {
@@ -117,11 +117,12 @@ export default async function handler(req: any, res: any) {
     }
 
     console.log('AI route hit');
+    console.log('Has VERTEX_AI_API_KEY:', !!process.env.VERTEX_AI_API_KEY);
     console.log('Has GEMINI_API_KEY:', !!process.env.GEMINI_API_KEY);
     console.log('Has OPENROUTER_API_KEY:', !!process.env.OPENROUTER_API_KEY);
     console.log('Has GROQ_API_KEY:', !!process.env.GROQ_API_KEY);
 
-    const geminiApiKey = process.env.GEMINI_API_KEY;
+    const geminiApiKey = process.env.VERTEX_AI_API_KEY || process.env.GEMINI_API_KEY;
 
     const providers = [
       geminiApiKey
@@ -137,7 +138,7 @@ export default async function handler(req: any, res: any) {
 
     if (providers.length === 0) {
       res.status(500).json({
-        error: 'No AI provider configured. Add GEMINI_API_KEY, OPENROUTER_API_KEY, or GROQ_API_KEY.',
+        error: 'No AI provider configured. Add VERTEX_AI_API_KEY or GEMINI_API_KEY, OPENROUTER_API_KEY, or GROQ_API_KEY.',
       });
       return;
     }

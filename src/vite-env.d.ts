@@ -1,8 +1,8 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
+  readonly VITE_VERTEX_AI_API_KEY?: string;
   readonly VITE_GEMINI_API_KEY?: string;
-  readonly VITE_GEMINI_API_KEY_BACKUP?: string;
   readonly VITE_GOOGLE_CLIENT_ID?: string;
   readonly VITE_GOOGLE_VISION_API_KEY?: string;
 }

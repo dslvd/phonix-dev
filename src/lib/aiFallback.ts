@@ -54,7 +54,7 @@ async function postJson<T>(url: string, body: unknown): Promise<T> {
 
 async function callGeminiBrowser(prompt: string, apiKey: string) {
   const response = await fetch(
-    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent',
+    'https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-2.5-pro:generateContent',
     {
       method: 'POST',
       headers: {
@@ -325,7 +325,7 @@ export async function askCloudAI(
   responseLanguage = 'English'
 ) {
   const prompt = buildAssistantPrompt(query, targetLanguage, history, pageContext, responseLanguage);
-  const browserApiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  const browserApiKey = import.meta.env.VITE_VERTEX_AI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY;
   let browserError: unknown = null;
   let serverError: unknown = null;
 
@@ -355,14 +355,14 @@ export async function askCloudAI(
   if (!browserApiKey && serverMissingProvider) {
     throw new AIRequestError(
       'missing_api_key',
-      'Missing AI keys. Configure VITE_GEMINI_API_KEY for browser calls or GEMINI_API_KEY on the server /api/ai runtime.'
+      'Missing AI keys. Configure VITE_VERTEX_AI_API_KEY or VITE_GEMINI_API_KEY for browser calls, or VERTEX_AI_API_KEY / GEMINI_API_KEY on the server /api/ai runtime.'
     );
   }
 
   if (!browserApiKey && !serverError) {
     throw new AIRequestError(
       'missing_api_key',
-      'Missing VITE_GEMINI_API_KEY.'
+      'Missing VITE_VERTEX_AI_API_KEY or VITE_GEMINI_API_KEY.'
     );
   }
 
@@ -395,13 +395,13 @@ export async function analyzeImageWithAI(base64Data: string, targetLanguage: str
     console.warn('Server vision route unavailable, falling back to browser request.', error);
   }
 
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  const apiKey = import.meta.env.VITE_VERTEX_AI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY;
 
   if (!apiKey) {
     throw new Error('missing-api-key');
   }
   const response = await fetch(
-    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent',
+    'https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-2.5-pro:generateContent',
     {
       method: 'POST',
       headers: {
@@ -416,8 +416,8 @@ export async function analyzeImageWithAI(base64Data: string, targetLanguage: str
                 text: `Identify the main object in this image in English. Then translate it to ${targetLanguage}. Format exactly: Object: [name] | Translation: [${targetLanguage} word]. Keep it simple and concise. Respond in plain text only. Do not use markdown, bold, or formatting.`,
               },
               {
-                inline_data: {
-                  mime_type: 'image/jpeg',
+                inlineData: {
+                  mimeType: 'image/jpeg',
                   data: base64Data,
                 },
               },

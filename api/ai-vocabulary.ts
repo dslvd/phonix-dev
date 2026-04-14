@@ -212,7 +212,7 @@ async function writeCachedToD1(pairKey: string, text: string, provider: string) 
 
 async function callGemini(prompt: string, apiKey: string) {
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`,
+    `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-2.5-pro:generateContent?key=${apiKey}`,
     {
       method: 'POST',
       headers: jsonHeaders,
@@ -237,7 +237,7 @@ async function callGemini(prompt: string, apiKey: string) {
     throw new Error('Gemini returned no text');
   }
 
-  return { text: String(text), provider: 'gemini' };
+  return { text: String(text), provider: 'vertex-ai' };
 }
 
 async function callGeminiSingle(prompt: string, apiKey: string) {
@@ -301,7 +301,7 @@ async function callGroq(prompt: string, apiKey: string) {
 }
 
 async function generateVocabularyText(prompt: string) {
-  const geminiApiKey = process.env.GEMINI_API_KEY;
+  const geminiApiKey = process.env.VERTEX_AI_API_KEY || process.env.GEMINI_API_KEY;
 
   const providers = [
     geminiApiKey ? () => callGeminiSingle(prompt, geminiApiKey) : null,
