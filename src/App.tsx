@@ -1,23 +1,23 @@
-import { useEffect, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
-import Landing from './pages/Landing';
-import LanguageSetup from './pages/LanguageSetup';
-import ModeSelection from './pages/ModeSelection';
-import Dashboard from './pages/Dashboard';
-import ScanMode from './pages/ScanMode';
-import VocabularyLearning from './pages/VocabularyLearning';
-import SentenceLearning from './pages/SentenceLearning';
-import VocabularyCollection from './pages/VocabularyCollection';
-import Profile from './pages/Profile';
-import Premium from './pages/Premium';
-import AdminDashboard from './pages/AdminDashboardPage';
-import Instructions from './pages/Instructions';
-import Mascot from './components/Mascot';
-import Button from './components/Button';
-import { usePremium } from './lib/usePremium';
-import { clearPremiumStatus } from './lib/premiumService';
-import { getVocabularyLevelCycle, prefetchAIVocabularyWindow } from './lib/aiVocabulary';
-import { BATTERY_MAX, normalizeBatteryState } from './lib/battery';
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import Landing from "./pages/Landing";
+import LanguageSetup from "./pages/LanguageSetup";
+import ModeSelection from "./pages/ModeSelection";
+import Dashboard from "./pages/Dashboard";
+import ScanMode from "./pages/ScanMode";
+import VocabularyLearning from "./pages/VocabularyLearning";
+import SentenceLearning from "./pages/SentenceLearning";
+import VocabularyCollection from "./pages/VocabularyCollection";
+import Profile from "./pages/Profile";
+import Premium from "./pages/Premium";
+import AdminDashboard from "./pages/AdminDashboardPage";
+import Instructions from "./pages/Instructions";
+import Mascot from "./components/Mascot";
+import Button from "./components/Button";
+import { usePremium } from "./lib/usePremium";
+import { clearPremiumStatus } from "./lib/premiumService";
+import { getVocabularyLevelCycle, prefetchAIVocabularyWindow } from "./lib/aiVocabulary";
+import { BATTERY_MAX, normalizeBatteryState } from "./lib/battery";
 
 type ThemeMode = "dark" | "light";
 
@@ -388,9 +388,13 @@ function App() {
   }, [currentPage]);
 
   const themeToggle = (
-    <div className="card inline-flex items-center gap-1 rounded-full p-1" role="group" aria-label="Theme mode switch">
+    <div
+      className="card inline-flex items-center gap-1 rounded-full p-1"
+      role="group"
+      aria-label="Theme mode switch"
+    >
       <Button
-        onClick={() => setTheme('light')}
+        onClick={() => setTheme("light")}
         unstyled
         className={`grid h-9 w-9 place-items-center rounded-full text-lg leading-none font-bold transition sm:h-10 sm:w-10 ${
           theme === "light" ? "bg-[color:var(--primary)] text-[color:var(--text)]" : "text-muted"
@@ -410,7 +414,7 @@ function App() {
         />
       </Button>
       <Button
-        onClick={() => setTheme('dark')}
+        onClick={() => setTheme("dark")}
         unstyled
         className={`grid h-9 w-9 place-items-center rounded-full text-lg leading-none font-bold transition sm:h-10 sm:w-10 ${
           theme === "dark" ? "bg-[color:var(--primary)] text-[color:var(--text)]" : "text-muted"
@@ -429,7 +433,7 @@ function App() {
           }}
         />
       </Button>
-   </div>
+    </div>
   );
 
   const updateState: UpdateStateFn = (updates) => {
@@ -585,7 +589,6 @@ function App() {
   }, [appState.targetLanguage, appState.nativeLanguage, levelCycle, userKey, isGuestMode]);
 
   const showDesktopSidebar = currentPage === "dashboard" || currentPage === "admin";
-  const isDashboardPage = currentPage === "dashboard";
   const keepMainPanel = currentPage === "dashboard";
   const shouldShowGlobalMascot = ![
     "landing",
@@ -814,17 +817,16 @@ function App() {
         {showMobileNav && (
           <>
             {!mobileHasFixedHeader && (
-            <div className={`fixed left-4 ${mobileFloatingTopClass} z-[80]`}>
-              <Button
-                onClick={() => setMobileNavOpen(true)}
-                unstyled
-                className="theme-bg-surface flex h-12 w-12 items-center justify-center rounded-2xl border shadow-[0_18px_36px_rgba(15,27,36,0.22)]"
-                aria-label="Open navigation menu"
-              >
-                <span className="text-[1.35rem] leading-none">☰</span>
-              </Button>
-            </div>
-
+              <div className={`fixed left-4 ${mobileFloatingTopClass} z-[80]`}>
+                <Button
+                  onClick={() => setMobileNavOpen(true)}
+                  unstyled
+                  className="theme-bg-surface flex h-12 w-12 items-center justify-center rounded-2xl border shadow-[0_18px_36px_rgba(15,27,36,0.22)]"
+                  aria-label="Open navigation menu"
+                >
+                  <span className="text-[1.35rem] leading-none">☰</span>
+                </Button>
+              </div>
             )}
             <AnimatePresence>
               {mobileNavOpen && (
@@ -892,6 +894,7 @@ function App() {
                     </nav>
 
                     <div className="mt-auto space-y-3">
+                      <div className="flex justify-center">{themeToggle}</div>
                       <Button
                         onClick={() => {
                           setMobileNavOpen(false);
@@ -901,7 +904,7 @@ function App() {
                         unstyled
                         className="btn btn-secondary w-full rounded-xl px-4 py-3 text-sm uppercase tracking-[0.08em]"
                       >
-                        {isGuestMode ? 'Exit Guest Mode' : 'Log Out'}
+                        {isGuestMode ? "Exit Guest Mode" : "Log Out"}
                       </Button>
                     </div>
                   </motion.aside>
@@ -909,10 +912,6 @@ function App() {
               )}
             </AnimatePresence>
           </>
-        )}
-        {/* Floating Theme Toggle */}
-        {isDashboardPage && (
-          <div className={`fixed right-4 ${mobileFloatingTopClass} z-[70]`}>{themeToggle}</div>
         )}
         {/* Global Mascot Assistant */}
         {shouldShowGlobalMascot && (
@@ -930,10 +929,6 @@ function App() {
   return (
     // Desktop App Shell
     <div className={`${showDesktopSidebar ? "p-4" : "p-6"} min-h-screen`}>
-      {/* Standalone Theme Toggle (no sidebar layout) */}
-      {!showDesktopSidebar && isDashboardPage && (
-        <div className="fixed right-6 top-6 z-[70]">{themeToggle}</div>
-      )}
       {/* Desktop Layout Wrapper */}
       <div
         className={`mx-auto ${showDesktopSidebar ? "max-w-[1400px] grid grid-cols-[240px,minmax(0,1fr)] gap-4" : "max-w-7xl"}`}
@@ -975,9 +970,7 @@ function App() {
             </nav>
 
             <div className="mt-auto space-y-3">
-              <div className="flex justify-center">
-                {themeToggle}
-              </div>
+              <div className="flex justify-center">{themeToggle}</div>
               <Button
                 onClick={() => {
                   resetAppState();
@@ -986,7 +979,7 @@ function App() {
                 unstyled
                 className="btn btn-secondary w-full rounded-xl px-4 py-3 text-sm uppercase tracking-[0.08em]"
               >
-                {isGuestMode ? 'Exit Guest Mode' : 'Log Out'}
+                {isGuestMode ? "Exit Guest Mode" : "Log Out"}
               </Button>
             </div>
           </aside>
