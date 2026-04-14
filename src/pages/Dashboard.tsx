@@ -777,7 +777,7 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
                                 {node.unlocked
                                   ? isCurrent
                                     ? node.progress > 0
-                                      ? "Continue here"
+                                      ? "Continue"
                                       : "Start now"
                                     : "Unlocked"
                                   : "Locked"}
