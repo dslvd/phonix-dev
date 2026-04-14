@@ -20,6 +20,12 @@ interface NavigationHeaderProps {
   starCount?: number;
 }
 
+interface HeaderUser {
+  name?: string;
+  email?: string;
+  picture?: string;
+}
+
 export default function NavigationHeader({
   onBack,
   onMenu,
@@ -38,6 +44,7 @@ export default function NavigationHeader({
   starCount = 0,
 }: NavigationHeaderProps) {
   const [now, setNow] = useState(() => Date.now());
+  const [headerUser, setHeaderUser] = useState<HeaderUser | null>(null);
 
   const storedStats = (() => {
     if (typeof window === "undefined") {
@@ -72,6 +79,34 @@ export default function NavigationHeader({
     const intervalId = window.setInterval(() => setNow(Date.now()), 60000);
     return () => window.clearInterval(intervalId);
   }, [batteryResetAt, isPremium]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const loadUser = () => {
+      const rawUser = window.localStorage.getItem("user");
+      if (!rawUser) {
+        setHeaderUser(null);
+        return;
+      }
+
+      try {
+        setHeaderUser(JSON.parse(rawUser) as HeaderUser);
+      } catch {
+        setHeaderUser(null);
+      }
+    };
+
+    loadUser();
+    window.addEventListener("storage", loadUser);
+
+    return () => window.removeEventListener("storage", loadUser);
+  }, []);
+
+  const hasLoggedInProfile =
+    !!(headerUser?.email || "").trim() && !!(headerUser?.picture || "").trim();
 
   return (
     <>
@@ -159,11 +194,19 @@ export default function NavigationHeader({
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={onProfile}
-                  className="theme-bg-surface flex h-10 w-10 items-center justify-center rounded-xl border text-lg leading-none transition-colors hover:text-[#2f9de4]"
+                  className="theme-bg-surface flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border text-lg leading-none transition-colors hover:text-[#2f9de4]"
                   title="Profile"
                   aria-label="Open profile"
                 >
-                  👤
+                  {hasLoggedInProfile ? (
+                    <img
+                      src={headerUser?.picture}
+                      alt={(headerUser?.name || "Profile").trim() || "Profile"}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    "👤"
+                  )}
                 </motion.button>
               )}
             </div>

@@ -40,28 +40,16 @@ export default function Premium({ navigate, openMobileNav, premium }: PremiumPro
       gradient: "from-[#7ed6ff] to-[#56b8e8]",
     },
     {
-      icon: "📄",
-      title: "Document Translation",
-      description: "Translate entire documents and text passages",
+      icon: "📷",
+      title: "Unlimited Scan Mode",
+      description: "Scan and translate as much text as you want",
       gradient: "from-[#FF9126] to-[#FF9126]",
     },
     {
-      icon: "🎯",
-      title: "Advanced Progress Tracking",
-      description: "Detailed analytics and learning insights",
+      icon: "📤",
+      title: "Unlimited Upload Files",
+      description: "Upload and translate more files without limits",
       gradient: "from-[#ffb86b] to-[#ff8e6d]",
-    },
-    {
-      icon: "🎨",
-      title: "Custom Themes",
-      description: "Personalize your learning experience",
-      gradient: "from-[#c8a4ff] to-[#8f66db]",
-    },
-    {
-      icon: "👥",
-      title: "Family Sharing",
-      description: "Share premium with up to 5 family members",
-      gradient: "from-[#56b8e8] to-[#2f9de4]",
     },
   ];
 
@@ -128,7 +116,7 @@ export default function Premium({ navigate, openMobileNav, premium }: PremiumPro
               <p className="theme-text-soft mb-2 text-lg font-bold">LIMITED TIME OFFER</p>
 
               <div className="flex justify-center items-end gap-2 mb-4">
-                <span className="theme-text-soft text-2xl opacity-70 line-through">₱299.99</span>
+                <span className="theme-text-soft text-2xl opacity-70 line-through">₱389.00</span>
                 <span className="font-baloo text-6xl font-bold">FREE</span>
               </div>
 
@@ -205,7 +193,7 @@ export default function Premium({ navigate, openMobileNav, premium }: PremiumPro
               },
               {
                 name: "Juan Dela Cruz",
-                quote: "Offline mode is perfect for my daily commute. Worth every cent!",
+                quote: "Unlimited scans and uploads make learning so much smoother. Worth every cent!",
                 avatar: "👨",
                 stars: 5,
               },
@@ -248,10 +236,6 @@ export default function Premium({ navigate, openMobileNav, premium }: PremiumPro
               {
                 q: "What happens to my progress if I cancel?",
                 a: "Your learning progress is always saved. You just lose premium features.",
-              },
-              {
-                q: "Is there a family plan?",
-                a: "Yes! Share premium with up to 5 family members.",
               },
             ].map((faq, index) => (
               <Card key={index} className="bg-white/10 border border-white/20">

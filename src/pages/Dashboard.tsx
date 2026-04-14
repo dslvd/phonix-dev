@@ -727,7 +727,7 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
 
                         <div className={`flex-1 ${isOdd ? "sm:pr-12" : "sm:pl-12"}`}>
                           <div
-                            className={`theme-bg-surface rounded-3xl border p-4 sm:p-5 ${isCurrent ? "ring-2 ring-[#56b8e8]" : ""}`}
+                            className={`theme-bg-surface relative rounded-3xl border p-4 sm:p-5 ${isCurrent ? "ring-2 ring-[#56b8e8]" : ""}`}
                           >
                             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                               <div>
@@ -739,11 +739,22 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
                                   {node.description}
                                 </p>
                               </div>
-                              <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-full border border-[color:var(--border)] text-center sm:h-14 sm:w-14">
+                              <div className="hidden h-12 w-12 shrink-0 flex-col items-center justify-center rounded-full border border-[color:var(--border)] text-center sm:flex sm:h-14 sm:w-14">
                                 <p className="theme-text-soft text-[9px] font-bold uppercase tracking-[0.08em] leading-none">
                                   Level
                                 </p>
                                 <p className="mt-0.5 font-baloo text-[0.95rem] font-bold leading-none sm:text-[1rem]">
+                                  {index + 1}/{roadmapNodes.length}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="absolute right-3 top-3 flex sm:hidden">
+                              <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] text-center shadow-sm">
+                                <p className="theme-text-soft text-[9px] font-bold uppercase tracking-[0.08em] leading-none">
+                                  Level
+                                </p>
+                                <p className="mt-0.5 font-baloo text-[0.95rem] font-bold leading-none">
                                   {index + 1}/{roadmapNodes.length}
                                 </p>
                               </div>
@@ -765,7 +776,9 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
                               >
                                 {node.unlocked
                                   ? isCurrent
-                                    ? "Continue here"
+                                    ? node.progress > 0
+                                      ? "Continue here"
+                                      : "Start now"
                                     : "Unlocked"
                                   : "Locked"}
                               </p>
