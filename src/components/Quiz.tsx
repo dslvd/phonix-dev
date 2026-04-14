@@ -75,6 +75,36 @@ export default function Quiz({
   const [incorrectText, setIncorrectText] = useState("");
   const answerTimeoutRef = useRef<number | null>(null);
 
+  const speakText = (text: string, language: string = "fil-PH") => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = language;
+    utterance.rate = 0.8;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+
+    const voices = window.speechSynthesis.getVoices();
+    const matchingVoice = voices.find((voice) => {
+      const voiceLanguage = voice.lang.toLowerCase();
+      return (
+        voiceLanguage.includes("fil") ||
+        voiceLanguage.includes("tl") ||
+        voiceLanguage.includes("ph")
+      );
+    });
+
+    if (matchingVoice) {
+      utterance.voice = matchingVoice;
+    }
+
+    window.speechSynthesis.speak(utterance);
+  };
+
   const challengeLines = [
     "What is this in Hiligaynon?",
     "Which Hiligaynon word matches this?",
@@ -267,13 +297,13 @@ export default function Quiz({
 
   useEffect(() => {
     // Auto-read the prompt word in the learner's response language each new question.
-    speakText(currentWord.englishWord, nativeLanguage, "en-US");
+    speakText(currentWord.englishWord, nativeLanguage);
   }, [currentWord.id, currentWord.englishWord, nativeLanguage]);
 
   const handleSelect = (word: VocabularyItem) => {
     if (showResult) return; // Prevent multiple selections
 
-    speakText(word.nativeWord, targetLanguage, "fil-PH");
+    speakText(word.nativeWord, targetLanguage);
 
     setSelectedAnswer(word.id);
     setShowResult(true);
