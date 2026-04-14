@@ -337,7 +337,7 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
                 animate={{ opacity: 1, y: 0 }}
                 className="theme-bg-surface mb-5 rounded-2xl border p-5"
               >
-                <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#FAC775]">
+                <p className="text-xs font-bold uppercase tracking-[0.15em] text-[color:var(--text)]">
                   Welcome to Phonix
                 </p>
                 <h2 className="mt-1 font-baloo text-3xl font-bold">
@@ -350,7 +350,7 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
 
                 <div className="mt-4 grid gap-3 sm:grid-cols-3">
                   <div className="theme-bg-surface rounded-xl border p-3">
-                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#FAC775]">
+                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-[color:var(--text)]">
                       1. Play Lessons
                     </p>
                     <p className="theme-text-soft mt-1 text-sm font-semibold">
@@ -358,7 +358,7 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
                     </p>
                   </div>
                   <div className="theme-bg-surface rounded-xl border p-3">
-                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#FAC775]">
+                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-[color:var(--text)]">
                       2. Explore
                     </p>
                     <p className="theme-text-soft mt-1 text-sm font-semibold">
@@ -366,7 +366,7 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
                     </p>
                   </div>
                   <div className="theme-bg-surface rounded-xl border p-3">
-                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#FAC775]">
+                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-[color:var(--text)]">
                       3. Keep Streak
                     </p>
                     <p className="theme-text-soft mt-1 text-sm font-semibold">
@@ -442,7 +442,7 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
               {/* Roadmap Header */}
               <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#FAC775]">
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-[color:var(--text)]">
                     Roadmap
                   </p>
                   <h3 className="mt-1 font-baloo text-4xl font-bold">Your learning route</h3>
