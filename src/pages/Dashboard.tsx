@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import Button from "../components/Button";
 import { Page, AppState, UpdateStateFn } from "../App";
@@ -57,6 +57,8 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
       currentStreak: number;
     }>
   >([]);
+  const [mobileStatsOpen, setMobileStatsOpen] = useState(false);
+  const [mobileLeaderboardOpen, setMobileLeaderboardOpen] = useState(false);
 
   const defaultLevelDescriptions: Record<"Beginner" | "Intermediate" | "Advanced", string> = {
     Beginner: "Core everyday words and pronunciation foundations.",
@@ -321,9 +323,244 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
     navigate(node.page);
   };
 
+  const renderStatsPanel = (compact = false) => (
+    <div className="theme-bg-surface rounded-2xl border p-3 sm:p-4">
+      <div className={`rounded-2xl border-b-4 bg-[color:var(--primary)] ${compact ? "p-3" : "p-4"}`}>
+        <p className="text-xs font-bold uppercase tracking-[0.15em]">Now learning</p>
+        <h3 className={`mt-1 font-baloo font-bold ${compact ? "text-[2.15rem] leading-none" : "text-4xl"}`}>
+          {appState.targetLanguage || "Hiligaynon"}
+        </h3>
+        <p className={`${compact ? "mt-1 text-xs" : "text-sm"} font-bold`}>Ready to practice</p>
+      </div>
+
+      <div className={`mt-3 ${compact ? "grid grid-cols-2 gap-2" : "space-y-2.5"}`}>
+        <div className="theme-bg-surface rounded-xl border p-3">
+          <p className="theme-text-soft text-[11px] font-bold uppercase tracking-[0.12em]">
+            Words learned
+          </p>
+          <p className={`mt-1 font-baloo font-bold ${compact ? "text-3xl" : "text-4xl"}`}>
+            {appState.learnedWords.length}
+          </p>
+        </div>
+
+        <div className="theme-bg-surface rounded-xl border p-3">
+          <p className="theme-text-soft text-[11px] font-bold uppercase tracking-[0.12em]">
+            Stars earned
+          </p>
+          <p className={`mt-1 font-baloo font-bold text-[#ffd166] ${compact ? "text-3xl" : "text-4xl"}`}>
+            {appState.stars}
+          </p>
+        </div>
+
+        <div className="theme-bg-surface rounded-xl border p-3">
+          <p className="theme-text-soft text-[11px] font-bold uppercase tracking-[0.12em]">
+            Batteries
+          </p>
+          <p className={`mt-1 font-baloo leading-none font-bold text-[#ffb86b] ${compact ? "text-[1.4rem]" : "text-[1.85rem]"}`}>
+            {premium.isPremium
+              ? "∞ Unlimited Batteries"
+              : appState.batteryResetAt
+                ? `${appState.batteriesRemaining} / ${BATTERY_MAX} · ${formatBatteryCountdown(appState.batteryResetAt)}`
+                : `${appState.batteriesRemaining} / ${BATTERY_MAX} batteries`}
+          </p>
+        </div>
+
+        <div className="theme-bg-surface rounded-xl border p-3">
+          <p className="theme-text-soft text-[11px] font-bold uppercase tracking-[0.12em]">Streak</p>
+          <p className={`mt-1 font-baloo leading-none font-bold text-[#ff8e6d] ${compact ? "text-[1.4rem]" : "text-[1.85rem]"}`}>
+            🔥 {appState.currentStreak} {appState.currentStreak === 1 ? "day" : "days"}
+          </p>
+          <p className="theme-text-soft mt-1 text-xs font-semibold">
+            Best: {appState.longestStreak} {appState.longestStreak === 1 ? "day" : "days"}
+          </p>
+        </div>
+
+        <div className={`theme-bg-surface rounded-xl border p-3 ${compact ? "col-span-2" : ""}`}>
+          <p className="theme-text-soft text-[11px] font-bold uppercase tracking-[0.12em]">XP</p>
+          <p className={`mt-1 font-baloo font-bold text-[#7ed6ff] ${compact ? "text-3xl" : "text-4xl"}`}>
+            {appState.totalXP}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderLeaderboardPanel = (compact = false) => {
+    const visibleEntries = compact ? leaderboardEntries.slice(0, 5) : leaderboardEntries;
+
+    return (
+      <div className="theme-bg-surface rounded-2xl border p-4">
+        <h3 className={`${compact ? "text-lg" : "text-xl"} font-bold`}>Leaderboard</h3>
+        {visibleEntries.length === 0 ? (
+          <p className="theme-text-soft mt-2 text-sm font-semibold">
+            Keep learning. Your rank appears after progress sync.
+          </p>
+        ) : (
+          <div className="mt-3 space-y-2">
+            {visibleEntries.map((entry) => {
+              const isCurrentUser =
+                typeof window !== "undefined" &&
+                (window.localStorage.getItem("user") || "")
+                  .toLowerCase()
+                  .includes(entry.userKey.toLowerCase());
+              const leaderboardName = (
+                entry.displayName ||
+                entry.userKey.split("@")[0] ||
+                "Player"
+              ).trim();
+
+              return (
+                <div
+                  key={`${entry.userKey}-${entry.rank}`}
+                  className={`theme-bg-surface flex items-center justify-between rounded-xl border px-3 py-2 ${
+                    isCurrentUser ? "border-[#56b8e8]" : ""
+                  }`}
+                >
+                  <div className="min-w-0">
+                    <p className={`${compact ? "text-xs" : "text-sm"} truncate font-bold`}>
+                      #{entry.rank} {leaderboardName}
+                    </p>
+                    <p className="theme-text-soft text-xs font-semibold">
+                      {entry.learnedWords} words • {entry.stars} stars • 🔥 {entry.currentStreak}
+                    </p>
+                  </div>
+                  <p className={`${compact ? "text-xl" : "text-2xl"} font-baloo font-bold text-[#7ed6ff]`}>
+                    {entry.totalXP}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {!compact && (
+          <Button
+            onClick={() => navigate("instructions")}
+            unstyled
+            className="theme-bg-surface mt-3 w-full rounded-xl border px-3 py-2 text-sm font-bold uppercase tracking-[0.08em]"
+          >
+            How It Works
+          </Button>
+        )}
+      </div>
+    );
+  };
+
   return (
     // Dashboard Page Container
     <div className="min-h-screen px-4 py-5 lg:px-6">
+      {!isGuestMode && (
+        <div className="fixed right-4 top-3 z-[75] flex flex-col items-end gap-2 lg:hidden">
+          <AnimatePresence initial={false}>
+            {mobileStatsOpen ? (
+              <>
+                <motion.button
+                  key="mobile-stats-backdrop"
+                  type="button"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.18 }}
+                  onClick={() => setMobileStatsOpen(false)}
+                  className="fixed inset-0 z-[74] bg-transparent"
+                  aria-label="Close learning stats"
+                />
+                <motion.div
+                  key="mobile-stats-panel"
+                  initial={{ opacity: 0, y: -10, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.96 }}
+                  transition={{ duration: 0.18 }}
+                  className="relative z-[75] w-[min(19rem,calc(100vw-1rem))]"
+                >
+                <div className="overflow-hidden rounded-[28px] shadow-[0_24px_48px_rgba(15,27,36,0.28)]">
+                  <div className="relative p-3">
+                    <Button
+                      type="button"
+                      onClick={() => setMobileStatsOpen(false)}
+                      unstyled
+                      className="theme-bg-surface absolute right-3 top-3 z-[1] flex h-10 w-10 items-center justify-center rounded-full border text-lg font-bold"
+                      aria-label="Collapse learning stats"
+                    >
+                      x
+                    </Button>
+                    {renderStatsPanel(true)}
+                  </div>
+                </div>
+                </motion.div>
+              </>
+            ) : (
+              !mobileLeaderboardOpen && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileLeaderboardOpen(false);
+                    setMobileStatsOpen(true);
+                  }}
+                  className="theme-bg-surface flex h-12 w-12 items-center justify-center rounded-full border shadow-[0_20px_32px_rgba(15,27,36,0.22)]"
+                  aria-label="Open learning stats"
+                >
+                  <span className="text-[1.5rem] leading-none">📊</span>
+                </button>
+              )
+            )}
+          </AnimatePresence>
+          <AnimatePresence initial={false}>
+            {mobileLeaderboardOpen ? (
+              <>
+                <motion.button
+                  key="mobile-leaderboard-backdrop"
+                  type="button"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.18 }}
+                  onClick={() => setMobileLeaderboardOpen(false)}
+                  className="fixed inset-0 z-[74] bg-transparent"
+                  aria-label="Close leaderboard"
+                />
+                <motion.div
+                  key="mobile-leaderboard-panel"
+                  initial={{ opacity: 0, y: -10, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.96 }}
+                  transition={{ duration: 0.18 }}
+                  className="relative z-[75] w-[min(19rem,calc(100vw-1rem))]"
+                >
+                  <div className="overflow-hidden rounded-[28px] shadow-[0_24px_48px_rgba(15,27,36,0.28)]">
+                    <div className="relative p-3">
+                      <Button
+                        type="button"
+                        onClick={() => setMobileLeaderboardOpen(false)}
+                        unstyled
+                        className="theme-bg-surface absolute right-3 top-3 z-[1] flex h-10 w-10 items-center justify-center rounded-full border text-lg font-bold"
+                        aria-label="Collapse leaderboard"
+                      >
+                        x
+                      </Button>
+                      {renderLeaderboardPanel(true)}
+                    </div>
+                  </div>
+                </motion.div>
+              </>
+            ) : (
+              !mobileStatsOpen && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileStatsOpen(false);
+                    setMobileLeaderboardOpen(true);
+                  }}
+                  className="theme-bg-surface flex h-12 w-12 items-center justify-center rounded-full border shadow-[0_20px_32px_rgba(15,27,36,0.22)]"
+                  aria-label="Open leaderboard"
+                >
+                  <span className="text-[1.5rem] leading-none">🏆</span>
+                </button>
+              )
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+
       {/* Dashboard Content Wrapper */}
       <div className="mx-auto max-w-6xl">
         {/* Main Grid: Primary Content + Optional Right Rail */}
@@ -548,7 +785,7 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
             <aside className="space-y-4">
               {/* Leaderboard Card */}
               {!isGuestMode && (
-                <div className="theme-bg-surface rounded-2xl border p-4">
+                <div className="theme-bg-surface hidden rounded-2xl border p-4 lg:block">
                   <h3 className="text-xl font-bold">Leaderboard</h3>
                   {leaderboardEntries.length === 0 ? (
                     <p className="theme-text-soft mt-2 text-sm font-semibold">
@@ -604,70 +841,7 @@ export default function Dashboard({ navigate, appState, updateState, premium }: 
 
               {/* Current Learning Stats Card */}
               {!isGuestMode && (
-                <div className="theme-bg-surface rounded-2xl border p-4">
-                  <div className="rounded-2xl border-b-4 bg-[color:var(--primary)] p-4">
-                    <p className="text-xs font-bold uppercase tracking-[0.15em]">Now learning</p>
-                    <h3 className="mt-1 font-baloo text-4xl font-bold">
-                      {appState.targetLanguage || "Hiligaynon"}
-                    </h3>
-                    <p className="text-sm font-bold">Ready to practice</p>
-                  </div>
-
-                  <div className="mt-3 space-y-2.5">
-                    <div className="theme-bg-surface rounded-xl border p-3">
-                      <p className="theme-text-soft text-xs font-bold uppercase tracking-[0.12em]">
-                        Words learned
-                      </p>
-                      <p className="mt-1 font-baloo text-4xl font-bold">
-                        {appState.learnedWords.length}
-                      </p>
-                    </div>
-
-                    <div className="theme-bg-surface rounded-xl border p-3">
-                      <p className="theme-text-soft text-xs font-bold uppercase tracking-[0.12em]">
-                        Stars earned
-                      </p>
-                      <p className="mt-1 font-baloo text-4xl font-bold text-[#ffd166]">
-                        {appState.stars}
-                      </p>
-                    </div>
-
-                    <div className="theme-bg-surface rounded-xl border p-3">
-                      <p className="theme-text-soft text-xs font-bold uppercase tracking-[0.12em]">
-                        Batteries
-                      </p>
-                      <p className="mt-1 font-baloo text-[1.85rem] leading-none font-bold text-[#ffb86b]">
-                        {premium.isPremium
-                          ? "∞ Unlimited Batteries"
-                          : appState.batteryResetAt
-                            ? `${appState.batteriesRemaining} / ${BATTERY_MAX} · ${formatBatteryCountdown(appState.batteryResetAt)}`
-                            : `${appState.batteriesRemaining} / ${BATTERY_MAX} batteries`}
-                      </p>
-                    </div>
-
-                    <div className="theme-bg-surface rounded-xl border p-3">
-                      <p className="theme-text-soft text-xs font-bold uppercase tracking-[0.12em]">
-                        Streak
-                      </p>
-                      <p className="mt-1 font-baloo text-[1.85rem] leading-none font-bold text-[#ff8e6d]">
-                        🔥 {appState.currentStreak} {appState.currentStreak === 1 ? "day" : "days"}
-                      </p>
-                      <p className="theme-text-soft mt-1 text-xs font-semibold">
-                        Best: {appState.longestStreak}{" "}
-                        {appState.longestStreak === 1 ? "day" : "days"}
-                      </p>
-                    </div>
-
-                    <div className="theme-bg-surface rounded-xl border p-3">
-                      <p className="theme-text-soft text-xs font-bold uppercase tracking-[0.12em]">
-                        XP
-                      </p>
-                      <p className="mt-1 font-baloo text-4xl font-bold text-[#7ed6ff]">
-                        {appState.totalXP}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                <div className="hidden lg:block">{renderStatsPanel()}</div>
               )}
 
               {/* Guest Save Progress Card */}
