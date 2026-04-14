@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import Button from './Button';
 
 interface EnergyBarProps {
   current: number;
@@ -47,12 +48,13 @@ export default function EnergyBar({ current, max, isPremium, onUpgrade }: Energy
         </div>
         
         {!isPremium && (
-          <button
+          <Button
             onClick={onUpgrade}
+            unstyled
             className="text-xs font-bold text-[#FF9126] hover:text-[#ffb35a] underline"
           >
             Upgrade →
-          </button>
+          </Button>
         )}
       </div>
 

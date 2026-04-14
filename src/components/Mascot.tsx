@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import Button from "./Button";
 import {
   AIChatTurn,
   AIRequestError,
@@ -222,14 +223,15 @@ export default function Mascot({
                   <p className="font-baloo text-lg font-bold">{uiText.title}</p>
                   <p className="theme-text-soft text-xs font-semibold">{uiText.subtitle}</p>
                 </div>
-                <button
+                <Button
                   type="button"
                   onClick={() => setIsOpen(false)}
+                  unstyled
                   className="theme-bg-surface flex h-9 w-9 items-center justify-center rounded-full border text-lg font-bold transition"
                   aria-label="Close AI assistant"
                 >
                   x
-                </button>
+                </Button>
               </div>
 
               <div className="theme-bg-surface max-h-80 space-y-3 overflow-y-auto px-4 py-4">
@@ -281,14 +283,15 @@ export default function Mascot({
                     disabled={isGuestMode}
                     className="theme-bg-surface max-h-28 min-h-[44px] flex-1 resize-none rounded-2xl border px-4 py-3 text-sm font-semibold outline-none transition focus:border-[#FF9126]"
                   />
-                  <button
+                  <Button
                     type="button"
                     onClick={handleAsk}
                     disabled={isGuestMode || loading || !query.trim()}
+                    unstyled
                     className="rounded-2xl border-b-4 border-[#FF9126] bg-[#FF9126] px-4 py-3 text-sm font-bold text-[#4a2a00] shadow-lg transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {uiText.send}
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -306,14 +309,15 @@ export default function Mascot({
               transition={{ delay: 0.2 }}
               className="theme-bg-surface absolute bottom-full right-0 mb-3 w-[12.25rem] rounded-[20px] border px-3.5 pb-2.5 pt-2.5 text-left text-xs font-bold leading-relaxed shadow-[0_18px_35px_rgba(15,27,36,0.24)] md:w-[13.5rem]"
             >
-              <button
+              <Button
                 type="button"
                 onClick={() => setShowBubble(false)}
+                unstyled
                 className="theme-bg-surface absolute right-2.5 top-2.5 flex h-5 w-5 items-center justify-center rounded-full border text-[10px] font-bold leading-none text-[color:var(--text)]/70 shadow-sm transition hover:border-[color:var(--primary)] hover:text-[color:var(--text)]"
                 aria-label="Dismiss mascot message"
               >
                 x
-              </button>
+              </Button>
               <span className="block pr-6 md:pr-1 whitespace-normal break-words">
                 {cleanAssistantText(message)}
               </span>

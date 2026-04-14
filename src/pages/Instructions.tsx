@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import Button from "../components/Button";
 import NavigationHeader from "../components/NavigationHeader";
 import { AppState, Page } from "../App";
 
@@ -152,19 +153,21 @@ export default function Instructions({ navigate, openMobileNav, appState }: Inst
 
         {/* Bottom Action Buttons */}
         <div className="mt-6 flex flex-wrap gap-3 pb-6">
-          <button
+          <Button
             onClick={() => navigate("dashboard")}
+            unstyled
             className="rounded-xl border-b-4 border-[#FF9126] bg-[#FF9126] px-5 py-3 text-sm font-bold uppercase tracking-[0.08em]"
           >
             Back to Dashboard
-          </button>
+          </Button>
           {isGuestMode && (
-            <button
+            <Button
               onClick={() => navigate("landing")}
+              unstyled
               className="rounded-xl border border-[#2a4151] bg-[#56b8e8] px-5 py-3 text-sm font-bold uppercase tracking-[0.08em]"
             >
               Create Account
-            </button>
+            </Button>
           )}
         </div>
       </div>
