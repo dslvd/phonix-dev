@@ -75,6 +75,79 @@ export default function Quiz({
   const [incorrectText, setIncorrectText] = useState("");
   const answerTimeoutRef = useRef<number | null>(null);
 
+  const getSpeechLang = (language: string, fallback: string) => {
+    const value = (language || "").trim().toLowerCase();
+    if (!value) {
+      return fallback;
+    }
+
+    if (value.includes("hiligaynon") || value.includes("filipino") || value.includes("tagalog")) {
+      return "fil-PH";
+    }
+
+    if (value.includes("english")) {
+      return "en-US";
+    }
+
+    return fallback;
+  };
+
+  const pickVoiceForLang = (voices: SpeechSynthesisVoice[], langCode: string) => {
+    const lowerLang = langCode.toLowerCase();
+
+    if (lowerLang.startsWith("fil")) {
+      return (
+        voices.find((voice) => {
+          const voiceLang = voice.lang.toLowerCase();
+          return (
+            voiceLang.startsWith("fil") ||
+            voiceLang.startsWith("tl") ||
+            voiceLang.includes("ph")
+          );
+        }) || null
+      );
+    }
+
+    if (lowerLang.startsWith("en")) {
+      return voices.find((voice) => voice.lang.toLowerCase().startsWith("en")) || null;
+    }
+
+    return voices.find((voice) => voice.lang.toLowerCase().startsWith(lowerLang.split("-")[0])) || null;
+  };
+
+  const speakText = (text: string, language: string, fallbackLang: string) => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window) || !text.trim()) {
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text.trim());
+    utterance.lang = getSpeechLang(language, fallbackLang);
+    utterance.rate = 0.9;
+    utterance.pitch = 0.9;
+    utterance.volume = 1;
+
+    const speakWithVoice = () => {
+      const voices = window.speechSynthesis.getVoices();
+      const preferred = pickVoiceForLang(voices, utterance.lang);
+      const englishFallback = voices.find((voice) => voice.lang.toLowerCase().startsWith("en")) || null;
+      utterance.voice = preferred || englishFallback || voices[0] || null;
+      window.speechSynthesis.speak(utterance);
+    };
+
+    const availableVoices = window.speechSynthesis.getVoices();
+    if (availableVoices.length === 0) {
+      window.speechSynthesis.onvoiceschanged = () => {
+        window.speechSynthesis.onvoiceschanged = null;
+        speakWithVoice();
+      };
+      return;
+    }
+
+    speakWithVoice();
+  };
+
   const challengeLines = [
     "What is this in Hiligaynon?",
     "Which Hiligaynon word matches this?",
@@ -265,13 +338,20 @@ export default function Quiz({
     levelStage,
   ]);
 
-  const handleSelect = (wordId: string) => {
+  useEffect(() => {
+    // Auto-read the prompt word in the learner's response language each new question.
+    speakText(currentWord.englishWord, nativeLanguage, "en-US");
+  }, [currentWord.id, currentWord.englishWord, nativeLanguage]);
+
+  const handleSelect = (word: VocabularyItem) => {
     if (showResult) return; // Prevent multiple selections
 
-    setSelectedAnswer(wordId);
+    speakText(word.nativeWord, targetLanguage, "fil-PH");
+
+    setSelectedAnswer(word.id);
     setShowResult(true);
 
-    const isCorrect = wordId === currentWord.id;
+    const isCorrect = word.id === currentWord.id;
 
     // Delay to show result before moving to next
     if (answerTimeoutRef.current !== null) {
@@ -302,36 +382,36 @@ export default function Quiz({
 
   return (
     // Quiz Component Container
-    <div className="space-y-8">
+    <div className="flex h-full min-h-0 flex-col justify-start gap-4 sm:gap-8">
       {/* Challenge Header */}
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         className="text-center"
       >
-        <div className="inline-block px-6 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full mb-4 shadow-lg">
-          <span className="font-baloo font-bold text-lg flex items-center gap-2 leading-none">
+        <div className="mb-3 inline-block rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 px-4 py-1.5 shadow-lg sm:mb-4 sm:px-6 sm:py-2">
+          <span className="flex items-center gap-2 font-baloo text-base font-bold leading-none sm:text-lg">
             <span className="text-2xl leading-none flex items-center justify-center">🎯</span>
             Quiz Challenge!
           </span>
         </div>
-        <h3 className="mb-2 font-baloo text-2xl font-bold">{challengeText}</h3>
+        <h3 className="mb-1 font-baloo text-xl font-bold sm:mb-2 sm:text-2xl">{challengeText}</h3>
       </motion.div>
 
       {/* Word Display */}
-      <Card className="theme-bg-surface border-2 border-[color:var(--border)] text-center py-12">
+      <Card className="theme-bg-surface flex min-h-[17rem] flex-col justify-center border-2 border-[color:var(--border)] py-7 text-center sm:min-h-0 sm:py-12">
         <motion.div
           animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
           transition={{ duration: 2, repeat: Infinity }}
-          className="text-[120px] mb-4 leading-none flex items-center justify-center"
+          className="mb-3 flex items-center justify-center text-[102px] leading-none sm:mb-4 sm:text-[120px]"
         >
           {currentWord.emoji}
         </motion.div>
-        <h2 className="font-baloo text-4xl font-bold">{currentWord.englishWord}</h2>
+        <h2 className="font-baloo text-3xl font-bold sm:text-4xl">{currentWord.englishWord}</h2>
       </Card>
 
       {/* Multiple Choice Options */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-1 md:grid-cols-2 md:gap-4">
         <AnimatePresence mode="wait">
           {options.map((word, index) => (
             // Quiz Answer Option
@@ -340,19 +420,19 @@ export default function Quiz({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              onClick={() => handleSelect(word.id)}
+              onClick={() => handleSelect(word)}
               disabled={showResult}
-              className={`${getButtonStyle(word)} rounded-2xl p-6 transition-all duration-300 disabled:cursor-not-allowed`}
+              className={`${getButtonStyle(word)} min-h-[4.5rem] rounded-2xl p-3 transition-all duration-300 disabled:cursor-not-allowed sm:min-h-0 sm:p-6`}
             >
-              <div className="flex items-center gap-4">
+              <div className="flex min-h-full items-center gap-2 sm:gap-4">
                 <div className="text-left flex-1">
-                  <p className="font-baloo text-2xl font-bold">{word.nativeWord}</p>
+                  <p className="font-baloo text-lg font-bold sm:text-2xl">{word.nativeWord}</p>
                 </div>
                 {showResult && word.id === currentWord.id && (
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="text-3xl leading-none flex items-center justify-center"
+                    className="flex items-center justify-center text-2xl leading-none sm:text-3xl"
                   >
                     ✅
                   </motion.div>
@@ -361,7 +441,7 @@ export default function Quiz({
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="text-3xl leading-none flex items-center justify-center"
+                    className="flex items-center justify-center text-2xl leading-none sm:text-3xl"
                   >
                     ❌
                   </motion.div>
@@ -383,18 +463,18 @@ export default function Quiz({
             className="text-center"
           >
             {selectedAnswer === currentWord.id ? (
-              <Card className="theme-bg-surface border-2 py-6">
-                <div className="text-6xl mb-2 leading-none flex items-center justify-center">
+              <Card className="theme-bg-surface border-2 py-4 sm:py-6">
+                <div className="mb-2 flex items-center justify-center text-5xl leading-none sm:text-6xl">
                   🎉
                 </div>
-                <p className="font-baloo text-2xl font-bold">{correctText}</p>
+                <p className="font-baloo text-xl font-bold sm:text-2xl">{correctText}</p>
               </Card>
             ) : (
-              <Card className="border-2 border-red-400 bg-gradient-to-r from-red-100 to-rose-100 py-6">
-                <div className="text-6xl mb-2 leading-none flex items-center justify-center">
+              <Card className="border-2 border-red-400 bg-gradient-to-r from-red-100 to-rose-100 py-4 sm:py-6">
+                <div className="mb-2 flex items-center justify-center text-5xl leading-none sm:text-6xl">
                   💪
                 </div>
-                <p className="font-baloo text-2xl font-bold text-red-700">{incorrectText}</p>
+                <p className="font-baloo text-xl font-bold text-red-700 sm:text-2xl">{incorrectText}</p>
               </Card>
             )}
           </motion.div>
