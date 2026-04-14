@@ -37,7 +37,7 @@ const normalizeComparableText = (value: string) =>
 const VOCAB_LEVEL_CHECKPOINTS = [
   {
     id: "warm-up-1",
-    target: 6,
+    target: 3,
     title: "Warm Up 1 Complete!",
     message: "Great work. You cleared Warm Up 1 and unlocked Word Builder 2.",
     cta: "Start Word Builder 2",
@@ -45,7 +45,7 @@ const VOCAB_LEVEL_CHECKPOINTS = [
   },
   {
     id: "word-builder-2",
-    target: 12,
+    target: 6,
     title: "Word Builder 2 Complete!",
     message: "Nice progress. You are ready for the next vocabulary challenge.",
     cta: "Continue to Level 3",
@@ -53,7 +53,7 @@ const VOCAB_LEVEL_CHECKPOINTS = [
   },
   {
     id: "phrase-builder-3",
-    target: 18,
+    target: 9,
     title: "Level 3 Complete!",
     message: "Phase 2 is unlocked. You can jump into Sentence Practice now.",
     cta: "Keep Vocabulary Practice",
