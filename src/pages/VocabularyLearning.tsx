@@ -401,6 +401,13 @@ export default function VocabularyLearning({
   const hasAIVocabulary = aiVocabulary.length > 0;
   const displayedItem = aiFlashcardItem || currentItem;
   const currentItemLearned = appState.learnedWords.includes(currentItem.id);
+  const projectedLearnedInCurrentCycle = currentItemLearned
+    ? learnedInCurrentCycle
+    : Math.min(VOCABULARY_PACK_WORD_COUNT, learnedInCurrentCycle + 1);
+  const hasFinishedAllFlashcards = projectedLearnedInCurrentCycle >= VOCABULARY_PACK_WORD_COUNT;
+  const nextUndiscoveredIndex = aiVocabulary.findIndex(
+    (item) => !appState.learnedWords.includes(item.id) && item.id !== currentItem.id,
+  );
   const nextIndex = appState.currentVocabIndex + 1;
   const nextItem = nextIndex < aiVocabulary.length ? aiVocabulary[nextIndex] : null;
   const nextItemLearned = nextItem ? appState.learnedWords.includes(nextItem.id) : false;
@@ -1455,8 +1462,9 @@ export default function VocabularyLearning({
             <div className="mb-4 flex items-center justify-center text-7xl leading-none">🎉</div>
             <h3 className="font-baloo text-3xl font-bold text-gray-800">Level Complete!</h3>
             <p className="mt-3 text-gray-600 font-semibold">
-              Nice work. You finished all the flashcards. You can review the words you learned in
-              your Backpack, or proceed to sentence learning.
+              {hasFinishedAllFlashcards
+                ? "Nice work. You finished all the flashcards. You can review the words you learned in your Backpack, or proceed to sentence learning."
+                : "Nice work. You finished this level pack. You can review the words you learned in your Backpack, continue learning vocabulary, or proceed to sentence learning."}
             </p>
             <div className="mt-6 flex flex-col gap-3">
               <button
@@ -1468,6 +1476,22 @@ export default function VocabularyLearning({
               >
                 See Backpack
               </button>
+              {!hasFinishedAllFlashcards && (
+                <button
+                  onClick={() => {
+                    setShowLevelCompleteModal(false);
+                    clearQuizState();
+                    clearReviewState();
+                    setConsecutiveWords(0);
+                    updateState({
+                      currentVocabIndex: nextUndiscoveredIndex >= 0 ? nextUndiscoveredIndex : 0,
+                    });
+                  }}
+                  className="flex-1 rounded-2xl bg-gray-100 px-6 py-4 font-bold text-gray-700"
+                >
+                  Continue Learning
+                </button>
+              )}
               <button
                 onClick={() => {
                   setShowLevelCompleteModal(false);
