@@ -119,7 +119,7 @@ export default function Landing({ navigate, resetAppState }: LandingProps) {
             </div>
           </div>
           <p className="text-sm font-semibold text-[#8bb1c7]">
-            Learn Filipino languages the fun way
+            Learn Hiligaynon the fun way
           </p>
         </div>
 

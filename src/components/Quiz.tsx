@@ -81,7 +81,7 @@ export default function Quiz({
       return fallback;
     }
 
-    if (value.includes("hiligaynon") || value.includes("filipino") || value.includes("tagalog")) {
+    if (value.includes("hiligaynon")) {
       return "fil-PH";
     }
 

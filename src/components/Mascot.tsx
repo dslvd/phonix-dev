@@ -38,7 +38,6 @@ export default function Mascot({
   containerClassName = "",
 }: MascotProps) {
   const AUTO_HIDE_MESSAGE_MS = 3000;
-  const isFilipino = responseLanguage.trim().toLowerCase() === "filipino";
   const isGuestMode = (() => {
     if (typeof window === "undefined") {
       return false;
@@ -83,14 +82,10 @@ export default function Mascot({
   };
   const uiText = {
     title: "Pippin",
-    subtitle: isFilipino
-      ? "Magtanong ng tungkol sa lesson"
-      : "Ask a quick question about the lesson",
-    placeholder: isFilipino
-      ? "Magtanong tungkol sa salita o aralin"
-      : "Ask about a word or lesson...",
-    send: isFilipino ? "Ipadala" : "Send",
-    thinking: isFilipino ? "Nag-iisip..." : "Thinking...",
+    subtitle: "Ask a quick question about the lesson",
+    placeholder: "Ask about a word or lesson...",
+    send: "Send",
+    thinking: "Thinking...",
   };
 
   const panelClasses = useMemo(

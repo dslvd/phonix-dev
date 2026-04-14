@@ -141,7 +141,7 @@ function buildAssistantPrompt(
     .join('\n');
 
   return [
-    'You are Pippin, a warm, concise Filipino language tutor and app guide.',
+    'You are Pippin, a warm, concise Hiligaynon tutor and app guide.',
     `The target language is ${targetLanguage}.`,
     `The learner's preferred response language is ${responseLanguage}.`,
     'Answer naturally, briefly, and clearly.',
@@ -188,39 +188,31 @@ export function findVocabularyMatch(query: string) {
 export function generateFallbackAIAnswer(
   query: string,
   _targetLanguage: string,
-  responseLanguage = 'English',
+  _responseLanguage = 'English',
   pageContext = ''
 ) {
   const normalizedQuery = normalize(query);
   const directMatch = findVocabularyMatch(query);
-  const isFilipino = normalize(responseLanguage) === 'filipino';
   const inQuizMode = normalize(pageContext).includes('quiz mode');
-  const reply = (english: string, filipino: string) => (isFilipino ? filipino : english);
 
   if (inQuizMode) {
-    return reply(
-      'I will only give a clue: look at the picture, compare the choices, and rule out the words that do not match the object or category.',
-      'Clue lang ibibigay ko: tingnan ang larawan, ihambing ang mga pagpipilian, at alisin ang mga salitang hindi tugma sa bagay o kategorya.'
-    );
+    return 'I will only give a clue: look at the picture, compare the choices, and rule out the words that do not match the object or category.';
   }
 
   if (directMatch) {
-    return reply(`You can say "${directMatch.nativeWord}".`, `Pwede mo sabihin ang "${directMatch.nativeWord}".`);
+    return `You can say "${directMatch.nativeWord}".`;
   }
 
   if (normalizedQuery === 'hello' || normalizedQuery === 'hi' || normalizedQuery === 'hey') {
-    return reply(
-      'Hello, I\'m Pippin. In Hiligaynon, you can say "Kamusta."',
-      'Hello, ako si Pippin. Sa Hiligaynon, puwede mong sabihin ang "Kamusta."'
-    );
+    return 'Hello, I\'m Pippin. In Hiligaynon, you can say "Kamusta."';
   }
 
   if (normalizedQuery.includes('how are you')) {
-    return reply('You can say "Kamusta ka?"', 'Puwede mong sabihin ang "Kamusta ka?"');
+    return 'You can say "Kamusta ka?"';
   }
 
   if (normalizedQuery.includes('thank you')) {
-    return reply('You can say "Salamat."', 'Puwede mong sabihin ang "Salamat."');
+    return 'You can say "Salamat."';
   }
 
   const asksAboutBattery =
@@ -250,42 +242,30 @@ export function generateFallbackAIAnswer(
     const hasCountdown = normalizedContext.includes('battery refill timer');
 
     if (hasUnlimited) {
-      return reply(
-        'You already have unlimited batteries with Premium, so you can keep learning anytime.',
-        'May unlimited batteries ka na sa Premium, kaya puwede kang magpatuloy kahit kailan.'
-      );
+      return 'You already have unlimited batteries with Premium, so you can keep learning anytime.';
     }
 
     if (hasCountdown) {
-      return reply(
-        'Yes. Free batteries recharge automatically after a short wait. If you want to keep going right away, open Premium for unlimited batteries.',
-        'Oo. Ang libreng batteries ay kusang nagre-recharge pagkatapos ng kaunting hintay. Kung gusto mong magpatuloy agad, buksan ang Premium para sa unlimited batteries.'
-      );
+      return 'Yes. Free batteries recharge automatically after a short wait. If you want to keep going right away, open Premium for unlimited batteries.';
     }
 
-    return reply(
-      'Yes. Free batteries recharge automatically after a while. If you want more right away, open the Premium page for unlimited batteries.',
-      'Oo. Ang libreng batteries ay kusang nagre-recharge pagkalipas ng ilang oras. Kung gusto mo ng dagdag agad, buksan ang Premium page para sa unlimited batteries.'
-    );
+    return 'Yes. Free batteries recharge automatically after a while. If you want more right away, open the Premium page for unlimited batteries.';
   }
 
   if (normalizedQuery.includes('xp')) {
-    return reply(
-      'XP shows your learning progress in the app.',
-      'Ang XP ay nagpapakita ng progreso mo sa app.'
-    );
+    return 'XP shows your learning progress in the app.';
   }
 
   if (normalizedQuery.includes('what is this')) {
-    return reply('"Ano ini?" is a natural way to ask that.', '"Ano ini?" ang natural na paraan para itanong iyan.');
+    return '"Ano ini?" is a natural way to ask that.';
   }
 
   if (normalizedQuery.includes('hello') || normalizedQuery.includes('greeting')) {
-    return reply('A common greeting is "Kamusta."', 'Karaniwang bati ang "Kamusta."');
+    return 'A common greeting is "Kamusta."';
   }
 
   if (normalizedQuery.includes('count') || normalizedQuery.includes('number')) {
-    return reply('Start with isa, duha, tatlo, apat, lima.', 'Magsimula sa isa, duha, tatlo, apat, lima.');
+    return 'Start with isa, duha, tatlo, apat, lima.';
   }
 
   if (normalizedQuery.includes('animal')) {
@@ -295,7 +275,7 @@ export function generateFallbackAIAnswer(
       .map((item) => `${item.englishWord} = ${item.nativeWord}`)
       .join('\n');
 
-    return reply(`Here are a few animal words:\n${animals}`, `Narito ang ilang salitang hayop:\n${animals}`);
+    return `Here are a few animal words:\n${animals}`;
   }
 
   if (normalizedQuery.includes('food')) {
@@ -305,7 +285,7 @@ export function generateFallbackAIAnswer(
       .map((item) => `${item.englishWord} = ${item.nativeWord}`)
       .join('\n');
 
-    return reply(`Here are a few food words:\n${foods}`, `Narito ang ilang salitang pagkain:\n${foods}`);
+    return `Here are a few food words:\n${foods}`;
   }
 
   const suggestions = vocabularyData
@@ -313,10 +293,7 @@ export function generateFallbackAIAnswer(
     .map((item) => `${item.englishWord} -> ${item.nativeWord}`)
     .join('\n');
 
-  return reply(
-    `Ask about a word, phrase, greeting, or counting.\n\nExamples:\n${suggestions}`,
-    `Magtanong tungkol sa salita, parirala, bati, o pagbibilang.\n\nExamples:\n${suggestions}`
-  );
+  return `Ask about a word, phrase, greeting, or counting.\n\nExamples:\n${suggestions}`;
 }
 
 export function getFallbackScanResult(label: string, targetLanguage: string): FallbackScanResult | null {

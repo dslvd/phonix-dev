@@ -631,42 +631,22 @@ function App() {
     ].join(" ");
   })();
   const globalMascotMessage = (() => {
-    const isFilipino = (appState.nativeLanguage || "").trim().toLowerCase() === "filipino";
-    const vocabularyMessages = isFilipino
-      ? [
-          "Kailangan mo ba ng tulong sa word na ito?",
-          "Pwede kitang tulungan sa kahulugan o bigkas nito.",
-          "Gusto mo bang i-review natin ang salitang ito?",
-          "Sabihin mo lang kung gusto mo ng mas madaling paliwanag.",
-        ]
-      : [
-          "Need help with this word?",
-          "I can help with the meaning or pronunciation.",
-          "Want to review this word together?",
-          "Ask me if you want a simpler explanation.",
-        ];
-    const sentenceMessages = isFilipino
-      ? [
-          "Gusto mo bang ipaliwanag ko ang sentence na ito?",
-          "Pwede kitang tulungan sa kahulugan ng pangungusap na ito.",
-          "Sabihin mo lang kung gusto mong himayin natin ito.",
-        ]
-      : [
-          "Want me to explain this sentence?",
-          "I can help break down what this sentence means.",
-          "Ask me if you want to go through this sentence step by step.",
-        ];
-    const scanMessages = isFilipino
-      ? [
-          "Pwede kitang tulungan sa scan o translation.",
-          "Kung gusto mo, ipapaliwanag ko ang result ng scan.",
-          "Magtanong ka kung gusto mo ng mas malinaw na translation.",
-        ]
-      : [
-          "I can help with scanning or translation.",
-          "If you want, I can explain the scan result.",
-          "Ask me if you want a clearer translation.",
-        ];
+    const vocabularyMessages = [
+      "Need help with this word?",
+      "I can help with the meaning or pronunciation.",
+      "Want to review this word together?",
+      "Ask me if you want a simpler explanation.",
+    ];
+    const sentenceMessages = [
+      "Want me to explain this sentence?",
+      "I can help break down what this sentence means.",
+      "Ask me if you want to go through this sentence step by step.",
+    ];
+    const scanMessages = [
+      "I can help with scanning or translation.",
+      "If you want, I can explain the scan result.",
+      "Ask me if you want a clearer translation.",
+    ];
 
     if (currentPage === "vocabulary") {
       return vocabularyMessages[appState.currentVocabIndex % vocabularyMessages.length];
@@ -681,15 +661,12 @@ function App() {
     }
 
     if (currentPage === "dashboard") {
-      return isFilipino
-        ? "Magtanong ka tungkol sa batteries, XP, streak, o susunod mong lesson."
-        : "Ask me about batteries, XP, streaks, or your next lesson.";
+      return "Ask me about batteries, XP, streaks, or your next lesson.";
     }
 
-    return isFilipino
-      ? "Andito lang ako kung may kailangan ka!"
+    return "I'm right here if you need anything!"; /*
       : "I’m right here if you need anything!";
-  })();
+  */ })();
   const desktopNavItems: Array<{ label: string; icon: string; page: Page }> = [
     { label: "Learn", icon: "🏠", page: "dashboard" },
     { label: "Backpack", icon: "🎒", page: "collection" },

@@ -177,8 +177,8 @@ export default function SentenceLearning({
 
       const utterance = new SpeechSynthesisUtterance(text);
 
-      // Configure for Hiligaynon/Filipino pronunciation
-      utterance.lang = "fil-PH"; // Filipino language code
+      // Use the closest available voice for spoken Hiligaynon audio.
+      utterance.lang = "fil-PH";
       utterance.rate = 0.8;
       utterance.pitch = 0.75;
       utterance.volume = 1.0;
@@ -198,13 +198,13 @@ export default function SentenceLearning({
           );
         });
 
-        const filipinoVoice = voices.find((voice) => {
+        const hiligaynonVoice = voices.find((voice) => {
           const lang = voice.lang.toLowerCase();
           return lang.includes("fil") || lang.includes("tl") || lang.includes("ph");
         });
 
         const englishFallback = voices.find((voice) => voice.lang.toLowerCase().startsWith("en"));
-        utterance.voice = robotVoice || filipinoVoice || englishFallback || voices[0] || null;
+        utterance.voice = robotVoice || hiligaynonVoice || englishFallback || voices[0] || null;
         window.speechSynthesis.speak(utterance);
       };
 
@@ -226,10 +226,7 @@ export default function SentenceLearning({
   };
 
   const responseLanguage = appState.nativeLanguage || "English";
-  const sentenceMascotMessage =
-    responseLanguage.trim().toLowerCase() === "filipino"
-      ? "Pwede akong magbigay ng clue sa pangungusap na ito."
-      : "I can give clues for this sentence.";
+  const sentenceMascotMessage = "I can give clues for this sentence.";
 
   const sentencePageContext = [
     "Current page: sentence practice.",
