@@ -12,7 +12,7 @@ import {
   getFiveStageLevel,
   getVocabularyLevelCycle,
   prefetchAIVocabularyWindow,
-  readCachedAIVocabularyOrPairLatest,
+  readCachedAIVocabulary,
   writeCachedAIVocabulary,
   VOCABULARY_PACK_WORD_COUNT,
 } from "../lib/aiVocabulary";
@@ -73,6 +73,71 @@ const getQuizIntervalForBand = (band: "beginner" | "intermediate" | "advanced") 
   return 5;
 };
 
+const QUIZ_SESSION_STORAGE_KEY = "phonix-vocabulary-quiz-session-v1";
+const CHECKPOINT_STORAGE_KEY = "phonix-vocabulary-shown-checkpoints-v1";
+
+const buildCheckpointKey = (cycle: number, checkpointId: string) => `${cycle}:${checkpointId}`;
+
+const readPersistedCheckpointKeys = () => {
+  if (typeof window === "undefined") {
+    return new Set<string>();
+  }
+
+  const raw = window.localStorage.getItem(CHECKPOINT_STORAGE_KEY);
+  if (!raw) {
+    return new Set<string>();
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as string[];
+    return new Set(Array.isArray(parsed) ? parsed : []);
+  } catch {
+    return new Set<string>();
+  }
+};
+
+const writePersistedCheckpointKeys = (keys: Set<string>) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(CHECKPOINT_STORAGE_KEY, JSON.stringify([...keys]));
+};
+
+interface PersistedQuizSessionState {
+  levelCycle: number;
+  isQuizMode: boolean;
+  isReviewMode: boolean;
+  isPracticeQuizSession: boolean;
+  quizWordId: string | null;
+  quizPoolIds: string[];
+  reviewWordIds: string[];
+  pendingQuizWordId: string | null;
+  wordsBeforeQuiz: number;
+  consecutiveWords: number;
+  quizRound: number;
+  quizMastery: QuizMasteryState;
+  lastQuizWordId: string | null;
+  activeCheckpointId: string | null;
+}
+
+const readPersistedQuizSessionState = (): PersistedQuizSessionState | null => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const raw = window.sessionStorage.getItem(QUIZ_SESSION_STORAGE_KEY);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(raw) as PersistedQuizSessionState;
+  } catch {
+    return null;
+  }
+};
+
 export default function VocabularyLearning({
   navigate,
   openMobileNav,
@@ -122,19 +187,19 @@ export default function VocabularyLearning({
   const [isPracticeQuizSession, setIsPracticeQuizSession] = useState(false);
   const previousLevelCycleRef = useRef(levelCycle);
   const shownCheckpointIdsRef = useRef<Set<string>>(new Set());
+  const pendingQuizSessionRef = useRef<PersistedQuizSessionState | null>(readPersistedQuizSessionState());
+  const hasRestoredQuizSessionRef = useRef(false);
   const [aiVocabulary, setAiVocabulary] = useState<VocabularyItem[]>(() => {
-    return readCachedAIVocabularyOrPairLatest(targetLanguage, nativeLanguage, { levelCycle });
+    return readCachedAIVocabulary(targetLanguage, nativeLanguage, { levelCycle });
   });
   const [aiFlashcardItem, setAiFlashcardItem] = useState<VocabularyItem | null>(null);
 
   useEffect(() => {
     const shouldAllowRefresh = learnedInCurrentCycle === 0;
-    const cached = readCachedAIVocabularyOrPairLatest(targetLanguage, nativeLanguage, {
+    const cached = readCachedAIVocabulary(targetLanguage, nativeLanguage, {
       levelCycle,
     });
-    if (cached.length > 0) {
-      setAiVocabulary(cached);
-    }
+    setAiVocabulary(cached);
 
     if (typeof navigator !== "undefined" && !navigator.onLine) {
       return;
@@ -184,13 +249,101 @@ export default function VocabularyLearning({
     setQuizMastery({});
     setLastQuizWordId(null);
     setQuizSessionKey(0);
+    setIsQuizMode(false);
+    setQuizWord(null);
+    setQuizPoolSnapshot([]);
     setIsPracticeQuizSession(false);
     setIsReviewMode(false);
     setReviewWords([]);
     setPendingQuizWord(null);
+    setConsecutiveWords(0);
     shownCheckpointIdsRef.current = new Set();
     setActiveCheckpointId(null);
+
+    if (typeof window !== "undefined") {
+      window.sessionStorage.removeItem(QUIZ_SESSION_STORAGE_KEY);
+    }
+    pendingQuizSessionRef.current = null;
+    hasRestoredQuizSessionRef.current = true;
   }, [levelCycle, updateState]);
+
+  useEffect(() => {
+    const persistedCheckpointKeys = readPersistedCheckpointKeys();
+    const earnedCheckpointKeys = VOCAB_LEVEL_CHECKPOINTS.filter(
+      (checkpoint) => checkpoint.target <= learnedInCurrentCycle,
+    ).map((checkpoint) => buildCheckpointKey(levelCycle, checkpoint.id));
+
+    const nextCheckpointKeys = new Set([
+      ...persistedCheckpointKeys,
+      ...earnedCheckpointKeys,
+    ]);
+
+    shownCheckpointIdsRef.current = nextCheckpointKeys;
+    writePersistedCheckpointKeys(nextCheckpointKeys);
+  }, [levelCycle, learnedInCurrentCycle]);
+
+  useEffect(() => {
+    if (hasRestoredQuizSessionRef.current) {
+      return;
+    }
+
+    const persisted = pendingQuizSessionRef.current;
+    if (!persisted) {
+      hasRestoredQuizSessionRef.current = true;
+      return;
+    }
+
+    if (persisted.levelCycle !== levelCycle) {
+      if (typeof window !== "undefined") {
+        window.sessionStorage.removeItem(QUIZ_SESSION_STORAGE_KEY);
+      }
+      pendingQuizSessionRef.current = null;
+      hasRestoredQuizSessionRef.current = true;
+      return;
+    }
+
+    if (aiVocabulary.length === 0) {
+      return;
+    }
+
+    const wordsById = new Map(aiVocabulary.map((item) => [item.id, item]));
+    const restoredQuizWord = persisted.quizWordId ? wordsById.get(persisted.quizWordId) || null : null;
+    const restoredPendingQuizWord = persisted.pendingQuizWordId
+      ? wordsById.get(persisted.pendingQuizWordId) || null
+      : null;
+    const restoredQuizPool = persisted.quizPoolIds
+      .map((id) => wordsById.get(id))
+      .filter((item): item is VocabularyItem => !!item);
+    const restoredReviewWords = persisted.reviewWordIds
+      .map((id) => wordsById.get(id))
+      .filter((item): item is VocabularyItem => !!item);
+
+    setWordsBeforeQuiz(persisted.wordsBeforeQuiz);
+    setConsecutiveWords(persisted.consecutiveWords);
+    setQuizRound(persisted.quizRound);
+    setQuizMastery(persisted.quizMastery || {});
+    setLastQuizWordId(persisted.lastQuizWordId);
+    setActiveCheckpointId(persisted.activeCheckpointId);
+    setIsPracticeQuizSession(persisted.isPracticeQuizSession);
+
+    if (persisted.isQuizMode && restoredQuizWord) {
+      setQuizWord(restoredQuizWord);
+      setQuizPoolSnapshot(
+        restoredQuizPool.length > 0 ? restoredQuizPool : buildQuizPoolSnapshot(restoredQuizWord)
+      );
+      setIsQuizMode(true);
+      setQuizSessionKey((previous) => previous + 1);
+    }
+
+    if (persisted.isReviewMode && restoredPendingQuizWord) {
+      setPendingQuizWord(restoredPendingQuizWord);
+      setReviewWords(restoredReviewWords);
+      setIsReviewMode(true);
+    }
+
+    pendingQuizSessionRef.current = null;
+    hasRestoredQuizSessionRef.current = true;
+  }, [aiVocabulary]);
 
   const currentLevelWords = (() => {
     const difficulty =
@@ -488,6 +641,46 @@ export default function VocabularyLearning({
     return [...deduped, focusWord].slice(-Math.max(wordsBeforeQuiz, 3));
   };
 
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const persistedState: PersistedQuizSessionState = {
+      levelCycle,
+      isQuizMode,
+      isReviewMode,
+      isPracticeQuizSession,
+      quizWordId: quizWord?.id || null,
+      quizPoolIds: quizPoolSnapshot.map((item) => item.id),
+      reviewWordIds: reviewWords.map((item) => item.id),
+      pendingQuizWordId: pendingQuizWord?.id || null,
+      wordsBeforeQuiz,
+      consecutiveWords,
+      quizRound,
+      quizMastery,
+      lastQuizWordId,
+      activeCheckpointId,
+    };
+
+    window.sessionStorage.setItem(QUIZ_SESSION_STORAGE_KEY, JSON.stringify(persistedState));
+  }, [
+    isQuizMode,
+    isReviewMode,
+    isPracticeQuizSession,
+    quizWord,
+    quizPoolSnapshot,
+    reviewWords,
+    pendingQuizWord,
+    levelCycle,
+    wordsBeforeQuiz,
+    consecutiveWords,
+    quizRound,
+    quizMastery,
+    lastQuizWordId,
+    activeCheckpointId,
+  ]);
+
   const startQuizSession = (word: VocabularyItem, sourcePoolOverride?: VocabularyItem[]) => {
     clearReviewState();
     setQuizWord(word);
@@ -605,9 +798,12 @@ export default function VocabularyLearning({
       const reachedCheckpoint = VOCAB_LEVEL_CHECKPOINTS.find(
         (checkpoint) => checkpoint.target === nextLearnedCount,
       );
-      const checkpointKey = reachedCheckpoint ? `${levelCycle}:${reachedCheckpoint.id}` : null;
+      const checkpointKey = reachedCheckpoint
+        ? buildCheckpointKey(levelCycle, reachedCheckpoint.id)
+        : null;
       if (reachedCheckpoint && checkpointKey && !shownCheckpointIdsRef.current.has(checkpointKey)) {
         shownCheckpointIdsRef.current.add(checkpointKey);
+        writePersistedCheckpointKeys(shownCheckpointIdsRef.current);
         setActiveCheckpointId(reachedCheckpoint.id);
       }
     } else {
@@ -846,8 +1042,16 @@ export default function VocabularyLearning({
       />
 
       {/* Main Lesson Content */}
-      <div className="flex flex-1 items-center justify-center overflow-hidden px-3 pb-3 pt-2 sm:p-4">
-        <div className="flex h-full w-full max-w-lg flex-col justify-center">
+      <div
+        className={`flex flex-1 overflow-hidden px-3 pb-3 pt-2 sm:p-4 ${
+          isQuizMode ? "items-start justify-center" : "items-center justify-center"
+        }`}
+      >
+        <div
+          className={`flex h-full w-full max-w-lg flex-col ${
+            isQuizMode ? "justify-start" : "justify-center"
+          }`}
+        >
           {/* Entrance Spacer Animation */}
           <motion.div
             initial={{ opacity: 0, y: -12 }}
@@ -948,7 +1152,7 @@ export default function VocabularyLearning({
             </motion.div>
           ) : isQuizMode ? (
             // Quiz Mode
-            <>
+            <div className="flex h-full min-h-0 flex-col justify-start">
               {/* Practice Session Exit Action */}
               {isPracticeQuizSession && (
                 <div className="mb-4 flex justify-end">
@@ -971,7 +1175,7 @@ export default function VocabularyLearning({
                 difficultyBand={currentDifficultyBand}
                 levelStage={levelStage}
               />
-            </>
+            </div>
           ) : (
             // Regular Flashcard Mode
             <>
@@ -1252,8 +1456,8 @@ export default function VocabularyLearning({
             <div className="mb-4 flex items-center justify-center text-7xl leading-none">🎉</div>
             <h3 className="font-baloo text-3xl font-bold text-gray-800">Level Complete!</h3>
             <p className="mt-3 text-gray-600 font-semibold">
-              Nice work. You finished this level pack. Want to review the words you learned? Check
-              your Backpack.
+              Nice work. You finished all the flashcards. You can review the words you learned in
+              your Backpack, or proceed to sentence learning.
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <Button
@@ -1270,7 +1474,7 @@ export default function VocabularyLearning({
                   setShowLevelCompleteModal(false);
                   navigate("sentence");
                 }}
-                className="flex-1 rounded-2xl bg-gray-100 px-6 py-4 font-bold text-gray-700"
+                className="flex-1 rounded-2xl border border-primary bg-white px-6 py-4 font-bold text-gray-700"
               >
                 Continue
               </Button>
@@ -1285,15 +1489,23 @@ export default function VocabularyLearning({
           <div className="max-w-md w-full rounded-3xl border-4 border-primary bg-white p-8 text-center shadow-2xl">
             <div className="mb-4 flex items-center justify-center text-7xl leading-none">🏁</div>
             <h3 className="font-baloo text-3xl font-bold text-gray-800">
-              {activeCheckpoint.title}
+              {activeCheckpoint.unlocksSentencePhase ? "Level Complete!" : activeCheckpoint.title}
             </h3>
-            <p className="mt-3 text-gray-600 font-semibold">{activeCheckpoint.message}</p>
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <p className="mt-3 text-gray-600 font-semibold">
+              {activeCheckpoint.unlocksSentencePhase
+                ? "Nice work. You finished this level pack. You can review the words you learned in your Backpack, continue learning vocabulary, or proceed to sentence learning."
+                : activeCheckpoint.message}
+            </p>
+            <div
+              className={`mt-6 flex flex-col gap-3 ${
+                activeCheckpoint.unlocksSentencePhase ? "" : "sm:flex-row"
+              }`}
+            >
               {activeCheckpoint.unlocksSentencePhase && (
                 <Button
                   onClick={() => {
                     setActiveCheckpointId(null);
-                    navigate("sentence");
+                    navigate("collection");
                   }}
                   className="flex-1 rounded-2xl bg-gradient-to-r from-primary to-secondary px-6 py-4 font-bold text-white shadow-lg"
                 >
