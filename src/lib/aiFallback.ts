@@ -103,34 +103,8 @@ async function callGeminiBrowser(prompt: string, apiKey: string) {
   return text.replace(/\*\*/g, '');
 }
 
-async function callGeminiWithBackup(prompt: string, apiKeys: string[]) {
-  let lastError: unknown = null;
-
-  for (let index = 0; index < apiKeys.length; index += 1) {
-    const apiKey = apiKeys[index];
-
-    try {
-      return await callGeminiBrowser(prompt, apiKey);
-    } catch (error) {
-      lastError = error;
-
-      const shouldTryNextKey =
-        error instanceof AIRequestError &&
-        error.code === 'rate_limited' &&
-        index < apiKeys.length - 1;
-
-      if (shouldTryNextKey) {
-        console.warn('Primary Gemini key is rate-limited, trying backup Gemini key.');
-        continue;
-      }
-
-      throw error;
-    }
-  }
-
-  throw lastError instanceof Error
-    ? lastError
-    : new AIRequestError('all_ai_paths_failed', 'All Gemini browser keys failed.');
+async function callGeminiSingle(prompt: string, apiKey: string) {
+  return callGeminiBrowser(prompt, apiKey);
 }
 
 function buildAssistantPrompt(
@@ -351,16 +325,13 @@ export async function askCloudAI(
   responseLanguage = 'English'
 ) {
   const prompt = buildAssistantPrompt(query, targetLanguage, history, pageContext, responseLanguage);
-  const browserApiKeys = [
-    import.meta.env.VITE_GEMINI_API_KEY,
-    import.meta.env.VITE_GEMINI_API_KEY_BACKUP,
-  ].filter(Boolean) as string[];
+  const browserApiKey = import.meta.env.VITE_GEMINI_API_KEY;
   let browserError: unknown = null;
   let serverError: unknown = null;
 
-  if (browserApiKeys.length > 0) {
+  if (browserApiKey) {
     try {
-      return stripEmoji(await callGeminiWithBackup(prompt, browserApiKeys));
+      return stripEmoji(await callGeminiSingle(prompt, browserApiKey));
     } catch (error) {
       browserError = error;
       console.warn('Gemini browser request failed, trying server AI route.', error);
@@ -381,17 +352,17 @@ export async function askCloudAI(
     serverError instanceof AIRequestError &&
     /No AI provider configured/i.test(serverError.message || '');
 
-  if (browserApiKeys.length === 0 && serverMissingProvider) {
+  if (!browserApiKey && serverMissingProvider) {
     throw new AIRequestError(
       'missing_api_key',
       'Missing AI keys. Configure VITE_GEMINI_API_KEY for browser calls or GEMINI_API_KEY on the server /api/ai runtime.'
     );
   }
 
-  if (browserApiKeys.length === 0 && !serverError) {
+  if (!browserApiKey && !serverError) {
     throw new AIRequestError(
       'missing_api_key',
-      'Missing VITE_GEMINI_API_KEY or VITE_GEMINI_API_KEY_BACKUP.'
+      'Missing VITE_GEMINI_API_KEY.'
     );
   }
 
@@ -424,71 +395,51 @@ export async function analyzeImageWithAI(base64Data: string, targetLanguage: str
     console.warn('Server vision route unavailable, falling back to browser request.', error);
   }
 
-  const apiKeys = [
-    import.meta.env.VITE_GEMINI_API_KEY,
-    import.meta.env.VITE_GEMINI_API_KEY_BACKUP,
-  ].filter(Boolean) as string[];
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
-  if (apiKeys.length === 0) {
+  if (!apiKey) {
     throw new Error('missing-api-key');
   }
-
-  let lastError: unknown = null;
-
-  for (let index = 0; index < apiKeys.length; index += 1) {
-    const apiKey = apiKeys[index];
-
-    const response = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': apiKey,
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                {
-                  text: `Identify the main object in this image in English. Then translate it to ${targetLanguage}. Format exactly: Object: [name] | Translation: [${targetLanguage} word]. Keep it simple and concise. Respond in plain text only. Do not use markdown, bold, or formatting.`,
+  const response = await fetch(
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey,
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: `Identify the main object in this image in English. Then translate it to ${targetLanguage}. Format exactly: Object: [name] | Translation: [${targetLanguage} word]. Keep it simple and concise. Respond in plain text only. Do not use markdown, bold, or formatting.`,
+              },
+              {
+                inline_data: {
+                  mime_type: 'image/jpeg',
+                  data: base64Data,
                 },
-                {
-                  inline_data: {
-                    mime_type: 'image/jpeg',
-                    data: base64Data,
-                  },
-                },
-              ],
-            },
-          ],
-        }),
-      }
-    );
-
-    const data = await response.json().catch(() => null);
-
-    if (!response.ok) {
-      console.error('Gemini vision browser error:', data);
-      lastError = new Error(`request-failed:${response.status}`);
-
-      if (response.status === 429 && index < apiKeys.length - 1) {
-        console.warn('Primary Gemini key is rate-limited for vision, trying backup Gemini key.');
-        continue;
-      }
-
-      throw lastError;
+              },
+            ],
+          },
+        ],
+      }),
     }
+  );
 
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  const data = await response.json().catch(() => null);
 
-    if (!text) {
-      lastError = new Error('no-text-returned');
-      break;
-    }
-
-    return text.replace(/\*\*/g, '');
+  if (!response.ok) {
+    console.error('Gemini vision browser error:', data);
+    throw new Error(`request-failed:${response.status}`);
   }
 
-  throw lastError instanceof Error ? lastError : new Error('all-vision-paths-failed');
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+  if (!text) {
+    throw new Error('no-text-returned');
+  }
+
+  return text.replace(/\*\*/g, '');
 }

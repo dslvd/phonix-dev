@@ -14,6 +14,33 @@ function cleanDetectedText(text: string) {
   return text.replace(/\s+/g, ' ').trim();
 }
 
+function formatScanRouteError(error: unknown) {
+  const rawMessage =
+    error instanceof Error ? error.message : typeof error === 'string' ? error : '';
+  const message = rawMessage.trim();
+  const lowerMessage = message.toLowerCase();
+
+  if (
+    lowerMessage.includes('quota') ||
+    lowerMessage.includes('rate limit') ||
+    lowerMessage.includes('rate-limit') ||
+    lowerMessage.includes('rate limited') ||
+    lowerMessage.includes('429') ||
+    lowerMessage.includes('generativelanguage.googleapis.com')
+  ) {
+    return {
+      status: 429,
+      message:
+        'Translation is temporarily unavailable because the AI service is busy right now. Please try again in a few minutes.',
+    };
+  }
+
+  return {
+    status: 500,
+    message: message || 'Scan failed',
+  };
+}
+
 async function detectTextWithGoogleVision(image: string, apiKey: string) {
   const response = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`, {
     method: 'POST',
@@ -98,42 +125,21 @@ Text: ${text}
   return translatedText;
 }
 
-async function translateWithGeminiFallback(text: string, targetLanguage: string, apiKeys: string[]) {
-  let lastError: unknown = null;
-
-  for (let index = 0; index < apiKeys.length; index += 1) {
-    const apiKey = apiKeys[index];
-
-    try {
-      return await translateWithGemini(text, targetLanguage, apiKey);
-    } catch (error: any) {
-      lastError = error;
-      const message = String(error?.message || '');
-
-      if ((message.includes('429') || message.toLowerCase().includes('quota')) && index < apiKeys.length - 1) {
-        console.warn('Primary Gemini server key is rate-limited, trying backup Gemini server key.');
-        continue;
-      }
-
-      throw error;
-    }
-  }
-
-  throw lastError instanceof Error ? lastError : new Error('gemini-translation-failed');
+async function translateWithGeminiSingle(text: string, targetLanguage: string, apiKey: string) {
+  return translateWithGemini(text, targetLanguage, apiKey);
 }
 
 function getVisionApiKey() {
   return process.env.GOOGLE_VISION_API_KEY || '';
 }
 
-function getGeminiApiKeys() {
-  return [
-    process.env.GEMINI_API_KEY,
-    process.env.GEMINI_API_KEY_BACKUP,
-    process.env.GOOGLE_API_KEY,
-    process.env.VITE_GEMINI_API_KEY,
-    process.env.VITE_GEMINI_API_KEY_BACKUP,
-  ].filter(Boolean) as string[];
+function getGeminiApiKey() {
+  return (
+    process.env.GEMINI_API_KEY ||
+    process.env.GOOGLE_API_KEY ||
+    process.env.VITE_GEMINI_API_KEY ||
+    ''
+  );
 }
 
 export default async function handler(req: any, res: any) {
@@ -146,12 +152,12 @@ export default async function handler(req: any, res: any) {
     const sourceText = typeof req.body?.sourceText === 'string' ? req.body.sourceText : '';
     const targetLanguage = req.body?.targetLanguage || 'Hiligaynon';
 
-    const geminiApiKeys = getGeminiApiKeys();
+    const geminiApiKey = getGeminiApiKey();
     const visionApiKey = getVisionApiKey();
 
-    if (geminiApiKeys.length === 0) {
+    if (!geminiApiKey) {
       return res.status(500).json({
-        error: 'Missing Gemini API key. Add GEMINI_API_KEY or GEMINI_API_KEY_BACKUP.',
+        error: 'Missing Gemini API key. Add GEMINI_API_KEY.',
       });
     }
 
@@ -171,7 +177,7 @@ export default async function handler(req: any, res: any) {
       detectedText = await detectTextWithGoogleVision(image, visionApiKey);
     }
 
-    const translatedText = await translateWithGeminiFallback(detectedText, targetLanguage, geminiApiKeys);
+    const translatedText = await translateWithGeminiSingle(detectedText, targetLanguage, geminiApiKey);
 
     return res.status(200).json({
       detectedText,
@@ -181,8 +187,9 @@ export default async function handler(req: any, res: any) {
     });
   } catch (error: any) {
     console.error('scan-translate error:', error);
-    return res.status(500).json({
-      error: error?.message || 'Scan failed',
+    const formatted = formatScanRouteError(error);
+    return res.status(formatted.status).json({
+      error: formatted.message,
     });
   }
 }

@@ -184,7 +184,7 @@ export const vocabularyData: VocabularyItem[] = [
   },
   {
     id: 'snake',
-    nativeWord: 'Halas',
+    nativeWord: 'Man og',
     englishWord: 'Snake',
     category: 'animals',
     emoji: '🐍',
@@ -263,7 +263,7 @@ export const vocabularyData: VocabularyItem[] = [
   },
   {
     id: 'mango',
-    nativeWord: 'Mangga',
+    nativeWord: 'Paho',
     englishWord: 'Mango',
     category: 'food',
     emoji: '🥭',

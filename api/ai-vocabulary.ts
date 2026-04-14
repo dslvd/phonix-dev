@@ -240,28 +240,8 @@ async function callGemini(prompt: string, apiKey: string) {
   return { text: String(text), provider: 'gemini' };
 }
 
-async function callGeminiWithFallback(prompt: string, apiKeys: string[]) {
-  let lastError: unknown = null;
-
-  for (let index = 0; index < apiKeys.length; index += 1) {
-    const apiKey = apiKeys[index];
-
-    try {
-      const result = await callGemini(prompt, apiKey);
-      return {
-        ...result,
-        provider: index === 0 ? 'gemini' : 'gemini-backup',
-      };
-    } catch (error: any) {
-      lastError = error;
-      const message = String(error?.message || '');
-      if ((message.includes('429') || message.toLowerCase().includes('quota')) && index < apiKeys.length - 1) {
-        continue;
-      }
-    }
-  }
-
-  throw lastError instanceof Error ? lastError : new Error('gemini-failed');
+async function callGeminiSingle(prompt: string, apiKey: string) {
+  return callGemini(prompt, apiKey);
 }
 
 async function callOpenRouter(prompt: string, apiKey: string) {
@@ -321,10 +301,10 @@ async function callGroq(prompt: string, apiKey: string) {
 }
 
 async function generateVocabularyText(prompt: string) {
-  const geminiApiKeys = [process.env.GEMINI_API_KEY, process.env.GEMINI_API_KEY_BACKUP].filter(Boolean) as string[];
+  const geminiApiKey = process.env.GEMINI_API_KEY;
 
   const providers = [
-    geminiApiKeys.length > 0 ? () => callGeminiWithFallback(prompt, geminiApiKeys) : null,
+    geminiApiKey ? () => callGeminiSingle(prompt, geminiApiKey) : null,
     process.env.OPENROUTER_API_KEY
       ? () => callOpenRouter(prompt, process.env.OPENROUTER_API_KEY as string)
       : null,
