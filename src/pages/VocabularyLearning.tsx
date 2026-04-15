@@ -313,6 +313,39 @@ export default function VocabularyLearning({
   }, [quizSessionStorageKey]);
 
   useEffect(() => {
+    const isFreshVocabularyStart =
+      appState.currentVocabIndex === 0 &&
+      learnedInCurrentCycle === 0 &&
+      !isQuizMode &&
+      !isReviewMode;
+
+    if (!isFreshVocabularyStart) {
+      return;
+    }
+
+    setConsecutiveWords(0);
+    setQuizRound(0);
+    setQuizMastery({});
+    setLastQuizWordId(null);
+    setActiveCheckpointId(null);
+    clearQuizState();
+    clearReviewState();
+
+    if (typeof window !== "undefined") {
+      window.sessionStorage.removeItem(quizSessionStorageKey);
+    }
+
+    pendingQuizSessionRef.current = null;
+    hasRestoredQuizSessionRef.current = true;
+  }, [
+    appState.currentVocabIndex,
+    learnedInCurrentCycle,
+    isQuizMode,
+    isReviewMode,
+    quizSessionStorageKey,
+  ]);
+
+  useEffect(() => {
     if (hasRestoredQuizSessionRef.current) {
       return;
     }
