@@ -20,20 +20,26 @@ export default function Landing({ navigate, resetAppState }: LandingProps) {
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
   useEffect(() => {
+    let cancelled = false;
+
     // Load Google Identity Services
     const script = document.createElement("script");
     script.src = "https://accounts.google.com/gsi/client";
     script.async = true;
     script.defer = true;
     script.onload = () => {
-      if (window.google && clientId && googleButtonRef.current) {
+      const targetNode = googleButtonRef.current;
+      const isMountedTarget =
+        !!targetNode && targetNode.isConnected && document.body.contains(targetNode);
+
+      if (!cancelled && window.google && clientId && isMountedTarget && targetNode) {
         try {
           window.google.accounts.id.initialize({
             client_id: clientId,
             callback: handleCredentialResponse,
           });
 
-          window.google.accounts.id.renderButton(googleButtonRef.current, {
+          window.google.accounts.id.renderButton(targetNode, {
             theme: "outline",
             size: "large",
             width: 350,
@@ -54,6 +60,7 @@ export default function Landing({ navigate, resetAppState }: LandingProps) {
     document.body.appendChild(script);
 
     return () => {
+      cancelled = true;
       if (document.body.contains(script)) {
         document.body.removeChild(script);
       }
