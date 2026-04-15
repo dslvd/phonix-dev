@@ -876,6 +876,7 @@ export default function VocabularyLearning({
         shownCheckpointIdsRef.current.add(checkpointKey);
         writePersistedCheckpointKeys(checkpointStorageKey, shownCheckpointIdsRef.current);
         setActiveCheckpointId(reachedCheckpoint.id);
+        return;
       }
     } else {
       updateState((prev) => ({
