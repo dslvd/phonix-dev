@@ -450,6 +450,8 @@ function App() {
       const hasLoggedInUser = !!(storedUser?.email || "").trim();
       window.localStorage.removeItem("phonix-app-state");
       window.sessionStorage.removeItem("phonix-admin-password");
+      window.sessionStorage.removeItem("phonix-vocabulary-quiz-session-v1");
+      window.localStorage.removeItem("phonix-vocabulary-shown-checkpoints-v1");
 
       if (!hasLoggedInUser) {
         clearPremiumStatus();

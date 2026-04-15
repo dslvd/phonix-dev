@@ -78,12 +78,32 @@ const CHECKPOINT_STORAGE_KEY = "phonix-vocabulary-shown-checkpoints-v1";
 
 const buildCheckpointKey = (cycle: number, checkpointId: string) => `${cycle}:${checkpointId}`;
 
-const readPersistedCheckpointKeys = () => {
+const getVocabularyStorageScope = () => {
+  if (typeof window === "undefined") {
+    return "guest";
+  }
+
+  const rawUser = window.localStorage.getItem("user");
+  if (!rawUser) {
+    return "guest";
+  }
+
+  try {
+    const user = JSON.parse(rawUser) as { email?: string; name?: string };
+    const email = (user.email || "").trim().toLowerCase();
+    const name = (user.name || "").trim().toLowerCase().replace(/\s+/g, "-");
+    return email || name || "guest";
+  } catch {
+    return "guest";
+  }
+};
+
+const readPersistedCheckpointKeys = (storageKey: string) => {
   if (typeof window === "undefined") {
     return new Set<string>();
   }
 
-  const raw = window.localStorage.getItem(CHECKPOINT_STORAGE_KEY);
+  const raw = window.localStorage.getItem(storageKey);
   if (!raw) {
     return new Set<string>();
   }
@@ -96,12 +116,12 @@ const readPersistedCheckpointKeys = () => {
   }
 };
 
-const writePersistedCheckpointKeys = (keys: Set<string>) => {
+const writePersistedCheckpointKeys = (storageKey: string, keys: Set<string>) => {
   if (typeof window === "undefined") {
     return;
   }
 
-  window.localStorage.setItem(CHECKPOINT_STORAGE_KEY, JSON.stringify([...keys]));
+  window.localStorage.setItem(storageKey, JSON.stringify([...keys]));
 };
 
 interface PersistedQuizSessionState {
@@ -121,12 +141,12 @@ interface PersistedQuizSessionState {
   activeCheckpointId: string | null;
 }
 
-const readPersistedQuizSessionState = (): PersistedQuizSessionState | null => {
+const readPersistedQuizSessionState = (storageKey: string): PersistedQuizSessionState | null => {
   if (typeof window === "undefined") {
     return null;
   }
 
-  const raw = window.sessionStorage.getItem(QUIZ_SESSION_STORAGE_KEY);
+  const raw = window.sessionStorage.getItem(storageKey);
   if (!raw) {
     return null;
   }
@@ -164,6 +184,9 @@ export default function VocabularyLearning({
       return false;
     }
   })();
+  const vocabularyStorageScope = getVocabularyStorageScope();
+  const quizSessionStorageKey = `${QUIZ_SESSION_STORAGE_KEY}:${vocabularyStorageScope}`;
+  const checkpointStorageKey = `${CHECKPOINT_STORAGE_KEY}:${vocabularyStorageScope}`;
   const targetLanguage = appState.targetLanguage || "Hiligaynon";
   const nativeLanguage = appState.nativeLanguage || "English";
   const levelCycle = getVocabularyLevelCycle(appState.learnedWords.length);
@@ -187,7 +210,9 @@ export default function VocabularyLearning({
   const [isPracticeQuizSession, setIsPracticeQuizSession] = useState(false);
   const previousLevelCycleRef = useRef(levelCycle);
   const shownCheckpointIdsRef = useRef<Set<string>>(new Set());
-  const pendingQuizSessionRef = useRef<PersistedQuizSessionState | null>(readPersistedQuizSessionState());
+  const pendingQuizSessionRef = useRef<PersistedQuizSessionState | null>(
+    readPersistedQuizSessionState(quizSessionStorageKey),
+  );
   const hasRestoredQuizSessionRef = useRef(false);
   const [aiVocabulary, setAiVocabulary] = useState<VocabularyItem[]>(() => {
     return readCachedAIVocabulary(targetLanguage, nativeLanguage, { levelCycle });
@@ -261,14 +286,14 @@ export default function VocabularyLearning({
     setActiveCheckpointId(null);
 
     if (typeof window !== "undefined") {
-      window.sessionStorage.removeItem(QUIZ_SESSION_STORAGE_KEY);
+      window.sessionStorage.removeItem(quizSessionStorageKey);
     }
     pendingQuizSessionRef.current = null;
     hasRestoredQuizSessionRef.current = true;
-  }, [levelCycle, updateState]);
+  }, [levelCycle, quizSessionStorageKey, updateState]);
 
   useEffect(() => {
-    const persistedCheckpointKeys = readPersistedCheckpointKeys();
+    const persistedCheckpointKeys = readPersistedCheckpointKeys(checkpointStorageKey);
     const earnedCheckpointKeys = VOCAB_LEVEL_CHECKPOINTS.filter(
       (checkpoint) => checkpoint.target <= learnedInCurrentCycle,
     ).map((checkpoint) => buildCheckpointKey(levelCycle, checkpoint.id));
@@ -279,8 +304,13 @@ export default function VocabularyLearning({
     ]);
 
     shownCheckpointIdsRef.current = nextCheckpointKeys;
-    writePersistedCheckpointKeys(nextCheckpointKeys);
-  }, [levelCycle, learnedInCurrentCycle]);
+    writePersistedCheckpointKeys(checkpointStorageKey, nextCheckpointKeys);
+  }, [checkpointStorageKey, levelCycle, learnedInCurrentCycle]);
+
+  useEffect(() => {
+    pendingQuizSessionRef.current = readPersistedQuizSessionState(quizSessionStorageKey);
+    hasRestoredQuizSessionRef.current = false;
+  }, [quizSessionStorageKey]);
 
   useEffect(() => {
     if (hasRestoredQuizSessionRef.current) {
@@ -295,7 +325,7 @@ export default function VocabularyLearning({
 
     if (persisted.levelCycle !== levelCycle) {
       if (typeof window !== "undefined") {
-        window.sessionStorage.removeItem(QUIZ_SESSION_STORAGE_KEY);
+        window.sessionStorage.removeItem(quizSessionStorageKey);
       }
       pendingQuizSessionRef.current = null;
       hasRestoredQuizSessionRef.current = true;
@@ -343,7 +373,7 @@ export default function VocabularyLearning({
 
     pendingQuizSessionRef.current = null;
     hasRestoredQuizSessionRef.current = true;
-  }, [aiVocabulary]);
+  }, [aiVocabulary, levelCycle, quizSessionStorageKey]);
 
   const currentLevelWords = (() => {
     const difficulty =
@@ -670,7 +700,7 @@ export default function VocabularyLearning({
       activeCheckpointId,
     };
 
-    window.sessionStorage.setItem(QUIZ_SESSION_STORAGE_KEY, JSON.stringify(persistedState));
+    window.sessionStorage.setItem(quizSessionStorageKey, JSON.stringify(persistedState));
   }, [
     isQuizMode,
     isReviewMode,
@@ -686,6 +716,7 @@ export default function VocabularyLearning({
     quizMastery,
     lastQuizWordId,
     activeCheckpointId,
+    quizSessionStorageKey,
   ]);
 
   const startQuizSession = (word: VocabularyItem, sourcePoolOverride?: VocabularyItem[]) => {
@@ -810,7 +841,7 @@ export default function VocabularyLearning({
         : null;
       if (reachedCheckpoint && checkpointKey && !shownCheckpointIdsRef.current.has(checkpointKey)) {
         shownCheckpointIdsRef.current.add(checkpointKey);
-        writePersistedCheckpointKeys(shownCheckpointIdsRef.current);
+        writePersistedCheckpointKeys(checkpointStorageKey, shownCheckpointIdsRef.current);
         setActiveCheckpointId(reachedCheckpoint.id);
       }
     } else {
