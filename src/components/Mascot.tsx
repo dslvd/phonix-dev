@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Button from "./Button";
 import {
@@ -15,6 +15,7 @@ interface MascotProps {
   pageContext?: string;
   responseLanguage?: string;
   containerClassName?: string;
+  autoBubbleKey?: string;
 }
 
 interface ChatMessage {
@@ -36,6 +37,7 @@ export default function Mascot({
   pageContext = "",
   responseLanguage = "English",
   containerClassName = "",
+  autoBubbleKey,
 }: MascotProps) {
   const AUTO_HIDE_MESSAGE_MS = 3000;
   const isGuestMode = (() => {
@@ -62,6 +64,7 @@ export default function Mascot({
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const previousAutoBubbleKeyRef = useRef<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
@@ -117,13 +120,19 @@ export default function Mascot({
       return;
     }
 
+    const resolvedBubbleKey = autoBubbleKey || `message:${cleanAssistantText(message)}`;
+    if (previousAutoBubbleKeyRef.current === resolvedBubbleKey) {
+      return;
+    }
+
+    previousAutoBubbleKeyRef.current = resolvedBubbleKey;
     setShowBubble(true);
     const timeoutId = window.setTimeout(() => {
       setShowBubble(false);
     }, AUTO_HIDE_MESSAGE_MS);
 
     return () => window.clearTimeout(timeoutId);
-  }, [message, isOpen, position]);
+  }, [message, isOpen, position, autoBubbleKey]);
 
   const handleAsk = async () => {
     const trimmedQuery = query.trim();

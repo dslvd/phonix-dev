@@ -1026,6 +1026,11 @@ export default function VocabularyLearning({
     return "Ask me about the word or clues.";
   })();
 
+  const mascotBubbleKey =
+    isReviewMode || isQuizMode
+      ? `challenge-${pendingQuizWord?.id || quizWord?.id || quizSessionKey}`
+      : `flashcards-${levelCycle}`;
+
   const vocabularyPageContext = [
     `Current page: vocabulary lesson.`,
     `Target language: ${targetLanguage}.`,
@@ -1595,6 +1600,7 @@ export default function VocabularyLearning({
         animation="float"
         responseLanguage={nativeLanguage}
         pageContext={vocabularyPageContext}
+        autoBubbleKey={mascotBubbleKey}
       />
     </div>
   );
