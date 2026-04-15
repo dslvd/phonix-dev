@@ -450,6 +450,16 @@ function App() {
       const hasLoggedInUser = !!(storedUser?.email || "").trim();
       window.localStorage.removeItem("phonix-app-state");
       window.sessionStorage.removeItem("phonix-admin-password");
+      window.sessionStorage.removeItem("phonix-vocabulary-quiz-session-v1");
+      window.localStorage.removeItem("phonix-vocabulary-shown-checkpoints-v1");
+
+      Object.keys(window.sessionStorage)
+        .filter((key) => key.startsWith("phonix-vocabulary-quiz-session-v1:"))
+        .forEach((key) => window.sessionStorage.removeItem(key));
+
+      Object.keys(window.localStorage)
+        .filter((key) => key.startsWith("phonix-vocabulary-shown-checkpoints-v1:"))
+        .forEach((key) => window.localStorage.removeItem(key));
 
       if (!hasLoggedInUser) {
         clearPremiumStatus();

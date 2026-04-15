@@ -18,28 +18,23 @@ declare global {
 export default function Landing({ navigate, resetAppState }: LandingProps) {
   const googleButtonRef = useRef<HTMLDivElement>(null);
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  const currentOrigin =
+    typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
 
   useEffect(() => {
-    let cancelled = false;
-
-    // Load Google Identity Services
     const script = document.createElement("script");
     script.src = "https://accounts.google.com/gsi/client";
     script.async = true;
     script.defer = true;
     script.onload = () => {
-      const targetNode = googleButtonRef.current;
-      const isMountedTarget =
-        !!targetNode && targetNode.isConnected && document.body.contains(targetNode);
-
-      if (!cancelled && window.google && clientId && isMountedTarget && targetNode) {
+      if (window.google && clientId && googleButtonRef.current) {
         try {
           window.google.accounts.id.initialize({
             client_id: clientId,
             callback: handleCredentialResponse,
           });
 
-          window.google.accounts.id.renderButton(targetNode, {
+          window.google.accounts.id.renderButton(googleButtonRef.current, {
             theme: "outline",
             size: "large",
             width: 350,
@@ -49,7 +44,7 @@ export default function Landing({ navigate, resetAppState }: LandingProps) {
         } catch (error) {
           console.error("Google Sign-In error:", error);
           console.log(
-            "💡 To fix: Add http://localhost:3000 to authorized origins in Google Cloud Console",
+            `Google Sign-In setup fix: add ${currentOrigin} to Authorized JavaScript origins in Google Cloud Console`,
           );
         }
       }
@@ -60,20 +55,17 @@ export default function Landing({ navigate, resetAppState }: LandingProps) {
     document.body.appendChild(script);
 
     return () => {
-      cancelled = true;
       if (document.body.contains(script)) {
         document.body.removeChild(script);
       }
     };
-  }, [clientId]);
+  }, [clientId, currentOrigin]);
 
   const handleCredentialResponse = (response: any) => {
-    // Decode JWT token
     try {
       const payload = JSON.parse(atob(response.credential.split(".")[1]));
       console.log("Google Sign-In successful:", payload);
 
-      // Store user data (you can expand this)
       localStorage.setItem(
         "user",
         JSON.stringify({
@@ -84,8 +76,6 @@ export default function Landing({ navigate, resetAppState }: LandingProps) {
       );
 
       resetAppState();
-
-      // Navigate to setup
       navigate("setup");
     } catch (error) {
       console.error("Error parsing credential:", error);
@@ -106,74 +96,39 @@ export default function Landing({ navigate, resetAppState }: LandingProps) {
   };
 
   return (
-    // Landing Page Container
     <div className="relative flex h-screen items-center justify-center overflow-hidden p-4">
-      {/* Floating pipin decoration — hidden on mobile, visible on md+ */}
       <motion.div
         animate={{ y: [10, -10, 10] }}
         transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-        className="hidden md:block absolute top-1/4 -translate-y-1/2 left-[15%] w-80 h-80 object-contain"
+        className="absolute left-[15%] top-1/4 hidden h-80 w-80 -translate-y-1/2 object-contain md:block"
       >
         <img src="../../assets/PipinRocket.png" />
       </motion.div>
 
-      {/* Login Card — centered on mobile, offset right on md+ */}
       <Card className="max-w-lg w-full animate-pop md:ml-auto md:mr-6">
-        <div className="text-center mb-8">
+        <div className="mb-8 text-center">
           <div className="inline-block">
             <div className="mb-4 p-2">
-              <h1 className="font-montserrat text-5xl font-black leading-none text-[#FF7100]">phonix</h1>
+              <h1 className="font-montserrat text-5xl font-black leading-none text-[#FF7100]">
+                phonix
+              </h1>
             </div>
           </div>
-          <p className="text-sm font-semibold text-[#8bb1c7]">
-            Learn beyond language barriers
-          </p>
+          <p className="text-sm font-semibold text-[#8bb1c7]">Learn beyond language barriers</p>
         </div>
 
-        {/* Sign In / Guest Access Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
           className="mb-4"
         >
-          {/* Google Sign-In Button Container */}
-          <div
-            ref={googleButtonRef}
-            className="flex justify-center mb-4"
-            style={{ minHeight: "44px" }}
-          />
+          <div ref={googleButtonRef} className="mb-4 flex justify-center" style={{ minHeight: "44px" }} />
 
-          {/* Development Note for OAuth 403 Error */}
-          {import.meta.env.DEV && (
-            <div className="theme-bg-surface mb-4 rounded-xl border p-3 text-xs">
-              <p className="mb-1 font-bold text-[#56b8e8]">Google Sign-In Setup (Development)</p>
-              <p className="theme-text-soft">
-                If you see a 403 error, add{" "}
-                <code className="rounded bg-[color:var(--bg)] px-1">
-                  http://localhost:3000
-                </code>{" "}
-                to authorized origins in{" "}
-                <a
-                  href="https://console.cloud.google.com/apis/credentials"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline font-bold"
-                >
-                  Google Cloud Console
-                </a>
-              </p>
-              <p className="theme-text-soft mt-1">
-                Or just use <strong>Guest Login</strong> below.
-              </p>
-            </div>
-          )}
-
-          {/* Manual Google Button (fallback if no Client ID) */}
           {!clientId && (
             <div className="theme-bg-surface mb-4 cursor-pointer rounded-2xl border p-3 text-center transition-all hover:border-[#56b8e8]">
               <div className="flex items-center justify-center gap-2">
-                <svg className="w-5 h-5" viewBox="0 0 48 48">
+                <svg className="h-5 w-5" viewBox="0 0 48 48">
                   <path
                     fill="#EA4335"
                     d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
@@ -193,26 +148,21 @@ export default function Landing({ navigate, resetAppState }: LandingProps) {
                 </svg>
                 <span className="font-bold">Continue with Google</span>
               </div>
-              <p className="theme-text-soft mt-2 text-xs">
-                Add your Google Client ID in .env to enable
-              </p>
+              <p className="theme-text-soft mt-2 text-xs">Add your Google Client ID in .env to enable</p>
             </div>
           )}
 
-          {/* Separator */}
-          <div className="flex items-center my-4">
+          <div className="my-4 flex items-center">
             <div className="flex-1 border-t border-[color:var(--border)]"></div>
             <span className="theme-text-soft px-4 text-sm font-semibold">or</span>
             <div className="flex-1 border-t border-[color:var(--border)]"></div>
           </div>
 
-          {/* Guest Login Button */}
           <Button variant="primary" size="lg" fullWidth onClick={handleGuestLogin} icon="🚀">
             Start as Guest
           </Button>
         </motion.div>
 
-        {/* Feature Preview Chips */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
