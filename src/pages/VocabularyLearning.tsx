@@ -333,8 +333,10 @@ export default function VocabularyLearning({
 
     if (typeof window !== "undefined") {
       window.sessionStorage.removeItem(quizSessionStorageKey);
+      window.localStorage.removeItem(checkpointStorageKey);
     }
 
+    shownCheckpointIdsRef.current = new Set();
     pendingQuizSessionRef.current = null;
     hasRestoredQuizSessionRef.current = true;
   }, [
@@ -342,6 +344,7 @@ export default function VocabularyLearning({
     learnedInCurrentCycle,
     isQuizMode,
     isReviewMode,
+    checkpointStorageKey,
     quizSessionStorageKey,
   ]);
 
