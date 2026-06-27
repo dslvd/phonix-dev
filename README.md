@@ -1,6 +1,4 @@
-# 🦅 Phonix — Learn Beyond Language Barriers
-
-![Phonix Banner](./assets/screenshots/banner.png)
+# Phonix — Learn Beyond Language Barriers
 
 Phonix is an AI-powered language learning app built as an alternative to tools like Duolingo. Instead of static, one-size-fits-all lessons, Phonix uses the **Google Gemini 2.5 Flash API** to dynamically generate lesson content based on each user's current skill level. Whether you're a complete beginner or already conversational, the app adapts to where you are and builds from there — covering vocabulary, grammar, and reading comprehension in a way that feels personal rather than repetitive.
 
